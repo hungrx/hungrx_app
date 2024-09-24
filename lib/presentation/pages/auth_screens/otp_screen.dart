@@ -1,20 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/create_account.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/email_login.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_button.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_newuser_text.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_textfield.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/header_text.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_botton.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/social_login_btn.dart';
+import 'package:pinput/pinput.dart';
 
-class PhoneNumberScreen extends StatelessWidget {
-  const PhoneNumberScreen({super.key});
+class OtpScreen extends StatelessWidget {
+  const OtpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final defaultPinTheme = PinTheme(
+      width: 50,
+      height: 50,
+      textStyle: const TextStyle(
+        fontSize: 22,
+        color: Colors.white,
+      ),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.buttonColors),
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
+
     Size size = MediaQuery.of(context).size;
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -32,61 +45,33 @@ class PhoneNumberScreen extends StatelessWidget {
               subHeading: "Glad You're here",
             ),
             SizedBox(
-              height: size.height * 0.07,
+              height: size.height * 0.06,
             ),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                borderRadius: BorderRadius.circular(25),
+            const Text(
+              "Enter OTP received on +91839494949",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.fontColor,
               ),
-              child: Row(
-                children: [
-                  // Country code and flag
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: const Row(
-                      children: [
-                        Text(
-                          "🇺🇸",
-                          style: TextStyle(fontSize: 24),
-                        ),
-                        SizedBox(width: 5),
-                        Text(
-                          "+1",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                        SizedBox(width: 5),
-                      ],
-                    ),
-                  ),
-                  // Vertical divider
-                  Container(
-                    height: 30,
-                    width: 1,
-                    color: Colors.grey[600],
-                  ),
-
-                  // Phone number input field
-                  const Expanded(
-                    child: CustomTextFormField(
-                      keyboardType: TextInputType.phone,
-                      hintText: "Enter your phone number",
-                    ),
-                  ),
-                ],
+            ),
+            const SizedBox(height: 20),
+            Pinput(
+              length: 4,
+              defaultPinTheme: defaultPinTheme,
+              focusedPinTheme: defaultPinTheme.copyWith(
+                decoration: defaultPinTheme.decoration!.copyWith(
+                  border: Border.all(color: AppColors.buttonColors),
+                ),
               ),
+              // onCompleted: (pin) => print(pin),
             ),
             const Spacer(),
 
             // Agree & Log In button
             CustomButton(
-              data: "Agree & Login",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const OtpScreen()),
-                );
-              },
+              data: "Verify",
+              onPressed: () {},
             ),
             const SizedBox(
               height: 20,
@@ -97,7 +82,7 @@ class PhoneNumberScreen extends StatelessWidget {
               termsUrl: "https://www.hungrx.com/",
             ),
             // Social login options
-            Column(
+             Column(
               children: [
                 const SizedBox(height: 20),
                 Row(
@@ -119,7 +104,7 @@ class PhoneNumberScreen extends StatelessWidget {
                       iconPath: 'assets/icons/mail.png',
                       label: 'Email',
                       size: 30,
-                      onPressed: () {
+                         onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -131,9 +116,7 @@ class PhoneNumberScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             // New user text
             CustomNewUserText(
               text: "New user? ",

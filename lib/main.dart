@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/presentation/pages/onboarding_screen/onboarding_screen.dart';
-
+import 'package:hungrx_app/presentation/pages/auth_screens/splash_screen.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -16,7 +15,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const OnboardingPage(),
+      home: const SplashScreen(),
     );
   }
 }

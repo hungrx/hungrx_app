@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/create_account.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/email_login.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_button.dart';
@@ -10,8 +9,8 @@ import 'package:hungrx_app/presentation/pages/auth_screens/widget/header_text.da
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_botton.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/social_login_btn.dart';
 
-class PhoneNumberScreen extends StatelessWidget {
-  const PhoneNumberScreen({super.key});
+class CreateAccountScreen extends StatelessWidget {
+  const CreateAccountScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,59 +27,35 @@ class PhoneNumberScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const HeaderText(
-              mainHeading: "Welcome back,",
-              subHeading: "Glad You're here",
+              mainHeading: "Create your Account",
+              subHeading: "",
             ),
             SizedBox(
-              height: size.height * 0.07,
+              height: size.height * 0.04,
             ),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Row(
-                children: [
-                  // Country code and flag
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: const Row(
-                      children: [
-                        Text(
-                          "🇺🇸",
-                          style: TextStyle(fontSize: 24),
-                        ),
-                        SizedBox(width: 5),
-                        Text(
-                          "+1",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                        SizedBox(width: 5),
-                      ],
-                    ),
-                  ),
-                  // Vertical divider
-                  Container(
-                    height: 30,
-                    width: 1,
-                    color: Colors.grey[600],
-                  ),
-
-                  // Phone number input field
-                  const Expanded(
-                    child: CustomTextFormField(
-                      keyboardType: TextInputType.phone,
-                      hintText: "Enter your phone number",
-                    ),
-                  ),
-                ],
-              ),
+            const CustomTextFormField(
+              hintText: "Enter your Email id",
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            const CustomTextFormField(
+              isPassword: true,
+              hintText: "Enter your Password",
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            const CustomTextFormField(
+              isPassword: true,
+              hintText: "Re-enter your Password",
             ),
             const Spacer(),
+            // Terms of Service text
 
             // Agree & Log In button
             CustomButton(
-              data: "Agree & Login",
+              data: "Agree & SignUp",
               onPressed: () {
                 Navigator.push(
                   context,
@@ -91,58 +66,52 @@ class PhoneNumberScreen extends StatelessWidget {
             const SizedBox(
               height: 20,
             ),
-            // Terms of Service text
             const ClickableTermsAndPolicyText(
               policyUrl: "https://www.hungrx.com/",
               termsUrl: "https://www.hungrx.com/",
             ),
+
             // Social login options
-            Column(
+            const Column(
               children: [
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SocialLoginBotton(
+                    SocialLoginBotton(
                       iconPath: 'assets/icons/google.png',
                       label: 'Google',
                       size: 25,
                     ),
-                    const SizedBox(width: 20),
-                    const SocialLoginBotton(
+                    SizedBox(width: 20),
+                    SocialLoginBotton(
                       iconPath: 'assets/icons/apple.png',
                       label: 'Apple',
                       size: 30,
                     ),
-                    const SizedBox(width: 20),
+                    SizedBox(width: 20),
                     SocialLoginBotton(
-                      iconPath: 'assets/icons/mail.png',
+                      iconPath: 'assets/icons/call.png',
                       label: 'Email',
-                      size: 30,
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const EmailLoginScreen()),
-                        );
-                      },
+                      size: 25,
                     ),
                   ],
                 ),
               ],
             ),
+
             const SizedBox(
               height: 20,
             ),
             // New user text
             CustomNewUserText(
-              text: "New user? ",
-              buttonText: "Create an account",
+              text: "Already User? ",
+              buttonText: "Login Account",
               onCreateAccountTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const CreateAccountScreen()),
+                      builder: (context) => const EmailLoginScreen()),
                 );
               },
             ),

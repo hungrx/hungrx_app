@@ -7,6 +7,6 @@ class AuthscreenGradient {
                 end: Alignment.bottomCenter,
                 colors: [
               Color(0xFF000000),
-              Color(0xFF1F1F1F),
+              Color(0xFF121212),
             ]));
 }

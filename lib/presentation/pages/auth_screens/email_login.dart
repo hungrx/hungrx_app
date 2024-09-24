@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/create_account.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/email_login.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_button.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_newuser_text.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_textfield.dart';
@@ -9,9 +8,10 @@ import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_conta
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/header_text.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_botton.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/social_login_btn.dart';
+import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
 
-class PhoneNumberScreen extends StatelessWidget {
-  const PhoneNumberScreen({super.key});
+class EmailLoginScreen extends StatelessWidget {
+  const EmailLoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,47 +34,15 @@ class PhoneNumberScreen extends StatelessWidget {
             SizedBox(
               height: size.height * 0.07,
             ),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Row(
-                children: [
-                  // Country code and flag
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: const Row(
-                      children: [
-                        Text(
-                          "🇺🇸",
-                          style: TextStyle(fontSize: 24),
-                        ),
-                        SizedBox(width: 5),
-                        Text(
-                          "+1",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                        SizedBox(width: 5),
-                      ],
-                    ),
-                  ),
-                  // Vertical divider
-                  Container(
-                    height: 30,
-                    width: 1,
-                    color: Colors.grey[600],
-                  ),
-
-                  // Phone number input field
-                  const Expanded(
-                    child: CustomTextFormField(
-                      keyboardType: TextInputType.phone,
-                      hintText: "Enter your phone number",
-                    ),
-                  ),
-                ],
-              ),
+            const CustomTextFormField(
+              hintText: "Enter your Email id",
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            const CustomTextFormField(
+              isPassword: true,
+              hintText: "Enter your Password",
             ),
             const Spacer(),
 
@@ -84,7 +52,7 @@ class PhoneNumberScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const OtpScreen()),
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
                 );
               },
             ),
@@ -96,6 +64,7 @@ class PhoneNumberScreen extends StatelessWidget {
               policyUrl: "https://www.hungrx.com/",
               termsUrl: "https://www.hungrx.com/",
             ),
+
             // Social login options
             Column(
               children: [
@@ -116,14 +85,14 @@ class PhoneNumberScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 20),
                     SocialLoginBotton(
-                      iconPath: 'assets/icons/mail.png',
-                      label: 'Email',
-                      size: 30,
+                      iconPath: 'assets/icons/call.png',
+                      label: 'Phone',
+                      size: 25,
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const EmailLoginScreen()),
+                              builder: (context) => const PhoneNumberScreen()),
                         );
                       },
                     ),
@@ -131,6 +100,7 @@ class PhoneNumberScreen extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(
               height: 20,
             ),

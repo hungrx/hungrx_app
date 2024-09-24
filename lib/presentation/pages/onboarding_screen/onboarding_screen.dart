@@ -50,7 +50,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 0,
+              bottom: -5,
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.2,
                 padding: const EdgeInsets.only(top: 50, right: 30, left: 30),
@@ -142,7 +142,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
           currentIndex == controller.items.length - 1
               ? "Get started"
               : "Continue",
-          style: const TextStyle(color: Colors.white),
+          style:
+              const TextStyle(color: Colors.black, fontWeight: FontWeight.w800),
         ),
       ),
     );
