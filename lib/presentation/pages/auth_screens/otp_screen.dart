@@ -8,6 +8,7 @@ import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_conta
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/header_text.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_botton.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/social_login_btn.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_screens/userr_info_one.dart';
 import 'package:pinput/pinput.dart';
 
 class OtpScreen extends StatelessWidget {
@@ -71,7 +72,13 @@ class OtpScreen extends StatelessWidget {
             // Agree & Log In button
             CustomButton(
               data: "Verify",
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const UserInfoScreenOne()),
+                );
+              },
             ),
             const SizedBox(
               height: 20,
@@ -82,7 +89,7 @@ class OtpScreen extends StatelessWidget {
               termsUrl: "https://www.hungrx.com/",
             ),
             // Social login options
-             Column(
+            Column(
               children: [
                 const SizedBox(height: 20),
                 Row(
@@ -104,7 +111,7 @@ class OtpScreen extends StatelessWidget {
                       iconPath: 'assets/icons/mail.png',
                       label: 'Email',
                       size: 30,
-                         onPressed: () {
+                      onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(

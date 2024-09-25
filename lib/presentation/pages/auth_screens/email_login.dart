@@ -8,7 +8,7 @@ import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_conta
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/header_text.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_botton.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/social_login_btn.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_screens/userr_info_one.dart';
 
 class EmailLoginScreen extends StatelessWidget {
   const EmailLoginScreen({super.key});
@@ -52,7 +52,8 @@ class EmailLoginScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const UserInfoScreenOne()),
                 );
               },
             ),

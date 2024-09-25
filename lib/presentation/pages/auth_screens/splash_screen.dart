@@ -19,7 +19,8 @@ class SplashScreenState extends State<SplashScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const OnboardingPage()),
       );
-    });
+    }
+    );
   }
 
   @override
@@ -31,7 +32,7 @@ class SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/images/companylogo.png', 
+              'assets/images/companylogo.png',
               width: 350, // Adjust size as needed
               height: 350,
             ),

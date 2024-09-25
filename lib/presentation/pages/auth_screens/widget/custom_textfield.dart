@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
 class CustomTextFormField extends StatefulWidget {
   final String? hintText;
@@ -47,7 +48,13 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
             borderRadius: BorderRadius.circular(25),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide:
+                const BorderSide(color: AppColors.buttonColors, width: 2),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           suffixIcon: widget.isPassword
               ? IconButton(
                   icon: Icon(
