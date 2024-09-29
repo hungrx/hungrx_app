@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class DailyInsightScreen extends StatefulWidget {
-  const DailyInsightScreen({Key? key}) : super(key: key);
+  const DailyInsightScreen({super.key});
 
   @override
-  _DailyInsightScreenState createState() => _DailyInsightScreenState();
+  DailyInsightScreenState createState() => DailyInsightScreenState();
 }
 
-class _DailyInsightScreenState extends State<DailyInsightScreen> {
+class DailyInsightScreenState extends State<DailyInsightScreen> {
   late DateTime selectedDate;
   final List<String> weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -58,11 +57,11 @@ class _DailyInsightScreenState extends State<DailyInsightScreen> {
   }
 
   Widget _buildDateSelector() {
-    return Container(
+    return SizedBox(
       height: 60,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: 7,
+        itemCount: 10,
         itemBuilder: (context, index) {
           final date = DateTime.now().add(Duration(days: index - 3));
           final isSelected = date.day == selectedDate.day;
@@ -80,11 +79,11 @@ class _DailyInsightScreenState extends State<DailyInsightScreen> {
                 children: [
                   Text(
                     weekDays[date.weekday % 7],
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     '${date.day}',
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ],
               ),
@@ -109,7 +108,7 @@ class _DailyInsightScreenState extends State<DailyInsightScreen> {
             radius: 80,
             lineWidth: 8,
             percent: 0.28,
-            center: Column(
+            center: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
@@ -125,15 +124,15 @@ class _DailyInsightScreenState extends State<DailyInsightScreen> {
             progressColor: AppColors.buttonColors,
             backgroundColor: Colors.grey[800]!,
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 70),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildCalorieInfo(Icons.flag, 'Daily Target', '2130 cal'),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 _buildCalorieInfo(Icons.restaurant, 'Total Now', '530 cal'),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 _buildCalorieInfo(Icons.directions_run, 'Work out', '0 mins'),
               ],
             ),
@@ -147,12 +146,12 @@ class _DailyInsightScreenState extends State<DailyInsightScreen> {
     return Row(
       children: [
         Icon(icon, color: Colors.white, size: 16),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(color: Colors.grey, fontSize: 12)),
-            Text(value, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
       ],
@@ -181,11 +180,11 @@ class _DailyInsightScreenState extends State<DailyInsightScreen> {
       children: [
         Text(
           title,
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         ...items,
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -207,25 +206,25 @@ class _DailyInsightScreenState extends State<DailyInsightScreen> {
               color: Colors.grey[800],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.fastfood, color: Colors.white),
+            child: const Icon(Icons.fastfood, color: Colors.white),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 Row(
                   children: [
-                    Icon(Icons.star, color: Colors.green, size: 16),
-                    SizedBox(width: 4),
-                    Text(rating.toString(), style: TextStyle(color: Colors.grey)),
+                    const Icon(Icons.star, color: Colors.green, size: 16),
+                    const SizedBox(width: 4),
+                    Text(rating.toString(), style: const TextStyle(color: Colors.grey)),
                   ],
                 ),
               ],
             ),
           ),
-          Text(calories, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(calories, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ],
       ),
     );

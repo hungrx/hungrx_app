@@ -4,6 +4,10 @@ import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/calorie_insight_screen/calorie_insight.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/widget/animated_button.dart';
+import 'package:hungrx_app/presentation/pages/home_screen/widget/feedbacks_widget.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screen/user_profile_screen.dart';
+import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_tracking.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -22,6 +26,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _calorieController.dispose();
     super.dispose();
+  }
+
+  void _showFeedbackDialog() {
+    showDialog(
+      barrierDismissible: true,
+      context: context,
+      builder: (BuildContext context) {
+        return FeedbackDialog(
+          onSubmit: (rating, feedback) {
+            // Handle the feedback submission here
+            print('Rating: $rating, Feedback: $feedback');
+            // You can send this data to your backend or process it as needed
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -63,10 +83,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader() {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
+        const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -82,9 +102,17 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        CircleAvatar(
-          radius: 25,
-          // backgroundImage: AssetImage('assets/profile_picture.jpg'),
+        InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => UserProfileScreen()),
+            );
+          },
+          child: const CircleAvatar(
+            radius: 25,
+            backgroundImage: AssetImage('assets/images/dp.png'),
+          ),
         ),
       ],
     );
@@ -174,7 +202,13 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: _buildInfoCard(
-            ontap: () {},
+            ontap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const WeightTrackingScreen()),
+              );
+            },
             title: 'Current Weight',
             value: '98',
             unit: 'KG',
@@ -196,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
       required void Function()? ontap,
       required Widget icon}) {
     return InkWell(
-      onTap: () {},
+      onTap: ontap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -271,13 +305,17 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Expanded(
           child: _buildBottomButton(
+            ontap: () {
+              _showFeedbackDialog();
+            },
             title: 'Feedbacks',
-            value: '100',
+            value: '0',
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _buildBottomButton(
+            ontap: () {},
             title: 'Days',
             value: '290',
           ),
@@ -286,24 +324,32 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBottomButton({required String title, required String value}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(color: Colors.grey)),
-          const SizedBox(height: 8),
-          AnimatedFlipCounter(
-            value: int.parse(value),
-            textStyle: const TextStyle(
-                color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ],
+  Widget _buildBottomButton(
+      {required String title,
+      required String value,
+      required void Function()? ontap}) {
+    return InkWell(
+      onTap: ontap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 8),
+            AnimatedFlipCounter(
+              value: int.tryParse(value) ?? 0,
+              textStyle: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -315,8 +361,10 @@ class _HomeScreenState extends State<HomeScreen> {
         print('Log meal pressed');
       },
       onNearbyRestaurant: () {
-        // Implement nearby restaurant functionality
-        print('Nearby restaurant pressed');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LogMealScreen()),
+        );
       },
     );
   }

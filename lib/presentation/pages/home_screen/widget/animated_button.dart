@@ -80,14 +80,15 @@ class AnimatedEatFoodButtonState extends State<AnimatedEatFoodButton>
                       children: [
                         const SizedBox(height: 16),
                         _buildOptionButton(
-                          icon: FontAwesomeIcons.utensils,
-                          label: 'Log your meal',
+                          icon: FontAwesomeIcons.store,
+                          label: 'Nearby Restaurant',
+                          
                           onPressed: widget.onLogMeal,
                         ),
                         const SizedBox(height: 16),
                         _buildOptionButton(
-                          icon: FontAwesomeIcons.store,
-                          label: 'Nearby Restaurant',
+                          icon: FontAwesomeIcons.utensils,
+                          label: 'Log your meal',
                           onPressed: widget.onNearbyRestaurant,
                         ),
                         const SizedBox(height: 16),

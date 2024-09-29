@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
+import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_picker.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 class WeightTrackingScreen extends StatelessWidget {
-  const WeightTrackingScreen({Key? key}) : super(key: key);
+  const WeightTrackingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: AppColors.primaryColor,
+        title: const Text("Weight Tracking"),
+      ),
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -23,32 +28,22 @@ class WeightTrackingScreen extends StatelessWidget {
                 ),
               ),
             ),
-            _buildUpdateWeightButton(),
+            _buildUpdateWeightButton(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () {}, // Implement navigation
-          ),
-          const Text(
-            'Weight Tracking',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeightGraph() {
+ Widget _buildWeightGraph() {
+    final List<ChartData> chartData = [
+      ChartData("Mar", 35),
+      ChartData("Jun", 28),
+      ChartData("Jul", 34),
+      ChartData("Aug", 32),
+      ChartData("Sep", 40),
+      ChartData("Oct", 45)
+    ];
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -62,52 +57,33 @@ class WeightTrackingScreen extends StatelessWidget {
         children: [
           const Text(
             'Current W: 75Kg',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: LineChart(
-              LineChartData(
-                gridData:  FlGridData(show: true, drawVerticalLine: true, drawHorizontalLine: true),
-                titlesData: FlTitlesData(
-                  // leftTitles:  SideTitles(showTitles: true, reservedSize: 30),
-                  // bottomTitles: SideTitles(
-                  //   showTitles: true,
-                  //   getTitles: (value) {
-                  //     switch (value.toInt()) {
-                  //       case 0:
-                  //         return 'Jan 10';
-                  //       case 2:
-                  //         return 'Mar 20';
-                  //       case 4:
-                  //         return 'Jun 10';
-                  //       default:
-                  //         return '';
-                  //     }
-                  //   },
-                  // ),
-                ),
-                borderData: FlBorderData(show: true, border: Border.all(color: Colors.white, width: 1)),
-                minX: 0,
-                maxX: 5,
-                minY: 20,
-                maxY: 50,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: [
-                      const FlSpot(0, 32),
-                      const FlSpot(1, 33),
-                      const FlSpot(2, 35),
-                      const FlSpot(3, 42),
-                      const FlSpot(4, 45),
-                    ],
-                    isCurved: true,
-                    // spots: [Colors.green],
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
-                  ),
-                ],
+            child: SfCartesianChart(
+              primaryXAxis: CategoryAxis(
+                majorGridLines: const MajorGridLines(width: 1),
+                labelStyle: const TextStyle(color: Colors.white),
               ),
+              primaryYAxis: NumericAxis(
+                majorGridLines: const MajorGridLines(width: 1),
+                labelStyle: const TextStyle(color: Colors.white),
+                
+              ),
+              plotAreaBorderWidth: 0,
+              series: <CartesianSeries>[
+                LineSeries<ChartData, String>(
+                  dataSource: chartData,
+                  xValueMapper: (ChartData data, _) => data.x,
+                  yValueMapper: (ChartData data, _) => data.y,
+                  color: AppColors.buttonColors,
+                  width: 3,
+                  dashArray: const <double>[5, 5],
+                  markerSettings: const MarkerSettings(isVisible: true),
+                )
+              ],
             ),
           ),
         ],
@@ -123,7 +99,8 @@ class WeightTrackingScreen extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
             'Weight Entry',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
         _buildWeightEntryItem('12-jun-20234', '50KG', '3kg'),
@@ -149,26 +126,38 @@ class WeightTrackingScreen extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(date, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              Text('Total weight lose : $weightLoss', style: const TextStyle(color: Colors.grey)),
+              Text(date,
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
+              Text('Total weight lose : $weightLoss',
+                  style: const TextStyle(color: Colors.grey)),
             ],
           ),
-          Text(weight, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(weight,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18)),
         ],
       ),
     );
   }
 
-  Widget _buildUpdateWeightButton() {
+  Widget _buildUpdateWeightButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: ElevatedButton(
         onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const WeightPickerScreen()),
+          );
           // Implement weight update logic
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          backgroundColor: AppColors.buttonColors,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),
         child: const Row(
@@ -178,11 +167,20 @@ class WeightTrackingScreen extends StatelessWidget {
             SizedBox(width: 8),
             Text(
               'Update Weight',
-              style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+class ChartData {
+  ChartData(this.x, this.y);
+  final String x;
+  final double y;
 }
