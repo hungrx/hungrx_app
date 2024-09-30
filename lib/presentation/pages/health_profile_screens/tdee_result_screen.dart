@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
 
 class TDEEResultScreen extends StatefulWidget {
   final VoidCallback onClose;
@@ -91,7 +92,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
                 const SizedBox(height: 24),
                 FadeTransition(
                   opacity: _opacityAnimation,
-                  child:  const Text(
+                  child: const Text(
                     'Your Results Are Ready!',
                     style: TextStyle(
                       fontSize: 24,
@@ -101,12 +102,12 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
                   ),
                 ),
                 const SizedBox(height: 24),
-                _buildResultCard('TDEE (Total Daily Energy Expenditure)',
-                    '${widget.results['tdee']?.toStringAsFixed(0) ?? 'N/A'} kcal'),
                 _buildResultCard('BMR (Basal Metabolic Rate)',
                     '${widget.results['bmr']?.toStringAsFixed(0) ?? 'N/A'} kcal'),
                 _buildResultCard(
                     'BMI', widget.results['bmi']?.toStringAsFixed(1) ?? 'N/A'),
+                _buildResultCard('TDEE (Total Daily Energy Expenditure)',
+                    '${widget.results['tdee']?.toStringAsFixed(0) ?? 'N/A'} kcal'),
                 _buildResultCard('Height',
                     '${widget.results['height']?.toString() ?? 'N/A'} cm'),
                 _buildResultCard('Weight',
@@ -121,7 +122,13 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
                     '${widget.results['goal_pace']?.toStringAsFixed(1) ?? 'N/A'} kg/week'),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: widget.onClose,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const HomeScreen()),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.buttonColors,
                     padding: const EdgeInsets.symmetric(
@@ -146,47 +153,39 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
 
   Widget _buildResultCard(String title, String value) {
     return FadeTransition(
-      opacity: _opacityAnimation,
-      child: Padding(
-        padding: const EdgeInsets.all(1.0),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF000000),
-                Color(0xFF1F1F1F),
-              ],
+        opacity: _opacityAnimation,
+        child: Padding(
+          padding: const EdgeInsets.all(1.0),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius:
+                  BorderRadius.circular(8), // Match the Card's border radius
             ),
-            borderRadius: BorderRadius.circular(8), // Match the Card's border radius
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white, // Change text color to white
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white, // Change text color to white
+                    ),
                   ),
-                ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white, // Change text color to white
-                    fontWeight: FontWeight.bold,
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white, // Change text color to white
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      )
-    );
+        ));
   }
 }

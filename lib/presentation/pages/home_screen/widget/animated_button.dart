@@ -83,13 +83,13 @@ class AnimatedEatFoodButtonState extends State<AnimatedEatFoodButton>
                           icon: FontAwesomeIcons.store,
                           label: 'Nearby Restaurant',
                           
-                          onPressed: widget.onLogMeal,
+                          onPressed: widget.onNearbyRestaurant,
                         ),
                         const SizedBox(height: 16),
                         _buildOptionButton(
                           icon: FontAwesomeIcons.utensils,
                           label: 'Log your meal',
-                          onPressed: widget.onNearbyRestaurant,
+                          onPressed: widget.onLogMeal,
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -122,7 +122,7 @@ class AnimatedEatFoodButtonState extends State<AnimatedEatFoodButton>
                           ),
                           SizedBox(width: 8),
                           Text(
-                            'Eat Food',
+                            'Eat',
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 18,

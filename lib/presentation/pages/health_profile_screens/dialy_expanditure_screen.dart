@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
-import 'package:hungrx_app/presentation/pages/health_profile_screens/tdee_confirm_screen.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_screens/tdee_result_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_screens/detail_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_screens/widgets/navigation_buttons.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_screens/widgets/prograss_indicator.dart';

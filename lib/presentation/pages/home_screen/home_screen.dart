@@ -8,6 +8,7 @@ import 'package:hungrx_app/presentation/pages/home_screen/widget/feedbacks_widge
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_tracking.dart';
+import 'package:hungrx_app/presentation/widgets/responsive_text.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -15,10 +16,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   double totalCalories = 115300;
   final TextEditingController _calorieController = TextEditingController();
 
@@ -36,8 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return FeedbackDialog(
           onSubmit: (rating, feedback) {
             // Handle the feedback submission here
-            print('Rating: $rating, Feedback: $feedback');
-            // You can send this data to your backend or process it as needed
           },
         );
       },
@@ -58,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHeader(),
+                      _buildHeader(context),
                       const SizedBox(height: 20),
                       _buildCalorieCounter(),
                       const SizedBox(height: 20),
@@ -82,14 +81,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Hi, Warren Daniel',
               style: TextStyle(
                   color: Colors.white,
@@ -97,8 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontWeight: FontWeight.bold),
             ),
             Text(
-              'Good Night',
-              style: TextStyle(color: Colors.grey),
+              _getGreeting(),
+              style: const TextStyle(color: Colors.grey),
             ),
           ],
         ),
@@ -106,7 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => UserProfileScreen()),
+              MaterialPageRoute(
+                  builder: (context) => const UserProfileScreen()),
             );
           },
           child: const CircleAvatar(
@@ -118,21 +118,37 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String _getGreeting() {
+    var hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    }
+    if (hour < 17) {
+      return 'Good Afternoon';
+    }
+    if (hour < 21) {
+      return 'Good Evening';
+    }
+    return 'Good Night';
+  }
+
   Widget _buildCalorieCounter() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Calories to Burn',
-            style: TextStyle(color: Colors.grey),
-          ),
+               const ResponsiveTextWidget(
+                      text: 'Calories to Burn',
+                      fontWeight: FontWeight.w600,
+                      sizeFactor: 0.04,
+                      color:  AppColors.fontColor,
+                    ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -156,17 +172,18 @@ class _HomeScreenState extends State<HomeScreen> {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Daily Target',
-                style: TextStyle(color: Colors.grey),
-              ),
-              Text(
-                '2130 cal',
-                style: TextStyle(
-                    color: AppColors.buttonColors,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
-              ),
+                ResponsiveTextWidget(
+                      text: 'Daily Target',
+                      fontWeight: FontWeight.w600,
+                      sizeFactor: 0.04,
+                      color:  AppColors.fontColor,
+                    ),
+                       ResponsiveTextWidget(
+                      text: '2130 cal',
+                      fontWeight: FontWeight.w600,
+                      sizeFactor: 0.05,
+                      color:  AppColors.buttonColors,
+                    ),
             ],
           ),
         ],
@@ -214,8 +231,8 @@ class _HomeScreenState extends State<HomeScreen> {
             unit: 'KG',
             icon: const FaIcon(
               FontAwesomeIcons.weightScale,
-              color: Colors.white,
-              size: 30,
+              color: AppColors.buttonColors,
+              size: 34,
             ),
           ),
         ),
@@ -234,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: AppColors.tileColor,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -252,12 +269,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(title, style: const TextStyle(color: Colors.grey)),
                 Row(
                   children: [
-                    Text(
-                      value,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold),
+                    ResponsiveTextWidget(
+                      text: value,
+                      fontWeight: FontWeight.w600,
+                      sizeFactor: 0.085,
+                      color: AppColors.fontColor,
                     ),
                     const SizedBox(width: 4),
                     Text(unit, style: const TextStyle(color: Colors.grey)),
@@ -273,30 +289,58 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeatmapCalendar() {
-    return HeatMap(
-      defaultColor: Colors.grey,
-      size: 12,
-      borderRadius: 1,
-      startDate: DateTime(2024, 9, 7, 20, 30),
-      endDate: DateTime(2025, 3, 7, 20, 30),
-      textColor: Colors.grey,
-      datasets: {
-        DateTime(2023, 9, 1): 5,
-        DateTime(2023, 9, 2): 7,
-        DateTime(2023, 9, 3): 10,
-        DateTime(2023, 9, 4): 13,
-        DateTime(2023, 9, 5): 6,
-      },
-      colorMode: ColorMode.color,
-      showText: false,
-      scrollable: true,
-      colorsets: {
-        1: Colors.green[100]!,
-        3: Colors.green[300]!,
-        5: Colors.green[500]!,
-        7: Colors.green[700]!,
-        9: Colors.green[900]!,
-      },
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.tileColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ResponsiveTextWidget(
+            text: "Streaks 🔥",
+            fontWeight: FontWeight.w600,
+            sizeFactor: 0.04,
+            color: AppColors.fontColor,
+          ),
+          HeatMap(
+            margin: const EdgeInsets.all(2),
+            fontSize: 0,
+            defaultColor: Colors.grey,
+            size: 15,
+            borderRadius: 4,
+            startDate: DateTime(2024, 9, 7, 20, 30),
+            endDate: DateTime(2025, 3, 7, 20, 30),
+            textColor: Colors.grey,
+            datasets: {
+              // this data daily add after comple the colorie budget
+              DateTime(2024, 9, 1): 1,
+              DateTime(2024, 9, 2): 2,
+              DateTime(2024, 9, 3): 1,
+              DateTime(2024, 9, 4): 13,
+              DateTime(2024, 9, 5): 6,
+              DateTime(2024, 9, 6): 6,
+              DateTime(2024, 9, 7): 6,
+              DateTime(2024, 9, 8): 6,
+              DateTime(2024, 9, 9): 6,
+              DateTime(2024, 9, 10): 1,
+              DateTime(2024, 9, 11): 6,
+              DateTime(2024, 9, 12): 6,
+              DateTime(2024, 9, 13): 1,
+            },
+            colorMode: ColorMode.color,
+            showText: false,
+            scrollable: true,
+            showColorTip: false,
+            colorsets: const {
+              1: Colors.red,
+              2: Colors.green,
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -333,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: AppColors.tileColor,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -344,8 +388,8 @@ class _HomeScreenState extends State<HomeScreen> {
             AnimatedFlipCounter(
               value: int.tryParse(value) ?? 0,
               textStyle: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+                  color: AppColors.fontColor,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold),
             ),
           ],
@@ -357,15 +401,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildEatFoodButton() {
     return AnimatedEatFoodButton(
       onLogMeal: () {
-        // Implement log meal functionality
-        print('Log meal pressed');
-      },
-      onNearbyRestaurant: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const LogMealScreen()),
         );
+        // Implement log meal functionality
       },
+      onNearbyRestaurant: () {},
     );
   }
 }
