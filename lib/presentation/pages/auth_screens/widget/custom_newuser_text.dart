@@ -26,9 +26,11 @@ class CustomNewUserText extends StatelessWidget {
           children: [
              TextSpan(text: text),
             TextSpan(
+              
               text: buttonText,
               style: TextStyle(
                 color: linkColor,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
               recognizer: TapGestureRecognizer()..onTap = onCreateAccountTap,

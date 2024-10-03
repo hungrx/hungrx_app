@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/presentation/pages/home_screen/widget/animated_button.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
+import 'package:hungrx_app/presentation/widgets/header_section.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class DailyInsightScreen extends StatefulWidget {
@@ -28,9 +31,12 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
           children: [
             _buildHeader(),
             _buildDateSelector(),
-            _buildCalorieProgress(),
             Expanded(
               child: _buildMealList(),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildEatFoodButton(),
             ),
           ],
         ),
@@ -39,21 +45,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
   }
 
   Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const Text(
-            'Daily Insight',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
+    return const HeaderSection(title: 'Daily Insight',);
   }
 
   Widget _buildDateSelector() {
@@ -71,7 +63,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
               width: 50,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.buttonColors : Colors.grey[900],
+                color: isSelected ? AppColors.buttonColors : AppColors.tileColor,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
@@ -79,11 +71,14 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
                 children: [
                   Text(
                     weekDays[date.weekday % 7],
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: isSelected ? Colors.black : Colors.white,
+                        fontWeight: FontWeight.bold),
                   ),
                   Text(
                     '${date.day}',
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(
+                        color: isSelected ? Colors.black : Colors.white),
                   ),
                 ],
               ),
@@ -96,10 +91,10 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
 
   Widget _buildCalorieProgress() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -113,7 +108,10 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
               children: [
                 Text(
                   '590',
-                  style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold),
                 ),
                 Text(
                   'kcal',
@@ -124,7 +122,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
             progressColor: AppColors.buttonColors,
             backgroundColor: Colors.grey[800]!,
           ),
-          const SizedBox(width: 70),
+          const SizedBox(width: 50),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,13 +143,16 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
   Widget _buildCalorieInfo(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, color: Colors.white, size: 16),
+        Icon(icon, color: AppColors.buttonColors, size: 20),
         const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(label,
+                style: const TextStyle(color: Colors.grey, fontSize: 14)),
+            Text(value,
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
       ],
@@ -162,9 +163,14 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        _buildCalorieProgress(),
+
         _buildMealSection('Breakfast', [
           _buildMealItem('Big Mac', '590 Cal.', 4.8),
           _buildMealItem('Double Quarter Pounder with Cheese', '740 Cal.', 4.2),
+          _buildMealItem('Double Quarter Pounder with Cheese', '740 Cal.', 4.2),
+          _buildMealItem('Double Quarter Pounder with Cheese', '740 Cal.', 4.2),
+          _buildMealItem('Cheese Burger', '300 Cal.', 3.9),
           _buildMealItem('Cheese Burger', '300 Cal.', 3.9),
         ]),
         _buildMealSection('Lunch', [
@@ -180,9 +186,10 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              color: AppColors.fontColor, fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         ...items,
         const SizedBox(height: 16),
       ],
@@ -194,7 +201,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -213,20 +220,38 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                Text(name,
+                    style: const TextStyle(
+                        color: AppColors.fontColor, fontWeight: FontWeight.bold)),
                 Row(
                   children: [
                     const Icon(Icons.star, color: Colors.green, size: 16),
                     const SizedBox(width: 4),
-                    Text(rating.toString(), style: const TextStyle(color: Colors.grey)),
+                    Text(rating.toString(),
+                        style: const TextStyle(color: Colors.grey)),
                   ],
                 ),
               ],
             ),
           ),
-          Text(calories, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(calories,
+              style: const TextStyle(
+                  color: AppColors.fontColor, fontWeight: FontWeight.bold)),
         ],
       ),
+    );
+  }
+
+  Widget _buildEatFoodButton() {
+    return AnimatedEatFoodButton(
+      onLogMeal: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LogMealScreen()),
+        );
+        // Implement log meal functionality
+      },
+      onNearbyRestaurant: () {},
     );
   }
 }

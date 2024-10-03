@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/create_account.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/email_login.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/email_auth_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_button.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_newuser_text.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/header_text.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_botton.dart';
@@ -115,7 +113,7 @@ class OtpScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const EmailLoginScreen()),
+                              builder: (context) => const EmailAuthScreen()),
                         );
                       },
                     ),
@@ -124,18 +122,6 @@ class OtpScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
-            // New user text
-            CustomNewUserText(
-              text: "New user? ",
-              buttonText: "Create an account",
-              onCreateAccountTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CreateAccountScreen()),
-                );
-              },
-            ),
           ],
         ),
       ),

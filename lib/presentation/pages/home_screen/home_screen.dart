@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/calorie_insight_screen/calorie_insight.dart';
+import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
+import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/widget/animated_button.dart';
+import 'package:hungrx_app/presentation/pages/home_screen/widget/bottom_navbar.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/widget/feedbacks_widget.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
+import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_tracking.dart';
 import 'package:hungrx_app/presentation/widgets/responsive_text.dart';
@@ -21,12 +24,40 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   double totalCalories = 115300;
+  int _selectedIndex = 0;
   final TextEditingController _calorieController = TextEditingController();
 
   @override
   void dispose() {
     _calorieController.dispose();
     super.dispose();
+  }
+
+ void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        // Already on HomeScreen, no navigation needed
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const UserProfileScreen()),
+        );
+        break;
+      case 3:
+        // TODO: Implement Food Cart screen
+        break;
+    }
   }
 
   void _showFeedbackDialog() {
@@ -71,15 +102,48 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _buildEatFoodButton(),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.all(16.0),
+            //   child: _buildEatFoodButton(),
+            // ),
           ],
         ),
       ),
+        bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
     );
   }
+
+  //  Widget _buildBottomNavigationBar() {
+  //   return BottomNavigationBar(
+  //     items: const <BottomNavigationBarItem>[
+  //       BottomNavigationBarItem(
+  //         icon: Icon(Icons.home),
+  //         label: 'Dashboard',
+  //       ),
+  //       BottomNavigationBarItem(
+  //         icon: Icon(Icons.restaurant_menu),
+  //         label: 'Eat',
+  //       ),
+  //       BottomNavigationBarItem(
+  //         icon: Icon(Icons.person),
+  //         label: 'Profile',
+  //       ),
+  //       BottomNavigationBarItem(
+  //         icon: Icon(Icons.shopping_cart),
+  //         label: 'Food Cart',
+  //       ),
+  //     ],
+  //     currentIndex: _selectedIndex,
+  //     selectedItemColor: AppColors.buttonColors,
+  //     unselectedItemColor: Colors.grey,
+  //     onTap: _onItemTapped,
+  //     backgroundColor: AppColors.tileColor,
+  //     type: BottomNavigationBarType.fixed,
+  //   );
+  // }
 
   Widget _buildHeader(BuildContext context) {
     return Row(
@@ -88,16 +152,17 @@ class HomeScreenState extends State<HomeScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Hi, Warren Daniel',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold),
+            const ResponsiveTextWidget(
+              text: 'Hi, Warren Daniel',
+              fontWeight: FontWeight.bold,
+              sizeFactor: 0.06,
+              color: Colors.white,
             ),
-            Text(
-              _getGreeting(),
-              style: const TextStyle(color: Colors.grey),
+            ResponsiveTextWidget(
+              text: _getGreeting(),
+              fontWeight: FontWeight.bold,
+              sizeFactor: 0.035,
+              color: AppColors.fontColor,
             ),
           ],
         ),
@@ -143,12 +208,12 @@ class HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-               const ResponsiveTextWidget(
-                      text: 'Calories to Burn',
-                      fontWeight: FontWeight.w600,
-                      sizeFactor: 0.04,
-                      color:  AppColors.fontColor,
-                    ),
+          const ResponsiveTextWidget(
+            text: 'Calories to Burn',
+            fontWeight: FontWeight.w600,
+            sizeFactor: 0.04,
+            color: AppColors.fontColor,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -172,18 +237,18 @@ class HomeScreenState extends State<HomeScreen> {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-                ResponsiveTextWidget(
-                      text: 'Daily Target',
-                      fontWeight: FontWeight.w600,
-                      sizeFactor: 0.04,
-                      color:  AppColors.fontColor,
-                    ),
-                       ResponsiveTextWidget(
-                      text: '2130 cal',
-                      fontWeight: FontWeight.w600,
-                      sizeFactor: 0.05,
-                      color:  AppColors.buttonColors,
-                    ),
+              ResponsiveTextWidget(
+                text: 'Daily Target',
+                fontWeight: FontWeight.w600,
+                sizeFactor: 0.04,
+                color: AppColors.fontColor,
+              ),
+              ResponsiveTextWidget(
+                text: '2130 cal',
+                fontWeight: FontWeight.w600,
+                sizeFactor: 0.05,
+                color: AppColors.buttonColors,
+              ),
             ],
           ),
         ],
@@ -407,7 +472,12 @@ class HomeScreenState extends State<HomeScreen> {
         );
         // Implement log meal functionality
       },
-      onNearbyRestaurant: () {},
+      onNearbyRestaurant: () {
+            Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RestaurantScreen()),
+        );
+      },
     );
   }
 }

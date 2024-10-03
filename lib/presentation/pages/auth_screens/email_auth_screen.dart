@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/create_account.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_button.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_newuser_text.dart';
@@ -10,8 +10,29 @@ import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/social_login_btn.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_screens/userr_info_one.dart';
 
-class EmailLoginScreen extends StatelessWidget {
-  const EmailLoginScreen({super.key});
+class EmailAuthScreen extends StatefulWidget {
+  final bool isSignUp;
+
+  const EmailAuthScreen({Key? key, this.isSignUp = false}) : super(key: key);
+
+  @override
+  _EmailAuthScreenState createState() => _EmailAuthScreenState();
+}
+
+class _EmailAuthScreenState extends State<EmailAuthScreen> {
+  late bool _isSignUp;
+
+  @override
+  void initState() {
+    super.initState();
+    _isSignUp = widget.isSignUp;
+  }
+
+  void _toggleMode() {
+    setState(() {
+      _isSignUp = !_isSignUp;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,46 +48,43 @@ class EmailLoginScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const HeaderText(
-              mainHeading: "Welcome back,",
-              subHeading: "Glad You're here",
+            HeaderText(
+              mainHeading: _isSignUp ? "Create Account" : "Welcome back,",
+              subHeading: _isSignUp ? "Let's get started" : "Glad You're here",
             ),
-            SizedBox(
-              height: size.height * 0.07,
-            ),
+            SizedBox(height: size.height * (_isSignUp ? 0.04 : 0.07)),
             const CustomTextFormField(
               hintText: "Enter your Email id",
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             const CustomTextFormField(
               isPassword: true,
               hintText: "Enter your Password",
             ),
+            if (_isSignUp) ...[
+              const SizedBox(height: 20),
+              const CustomTextFormField(
+                isPassword: true,
+                hintText: "Re-enter your Password",
+              ),
+            ],
             const Spacer(),
-
-            // Agree & Log In button
             CustomButton(
-              data: "Agree & Login",
+              data: _isSignUp ? "Agree & SignUp" : "Agree & Login",
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => const UserInfoScreenOne()),
+                  MaterialPageRoute(builder: (context) => 
+                    _isSignUp ? const OtpScreen() : const UserInfoScreenOne()
+                  ),
                 );
               },
             ),
-            const SizedBox(
-              height: 20,
-            ),
-            // Terms of Service text
+            const SizedBox(height: 20),
             const ClickableTermsAndPolicyText(
               policyUrl: "https://www.hungrx.com/",
               termsUrl: "https://www.hungrx.com/",
             ),
-
-            // Social login options
             Column(
               children: [
                 const SizedBox(height: 20),
@@ -92,8 +110,7 @@ class EmailLoginScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) => const PhoneNumberScreen()),
+                          MaterialPageRoute(builder: (context) => const PhoneNumberScreen()),
                         );
                       },
                     ),
@@ -101,21 +118,11 @@ class EmailLoginScreen extends StatelessWidget {
                 ),
               ],
             ),
-
-            const SizedBox(
-              height: 20,
-            ),
-            // New user text
+            const SizedBox(height: 20),
             CustomNewUserText(
-              text: "New user? ",
-              buttonText: "Create an account",
-              onCreateAccountTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CreateAccountScreen()),
-                );
-              },
+              text: _isSignUp ? "Already User? " : "New user? ",
+              buttonText: _isSignUp ? "Login Account" : "Create an account",
+              onCreateAccountTap: _toggleMode,
             ),
           ],
         ),

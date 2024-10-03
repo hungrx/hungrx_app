@@ -1,10 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_informaion_screen.dart';
+import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
+import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
+import 'package:hungrx_app/presentation/pages/home_screen/widget/bottom_navbar.dart';
 
-class UserProfileScreen extends StatelessWidget {
+class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
 
+  @override
+  State<UserProfileScreen> createState() => _UserProfileScreenState();
+}
+
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  int _selectedIndex = 2; // Set to 2 for 'Profile' tab
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+        break;
+      case 2:
+        // Already on UserProfileScreen, no navigation needed
+        break;
+      case 3:
+        // TODO: Implement Food Cart screen
+        break;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,6 +58,10 @@ class UserProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+       bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
     );
   }
 
@@ -33,12 +73,13 @@ class UserProfileScreen extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                icon: Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () {
-                Navigator.of(context).pop();
-                }, // Implement navigation
-              ),
+              SizedBox(),
+              // IconButton(
+              //   icon: Icon(Icons.arrow_back, color: Colors.white),
+              //   onPressed: () {
+              //   Navigator.of(context).pop();
+              //   }, // Implement navigation
+              // ),
               ElevatedButton.icon(
                 icon: Icon(Icons.edit, color: Colors.black, size: 16),
                 label: Text('Edit', style: TextStyle(color: Colors.black)),

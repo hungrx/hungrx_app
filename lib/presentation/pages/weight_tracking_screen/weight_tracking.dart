@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_picker.dart';
+import 'package:hungrx_app/presentation/widgets/header_section.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class WeightTrackingScreen extends StatelessWidget {
@@ -9,15 +10,11 @@ class WeightTrackingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: AppColors.primaryColor,
-        title: const Text("Weight Tracking"),
-      ),
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
           children: [
+            _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -35,7 +32,13 @@ class WeightTrackingScreen extends StatelessWidget {
     );
   }
 
- Widget _buildWeightGraph() {
+  Widget _buildHeader() {
+    return const HeaderSection(
+      title: 'Weight Tracking',
+    );
+  }
+
+  Widget _buildWeightGraph() {
     final List<ChartData> chartData = [
       ChartData("Mar", 35),
       ChartData("Jun", 28),
@@ -45,7 +48,7 @@ class WeightTrackingScreen extends StatelessWidget {
       ChartData("Oct", 45)
     ];
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[900],
@@ -63,14 +66,14 @@ class WeightTrackingScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Expanded(
             child: SfCartesianChart(
-              primaryXAxis: CategoryAxis(
-                majorGridLines: const MajorGridLines(width: 1),
-                labelStyle: const TextStyle(color: Colors.white),
+            
+              primaryXAxis: const CategoryAxis(
+                majorGridLines: MajorGridLines(width: 1),
+                labelStyle: TextStyle(color: Colors.white),
               ),
-              primaryYAxis: NumericAxis(
-                majorGridLines: const MajorGridLines(width: 1),
-                labelStyle: const TextStyle(color: Colors.white),
-                
+              primaryYAxis: const NumericAxis(
+                majorGridLines: MajorGridLines(width: 1),
+                labelStyle: TextStyle(color: Colors.white),
               ),
               plotAreaBorderWidth: 0,
               series: <CartesianSeries>[

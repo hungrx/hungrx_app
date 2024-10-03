@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/create_account.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/email_login.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/email_auth_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_button.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_newuser_text.dart';
@@ -11,7 +10,9 @@ import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/social_login_btn.dart';
 
 class PhoneNumberScreen extends StatelessWidget {
-  const PhoneNumberScreen({super.key});
+  final bool isSignUp;
+
+  const PhoneNumberScreen({super.key, this.isSignUp = false});
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +28,11 @@ class PhoneNumberScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const HeaderText(
-              mainHeading: "Welcome back,",
-              subHeading: "Glad You're here",
+            HeaderText(
+              mainHeading: isSignUp ? "Create Account" : "Welcome back,",
+              subHeading: isSignUp ? "Let's get started" : "Glad You're here",
             ),
-            SizedBox(
-              height: size.height * 0.07,
-            ),
+            SizedBox(height: size.height * 0.07),
             Container(
               decoration: BoxDecoration(
                 color: Colors.grey[800],
@@ -41,32 +40,18 @@ class PhoneNumberScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Country code and flag
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: const Row(
                       children: [
-                        Text(
-                          "🇺🇸",
-                          style: TextStyle(fontSize: 24),
-                        ),
+                        Text("🇺🇸", style: TextStyle(fontSize: 24)),
                         SizedBox(width: 5),
-                        Text(
-                          "+1",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
+                        Text("+1", style: TextStyle(color: Colors.white, fontSize: 16)),
                         SizedBox(width: 5),
                       ],
                     ),
                   ),
-                  // Vertical divider
-                  Container(
-                    height: 30,
-                    width: 1,
-                    color: Colors.grey[600],
-                  ),
-
-                  // Phone number input field
+                  Container(height: 30, width: 1, color: Colors.grey[600]),
                   const Expanded(
                     child: CustomTextFormField(
                       keyboardType: TextInputType.phone,
@@ -77,10 +62,8 @@ class PhoneNumberScreen extends StatelessWidget {
               ),
             ),
             const Spacer(),
-
-            // Agree & Log In button
             CustomButton(
-              data: "Agree & Login",
+              data: isSignUp ? "Agree & Sign Up" : "Agree & Login",
               onPressed: () {
                 Navigator.push(
                   context,
@@ -88,15 +71,11 @@ class PhoneNumberScreen extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(
-              height: 20,
-            ),
-            // Terms of Service text
+            const SizedBox(height: 20),
             const ClickableTermsAndPolicyText(
               policyUrl: "https://www.hungrx.com/",
               termsUrl: "https://www.hungrx.com/",
             ),
-            // Social login options
             Column(
               children: [
                 const SizedBox(height: 20),
@@ -122,8 +101,7 @@ class PhoneNumberScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) => const EmailLoginScreen()),
+                          MaterialPageRoute(builder: (context) => const EmailAuthScreen()),
                         );
                       },
                     ),
@@ -131,18 +109,14 @@ class PhoneNumberScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(
-              height: 20,
-            ),
-            // New user text
+            const SizedBox(height: 20),
             CustomNewUserText(
-              text: "New user? ",
-              buttonText: "Create an account",
+              text: isSignUp ? "Already have an account? " : "New user? ",
+              buttonText: isSignUp ? "Sign In" : "Create an account",
               onCreateAccountTap: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => const CreateAccountScreen()),
+                  MaterialPageRoute(builder: (context) => PhoneNumberScreen(isSignUp: !isSignUp)),
                 );
               },
             ),
