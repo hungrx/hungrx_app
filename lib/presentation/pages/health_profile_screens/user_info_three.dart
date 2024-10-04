@@ -17,6 +17,7 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
   final TextEditingController heightController = TextEditingController();
   final TextEditingController weightController = TextEditingController();
   double mealsPerDay = 1;
+  bool isMetric = false; // New state variable for unit selection
 
   @override
   Widget build(BuildContext context) {
@@ -51,17 +52,49 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        // Add the unit toggle button here
+                        UnitToggle(
+                          isMetric: isMetric,
+                          onToggle: (value) {
+                            setState(() {
+                              isMetric = value;
+                              heightController.clear(); // Clear height when switching units
+                            });
+                          },
+                        ),
                         const SizedBox(height: 30),
                         const Text(
                           "What's your Height?",
                           style: TextStyle(color: Colors.grey, fontSize: 16),
                         ),
                         const SizedBox(height: 10),
-                        CustomTextFormField(
-                          controller: heightController,
-                          hintText: 'Enter Your Height',
-                          keyboardType: TextInputType.number,
-                        ),
+                        // Modify height input based on selected unit
+                        if (isMetric)
+                          CustomTextFormField(
+                            controller: heightController,
+                            hintText: 'Enter Your Height (cm)',
+                            keyboardType: TextInputType.number,
+                          )
+                        else
+                          Row(
+                            children: [
+                              Expanded(
+                                child: CustomTextFormField(
+                                  controller: heightController,
+                                  hintText: 'Feet',
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: CustomTextFormField(
+                                  hintText: 'Inches',
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                            ],
+                          ),
                         const SizedBox(height: 20),
                         const Text(
                           "What's your Weight?",
@@ -70,7 +103,7 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                         const SizedBox(height: 10),
                         CustomTextFormField(
                           controller: weightController,
-                          hintText: 'Enter Your Weight',
+                          hintText: isMetric ? 'Enter Your Weight (kg)' : 'Enter Your Weight (lbs)',
                           keyboardType: TextInputType.number,
                         ),
                         const SizedBox(height: 20),
@@ -102,8 +135,7 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                   ))
                               .toList(),
                         ),
-                        const SizedBox(
-                            height: 100), // Extra space at the bottom
+                        const SizedBox(height: 100), // Extra space at the bottom
                       ],
                     ),
                   ),
@@ -113,13 +145,6 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                 padding: const EdgeInsets.all(20.0),
                 child: NavigationButtons(
                   onNextPressed: () {
-                    // if (heightController.text.isNotEmpty && weightController.text.isNotEmpty) {
-                    //   print('Height: ${heightController.text}, Weight: ${weightController.text}, Meals per day: ${mealsPerDay.round()}');
-                    // } else {
-                    //   ScaffoldMessenger.of(context).showSnackBar(
-                    //     const SnackBar(content: Text('Please enter your height and weight')),
-                    //   );
-                    // }
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -131,6 +156,79 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Add this new widget for the unit toggle button
+class UnitToggle extends StatelessWidget {
+  final bool isMetric;
+  final ValueChanged<bool> onToggle;
+
+  const UnitToggle({
+    Key? key,
+    required this.isMetric,
+    required this.onToggle,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 200,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Stack(
+        children: [
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            alignment: isMetric ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              width: 100,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppColors.buttonColors,
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onToggle(false),
+                  child: Center(
+                    child: Text(
+                      'Ft/In',
+                      style: TextStyle(
+                        color: !isMetric ? Colors.black : Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onToggle(true),
+                  child: Center(
+                    child: Text(
+                      'Cm',
+                      style: TextStyle(
+                        color: isMetric ? Colors.black : Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

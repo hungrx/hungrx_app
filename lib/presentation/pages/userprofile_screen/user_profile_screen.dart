@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_informaion_screen.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/widget/bottom_navbar.dart';
 
@@ -37,7 +38,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         // Already on UserProfileScreen, no navigation needed
         break;
       case 3:
-        // TODO: Implement Food Cart screen
+            Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const CartScreen()),
+        );
         break;
     }
   }
@@ -93,8 +97,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(top: 60.0,left: 16),
+        const Padding(
+          padding: EdgeInsets.only(top: 60.0,left: 16),
           child: Column(
             children: [
               CircleAvatar(

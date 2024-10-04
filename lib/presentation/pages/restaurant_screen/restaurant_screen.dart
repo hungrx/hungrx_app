@@ -170,8 +170,8 @@ class RestaurantItem extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imageUrl,
+              child: Image.asset(
+                'assets/images/maclog.png',
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,

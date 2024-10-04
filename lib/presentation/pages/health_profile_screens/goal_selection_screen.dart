@@ -18,6 +18,7 @@ class GoalSelectionScreen extends StatefulWidget {
 class GoalSelectionScreenState extends State<GoalSelectionScreen> {
   WeightGoal? selectedGoal;
   TextEditingController weightController = TextEditingController();
+  bool isMetric = true; // New state variable for unit selection
 
   @override
   Widget build(BuildContext context) {
@@ -77,9 +78,20 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                               ),
                               const SizedBox(height: 10),
+                              // Add the unit toggle button here
+                              UnitToggle(
+                                isMetric: isMetric,
+                                onToggle: (value) {
+                                  setState(() {
+                                    isMetric = value;
+                                    weightController.clear(); // Clear weight when switching units
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 10),
                               CustomTextFormField(
                                 keyboardType: TextInputType.number,
-                                hintText: 'Input the goal weight',
+                                hintText: 'Input the goal weight (${isMetric ? 'kg' : 'lbs'})',
                                 controller: weightController,
                               ),
                             ],
@@ -150,6 +162,79 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Add this new widget for the unit toggle button
+class UnitToggle extends StatelessWidget {
+  final bool isMetric;
+  final ValueChanged<bool> onToggle;
+
+  const UnitToggle({
+    Key? key,
+    required this.isMetric,
+    required this.onToggle,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 200,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Stack(
+        children: [
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            alignment: isMetric ? Alignment.centerLeft : Alignment.centerRight,
+            child: Container(
+              width: 100,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppColors.buttonColors,
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onToggle(true),
+                  child: Center(
+                    child: Text(
+                      'kg',
+                      style: TextStyle(
+                        color: isMetric ? Colors.black : Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onToggle(false),
+                  child: Center(
+                    child: Text(
+                      'lbs',
+                      style: TextStyle(
+                        color: !isMetric ? Colors.black : Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/widget/animated_button.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/widget/bottom_navbar.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/widget/feedbacks_widget.dart';
@@ -55,7 +56,10 @@ class HomeScreenState extends State<HomeScreen> {
         );
         break;
       case 3:
-        // TODO: Implement Food Cart screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CartScreen()),
+        );
         break;
     }
   }

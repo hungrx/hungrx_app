@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/presentation/pages/calorie_calculation_screen/calculation_tracking.dart';
 
 class RestaurantMenuScreen extends StatelessWidget {
   const RestaurantMenuScreen({super.key});
@@ -23,7 +24,7 @@ class RestaurantMenuScreen extends StatelessWidget {
           Expanded(
             child: _buildMenuList(),
           ),
-          _buildOrderSummary(),
+          _buildOrderSummary(context),
         ],
       ),
     );
@@ -194,7 +195,7 @@ class RestaurantMenuScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderSummary() {
+  Widget _buildOrderSummary(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.grey[900],
@@ -218,7 +219,12 @@ class RestaurantMenuScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
             ),
-            onPressed: () {},
+            onPressed: () {
+   Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CalorieCalculationScreen()),
+        );
+            },
             child: const Text('View order list (5 items) >'),
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/widget/bottom_navbar.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
@@ -37,7 +38,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
         break;
       case 3:
-        // TODO: Implement Food Cart screen
+             Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const CartScreen()),
+        );
         break;
     }
   }

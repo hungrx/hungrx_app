@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_button.dart';
@@ -13,13 +14,13 @@ import 'package:hungrx_app/presentation/pages/health_profile_screens/userr_info_
 class EmailAuthScreen extends StatefulWidget {
   final bool isSignUp;
 
-  const EmailAuthScreen({Key? key, this.isSignUp = false}) : super(key: key);
+  const EmailAuthScreen({super.key, this.isSignUp = false});
 
   @override
-  _EmailAuthScreenState createState() => _EmailAuthScreenState();
+  EmailAuthScreenState createState() => EmailAuthScreenState();
 }
 
-class _EmailAuthScreenState extends State<EmailAuthScreen> {
+class EmailAuthScreenState extends State<EmailAuthScreen> {
   late bool _isSignUp;
 
   @override
@@ -52,7 +53,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
               mainHeading: _isSignUp ? "Create Account" : "Welcome back,",
               subHeading: _isSignUp ? "Let's get started" : "Glad You're here",
             ),
-            SizedBox(height: size.height * (_isSignUp ? 0.04 : 0.07)),
+             SizedBox(height: size.height * (_isSignUp ? 0.04 : 0.07)),
             const CustomTextFormField(
               hintText: "Enter your Email id",
             ),
@@ -61,6 +62,23 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
               isPassword: true,
               hintText: "Enter your Password",
             ),
+            if (!_isSignUp) ...[
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                    );
+                  },
+                  child: const Text(
+                    "Forgot Password?",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
             if (_isSignUp) ...[
               const SizedBox(height: 20),
               const CustomTextFormField(
