@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/widget/bottom_navbar.dart';
+import 'package:hungrx_app/presentation/widgets/bottom_navbar.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/presentation/widgets/responsive_text.dart';
 

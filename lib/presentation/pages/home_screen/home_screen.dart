@@ -5,11 +5,8 @@ import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/widget/animated_button.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/widget/bottom_navbar.dart';
+import 'package:hungrx_app/presentation/widgets/bottom_navbar.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/widget/feedbacks_widget.dart';
-import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
-import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_tracking.dart';
 import 'package:hungrx_app/presentation/widgets/responsive_text.dart';
@@ -467,21 +464,21 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildEatFoodButton() {
-    return AnimatedEatFoodButton(
-      onLogMeal: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LogMealScreen()),
-        );
-        // Implement log meal functionality
-      },
-      onNearbyRestaurant: () {
-            Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const RestaurantScreen()),
-        );
-      },
-    );
-  }
+  // Widget _buildEatFoodButton() {
+  //   return AnimatedEatFoodButton(
+  //     onLogMeal: () {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const LogMealScreen()),
+  //       );
+  //       // Implement log meal functionality
+  //     },
+  //     onNearbyRestaurant: () {
+  //           Navigator.push(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const RestaurantScreen()),
+  //       );
+  //     },
+  //   );
+  // }
 }

@@ -5,10 +5,10 @@ class BasicInformationScreen extends StatefulWidget {
   const BasicInformationScreen({super.key});
 
   @override
-  _BasicInformationScreenState createState() => _BasicInformationScreenState();
+  BasicInformationScreenState createState() => BasicInformationScreenState();
 }
 
-class _BasicInformationScreenState extends State<BasicInformationScreen> {
+class BasicInformationScreenState extends State<BasicInformationScreen> {
   String gender = 'Male';
   final TextEditingController nameController = TextEditingController(text: 'Werren Daniel');
   final TextEditingController phoneController = TextEditingController(text: '87956426599');
@@ -26,40 +26,40 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text('Basic Information', style: TextStyle(color: Colors.white)),
+        title: const Text('Basic Information', style: TextStyle(color: Colors.white)),
         actions: [
           TextButton(
             onPressed: () {
               // Implement save functionality
               Navigator.of(context).pop();
             },
-            child: Text('Done', style: TextStyle(color: AppColors.buttonColors)),
+            child: const Text('Done', style: TextStyle(color: AppColors.buttonColors)),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             _buildInputField(Icons.person, 'Name', nameController),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildGenderSelector(),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInputField(Icons.phone, 'Phone number', phoneController),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInputField(Icons.email, 'Email', emailController),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInputField(Icons.cake, 'Age', ageController),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInputField(Icons.monitor_weight, 'Weight', weightController, suffix: 'kg'),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInputField(Icons.monitor_weight_outlined, 'Target Weight', targetWeightController, suffix: 'kg'),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInputField(Icons.flag, 'Goal pace', goalPaceController, suffix: 'kg'),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInputField(Icons.height, 'Height', heightController, suffix: 'cm'),
           ],
         ),
@@ -69,7 +69,7 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
 
   Widget _buildInputField(IconData icon, String label, TextEditingController controller, {String? suffix}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(30),
@@ -78,17 +78,17 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
       child: Row(
         children: [
           Icon(icon, color: Colors.white),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: TextField(
               controller: controller,
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 border: InputBorder.none,
                 labelText: label,
-                labelStyle: TextStyle(color: Colors.grey),
+                labelStyle: const TextStyle(color: Colors.grey),
                 suffixText: suffix,
-                suffixStyle: TextStyle(color: AppColors.buttonColors),
+                suffixStyle: const TextStyle(color: AppColors.buttonColors),
               ),
             ),
           ),
@@ -99,7 +99,7 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
 
   Widget _buildGenderSelector() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(30),
@@ -107,13 +107,13 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.wc, color: Colors.white),
-          SizedBox(width: 16),
+          const Icon(Icons.wc, color: Colors.white),
+          const SizedBox(width: 16),
           Expanded(
             child: Row(
               children: [
                 _buildGenderButton('Male'),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 _buildGenderButton('Female'),
               ],
             ),
@@ -128,20 +128,20 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
     return Expanded(
       child: ElevatedButton(
         onPressed: () => setState(() => gender = genderOption),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isSelected ? AppColors.buttonColors : Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: AppColors.buttonColors),
+          ),
+          elevation: 0,
+        ),
         child: Text(
           genderOption,
           style: TextStyle(
             color: isSelected ? Colors.black : AppColors.buttonColors,
             fontWeight: FontWeight.bold,
           ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isSelected ? AppColors.buttonColors : Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: AppColors.buttonColors),
-          ),
-          elevation: 0,
         ),
       ),
     );

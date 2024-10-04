@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/widget/bottom_navbar.dart';
+import 'package:hungrx_app/presentation/widgets/bottom_navbar.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screen/user_profile_screen.dart';
@@ -57,13 +57,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _buildSearchBar(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _buildCalorieBudget(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _buildOptionsGrid(),
-              Spacer(),
+              const Spacer(),
               _buildEnjoyCalories(),
             ],
           ),
@@ -77,7 +77,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHeader() {
-    return Row(
+    return const Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
@@ -113,7 +113,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildCalorieBudget() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(

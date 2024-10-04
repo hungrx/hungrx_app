@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/calorie_calculation_screen/calculation_tracking.dart';
+import 'package:hungrx_app/presentation/pages/food_details_screen/food_detail_screen.dart';
 
 class RestaurantMenuScreen extends StatelessWidget {
   const RestaurantMenuScreen({super.key});
@@ -22,7 +23,7 @@ class RestaurantMenuScreen extends StatelessWidget {
           _buildSearchBar(),
           const SizedBox(height: 20,),
           Expanded(
-            child: _buildMenuList(),
+            child: _buildMenuList(context),
           ),
           _buildOrderSummary(context),
         ],
@@ -118,30 +119,30 @@ class RestaurantMenuScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuList() {
+  Widget _buildMenuList(BuildContext context) {
     return ListView(
       children: [
         _buildMenuCategory('Recommended foods', [
           _buildMenuItem(
-              'Big Mac', '590 Cal.', 'assets/images/burger.png', 4.8),
+              'Big Mac', '590 Cal.', 'assets/images/burger.png', 4.8,context),
           _buildMenuItem('Double Quarter Pounder with Cheese', '740 Cal.',
-              'assets/images/burger.png', 4.2),
+              'assets/images/burger.png', 4.2,context),
         ]),
         _buildMenuCategory('Homestyle Breakfasts', [
-          _buildMenuItem('Pancakes', '540 Cal.', 'assets/images/piza.png', 4.5),
+          _buildMenuItem('Pancakes', '540 Cal.', 'assets/images/piza.png', 4.5,context),
           _buildMenuItem(
-              'Egg McMuffin', '300 Cal.', 'assets/images/piza.png', 4.3),
+              'Egg McMuffin', '300 Cal.', 'assets/images/piza.png', 4.3,context),
         ]),
         _buildMenuCategory('Hash Browns and Sides', [
           _buildMenuItem(
-              'Hash Browns', '150 Cal.', 'assets/images/burger.png', 4.6),
+              'Hash Browns', '150 Cal.', 'assets/images/burger.png', 4.6,context),
           _buildMenuItem(
-              'French Fries', '320 Cal.', 'assets/images/piza.png', 4.7),
+              'French Fries', '320 Cal.', 'assets/images/piza.png', 4.7,context),
         ]),
         _buildMenuCategory('McCafé® Coffees', [
           _buildMenuItem(
-              'Cappuccino', '120 Cal.', 'assets/images/burger.png', 4.4),
-          _buildMenuItem('Latte', '190 Cal.', 'assets/images/burger.png', 4.2),
+              'Cappuccino', '120 Cal.', 'assets/images/burger.png', 4.4,context),
+          _buildMenuItem('Latte', '190 Cal.', 'assets/images/burger.png', 4.2,context),
         ]),
       ],
     );
@@ -165,8 +166,31 @@ class RestaurantMenuScreen extends StatelessWidget {
   }
 
   Widget _buildMenuItem(
-      String name, String calories, String imagePath, double rating) {
+      String name, String calories, String imagePath, double rating,BuildContext context) {
     return ListTile(
+      onTap: () {
+        Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => const FoodDetailScreen(
+      foodName: 'Big Mac',
+      imageUrl: 'assets/images/burger.png',
+      nutritionFacts: {
+        'carbohydrate': 46,
+        'fat': 34,
+        'protein': 25,
+        'cholesterol': 85,
+      },
+      description: "McDonald's Big Mac® is a 100% beef burger with a taste like no other. The mouthwatering perfection starts with two 100% pure beef patties ...",
+    ),
+  ),
+);
+        
+
+
+
+
+      },
       leading: Image.asset(imagePath, width: 50, height: 50),
       title: Text(name, style: const TextStyle(color: Colors.white)),
       subtitle: Row(

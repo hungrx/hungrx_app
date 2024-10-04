@@ -3,13 +3,13 @@ import 'package:animated_weight_picker/animated_weight_picker.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
 class WeightPickerScreen extends StatefulWidget {
-  const WeightPickerScreen({Key? key}) : super(key: key);
+  const WeightPickerScreen({super.key});
 
   @override
-  _WeightPickerScreenState createState() => _WeightPickerScreenState();
+  WeightPickerScreenState createState() => WeightPickerScreenState();
 }
 
-class _WeightPickerScreenState extends State<WeightPickerScreen> {
+class WeightPickerScreenState extends State<WeightPickerScreen> {
   String selectedValue = ''; // Default weight
 
   @override
@@ -45,13 +45,13 @@ class _WeightPickerScreenState extends State<WeightPickerScreen> {
                 height: 50,
               ),
               Text(
-                "$selectedValue",
-                style: TextStyle(
+                selectedValue,
+                style: const TextStyle(
                     fontSize: 74,
                     color: Colors.white,
                     fontWeight: FontWeight.bold),
               ),
-              Spacer(),
+              const Spacer(),
               ElevatedButton(
                 onPressed: () {
                   // Handle weight submission
@@ -59,16 +59,16 @@ class _WeightPickerScreenState extends State<WeightPickerScreen> {
                   // You can navigate back or process the weight here
                   Navigator.of(context).pop(selectedValue);
                 },
-                child: Text(
-                  'Submit',
-                  style: TextStyle(fontSize: 18, color: AppColors.primaryColor),
-                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.buttonColors,
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
+                ),
+                child: const Text(
+                  'Submit',
+                  style: TextStyle(fontSize: 18, color: AppColors.primaryColor),
                 ),
               ),
             ],

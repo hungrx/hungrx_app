@@ -7,16 +7,16 @@ class MealDetailsBottomSheet extends StatefulWidget {
   final String mealDescription;
 
   const MealDetailsBottomSheet({
-    Key? key,
+    super.key,
     required this.mealName,
     required this.mealDescription,
-  }) : super(key: key);
+  });
 
   @override
-  _MealDetailsBottomSheetState createState() => _MealDetailsBottomSheetState();
+  MealDetailsBottomSheetState createState() => MealDetailsBottomSheetState();
 }
 
-class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
+class MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
   int numberOfServings = 1;
   String servingSize = 'slice(xl)';
 
@@ -25,7 +25,7 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[900],
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         border: Border.all(color: AppColors.buttonColors, width: 2),
       ),
       child: Column(
@@ -34,7 +34,7 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
           Container(
             width: 40,
             height: 4,
-            margin: EdgeInsets.symmetric(vertical: 10),
+            margin: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.buttonColors,
               borderRadius: BorderRadius.circular(2),
@@ -47,24 +47,24 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
               children: [
                 Text(
                   widget.mealName,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   widget.mealDescription,
-                  style: TextStyle(color: Colors.grey),
+                  style: const TextStyle(color: Colors.grey),
                 ),
-                SizedBox(height: 20),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
                   'Number of servings',
                   style: TextStyle(color: Colors.white),
                 ),
-                SizedBox(height: 10),
-                Container(
+                const SizedBox(height: 10),
+                SizedBox(
                   height: 100,
                   child: CupertinoPicker(
                     backgroundColor: Colors.transparent,
@@ -78,19 +78,19 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                       return Center(
                         child: Text(
                           '${index + 1}',
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       );
                     }),
                   ),
                 ),
-                SizedBox(height: 20),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
                   'Serving Size',
                   style: TextStyle(color: Colors.white),
                 ),
-                SizedBox(height: 10),
-                Container(
+                const SizedBox(height: 10),
+                SizedBox(
                   height: 100,
                   child: CupertinoPicker(
                     backgroundColor: Colors.transparent,
@@ -104,13 +104,13 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                       return Center(
                         child: Text(
                           size,
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       );
                     }).toList(),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
                     // Implement add to meal logic
@@ -119,16 +119,16 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                       'servingSize': servingSize,
                     });
                   },
-                  child: Text(
-                    'ADD TO BREAKFAST',
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.buttonColors,
-                    minimumSize: Size(double.infinity, 50),
+                    minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
+                  ),
+                  child: const Text(
+                    'ADD TO BREAKFAST',
+                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],

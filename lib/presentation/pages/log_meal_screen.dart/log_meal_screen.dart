@@ -65,7 +65,7 @@ class LogMealScreenState extends State<LogMealScreen> {
               ),
             ),
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Container(
             decoration: BoxDecoration(
               color: Colors.grey[900],
@@ -136,7 +136,7 @@ class LogMealScreenState extends State<LogMealScreen> {
               value: sortOption,
               icon: const Icon(Icons.arrow_drop_down, color: AppColors.buttonColors),
               style: const TextStyle(color: AppColors.buttonColors),
-              underline: SizedBox(),
+              underline: const SizedBox(),
               onChanged: (String? newValue) {
                 setState(() {
                   sortOption = newValue!;
@@ -167,8 +167,8 @@ class LogMealScreenState extends State<LogMealScreen> {
 
 Widget _buildFoodItem(String name, String description, String calories) {
   return Container(
-    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-    padding: EdgeInsets.all(16),
+    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+    padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: Colors.grey[900],
       borderRadius: BorderRadius.circular(10),
@@ -179,26 +179,26 @@ Widget _buildFoodItem(String name, String description, String calories) {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(name, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            SizedBox(height: 4),
-            Text(description, style: TextStyle(color: Colors.grey)),
+            Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text(description, style: const TextStyle(color: Colors.grey)),
           ],
         ),
         Row(
           children: [
-            Text(calories, style: TextStyle(color: Colors.white)),
-            SizedBox(width: 10),
+            Text(calories, style: const TextStyle(color: Colors.white)),
+            const SizedBox(width: 10),
             GestureDetector(
               onTap: () {
                 _showMealDetailsBottomSheet(context, name, description);
               },
               child: Container(
-                padding: EdgeInsets.all(4),
-                decoration: BoxDecoration(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.buttonColors,
                 ),
-                child: Icon(Icons.add, color: Colors.black, size: 20),
+                child: const Icon(Icons.add, color: Colors.black, size: 20),
               ),
             ),
           ],

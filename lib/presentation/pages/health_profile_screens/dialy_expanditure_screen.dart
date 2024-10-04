@@ -103,15 +103,7 @@ class DailyExpenditureScreenState extends State<DailyExpenditureScreen> {
                       ),
                     );
 
-                    // if (selectedActivity != null) {
-                    //   // Navigate to the next screen or process the selected activity
-                    //   print('Selected Activity: $selectedActivity');
-                    //   // TODO: Add navigation to next screen
-                    // } else {
-                    //   ScaffoldMessenger.of(context).showSnackBar(
-                    //     const SnackBar(content: Text('Please select an activity level')),
-                    //   );
-                    // }
+              
                   },
                 ),
               ],

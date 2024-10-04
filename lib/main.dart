@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/splash_screen.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
 void main() {
   runApp(const MyApp());

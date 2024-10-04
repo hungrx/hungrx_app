@@ -173,10 +173,10 @@ class UnitToggle extends StatelessWidget {
   final ValueChanged<bool> onToggle;
 
   const UnitToggle({
-    Key? key,
+    super.key,
     required this.isMetric,
     required this.onToggle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

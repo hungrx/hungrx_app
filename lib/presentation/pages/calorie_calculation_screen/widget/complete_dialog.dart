@@ -9,10 +9,10 @@ class CompletionDialog extends StatefulWidget {
   const CompletionDialog({super.key, required this.message, required this.onComplete});
 
   @override
-  _CompletionDialogState createState() => _CompletionDialogState();
+  CompletionDialogState createState() => CompletionDialogState();
 }
 
-class _CompletionDialogState extends State<CompletionDialog> with SingleTickerProviderStateMixin {
+class CompletionDialogState extends State<CompletionDialog> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 

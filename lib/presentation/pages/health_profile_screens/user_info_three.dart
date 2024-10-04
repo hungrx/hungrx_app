@@ -87,7 +87,7 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              Expanded(
+                              const Expanded(
                                 child: CustomTextFormField(
                                   hintText: 'Inches',
                                   keyboardType: TextInputType.number,
@@ -167,10 +167,10 @@ class UnitToggle extends StatelessWidget {
   final ValueChanged<bool> onToggle;
 
   const UnitToggle({
-    Key? key,
+    super.key,
     required this.isMetric,
     required this.onToggle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -4,7 +4,7 @@ import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_inf
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
 import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/widget/bottom_navbar.dart';
+import 'package:hungrx_app/presentation/widgets/bottom_navbar.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -77,7 +77,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(),
+              const SizedBox(),
               // IconButton(
               //   icon: Icon(Icons.arrow_back, color: Colors.white),
               //   onPressed: () {
@@ -85,8 +85,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               //   }, // Implement navigation
               // ),
               ElevatedButton.icon(
-                icon: Icon(Icons.edit, color: Colors.black, size: 16),
-                label: Text('Edit', style: TextStyle(color: Colors.black)),
+                icon: const Icon(Icons.edit, color: Colors.black, size: 16),
+                label: const Text('Edit', style: TextStyle(color: Colors.black)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.buttonColors,
                   shape: RoundedRectangleBorder(
@@ -122,8 +122,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Widget _buildUserStats() {
     return Container(
-      margin: EdgeInsets.all(16),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(15),
@@ -143,10 +143,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget _buildStatItem(String label, String value) {
     return Column(
       children: [
-        Text(label, style: TextStyle(color: Colors.grey, fontSize: 12)),
-        SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        const SizedBox(height: 4),
         Text(value,
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -155,8 +155,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Text('Personal Details',
               style: TextStyle(
                   color: Colors.white,
@@ -170,7 +170,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           () {
             Navigator.push(
   context,
-  MaterialPageRoute(builder: (context) => BasicInformationScreen()),
+  MaterialPageRoute(builder: (context) => const BasicInformationScreen()),
 );
           },
         ),
@@ -186,8 +186,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Text('App Settings',
               style: TextStyle(
                   color: Colors.white,
@@ -208,9 +208,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       IconData icon, String title, String subtitle, void Function()? ontap) {
     return ListTile(
       leading: Icon(icon, color: Colors.white),
-      title: Text(title, style: TextStyle(color: Colors.white)),
-      subtitle: Text(subtitle, style: TextStyle(color: Colors.grey)),
-      trailing: Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      subtitle: Text(subtitle, style: const TextStyle(color: Colors.grey)),
+      trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
       onTap: ontap, // Implement navigation or action
     );
   }
@@ -219,8 +219,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
+        const Padding(
+          padding: EdgeInsets.all(16.0),
           child: Text('Invite your friends',
               style: TextStyle(
                   color: Colors.white,
@@ -232,7 +232,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 16),
           height: 100,
           decoration: BoxDecoration(
-            image: DecorationImage(fit: BoxFit.fill,
+            image: const DecorationImage(fit: BoxFit.fill,
               image: AssetImage("assets/images/referrel.jpg")),
             color: Colors.grey[800],
             borderRadius: BorderRadius.circular(10),
@@ -242,24 +242,24 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             children: [
               CircleAvatar(
                   backgroundColor: Colors.blue[100],
-                  child: Icon(Icons.person, color: Colors.blue)),
+                  child: const Icon(Icons.person, color: Colors.blue)),
               CircleAvatar(
                   backgroundColor: Colors.green[100],
-                  child: Icon(Icons.share, color: Colors.green)),
+                  child: const Icon(Icons.share, color: Colors.green)),
               CircleAvatar(
                   backgroundColor: Colors.orange[100],
-                  child: Icon(Icons.person, color: Colors.orange)),
+                  child: const Icon(Icons.person, color: Colors.orange)),
             ],
           ),
         ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton.icon(
-            icon: Icon(Icons.person_add, color: Colors.black),
-            label: Text('Refer Now', style: TextStyle(color: Colors.black)),
+            icon: const Icon(Icons.person_add, color: Colors.black),
+            label: const Text('Refer Now', style: TextStyle(color: Colors.black)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.buttonColors,
-              minimumSize: Size(double.infinity, 50),
+              minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25)),
             ),
