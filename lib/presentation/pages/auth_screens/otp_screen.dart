@@ -99,10 +99,10 @@ class OtpScreen extends StatelessWidget {
                       size: 25,
                     ),
                     const SizedBox(width: 20),
-                    const SocialLoginBotton(
-                      iconPath: 'assets/icons/apple.png',
-                      label: 'Apple',
-                      size: 30,
+                  const SocialLoginBotton(
+                      iconPath: 'assets/icons/facebook.png',
+                      label: 'Facebook',
+                      size: 60,
                     ),
                     const SizedBox(width: 20),
                     SocialLoginBotton(

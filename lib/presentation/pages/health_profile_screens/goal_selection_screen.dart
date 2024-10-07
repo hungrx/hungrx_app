@@ -68,13 +68,17 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'How much weight do you want to ${selectedGoal == WeightGoal.lose ? 'lose' : 'gain'}?',
-                                style: const TextStyle(color: Colors.grey, fontSize: 16),
+                              const Text(
+                                "What's is your target weight?",
+                                style: TextStyle(color: Colors.grey, fontSize: 16),
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Example: If you currently weigh 80kg and want to reach 65kg, your goal weight is 65kg.',
+                                'Based on your BMI of 27.7',
+                                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                              ),
+                               Text(
+                                'Your ideal weight range is 54-66 kg',
                                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                               ),
                               const SizedBox(height: 10),
@@ -114,7 +118,7 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>  GoalPaceScreen(goal: selectedGoal!),
+                            builder: (context) =>  GoalPaceScreen(goal: selectedGoal!,currentWeight: 50,goalWeight: 75,),
                           ),
                         );
                       }

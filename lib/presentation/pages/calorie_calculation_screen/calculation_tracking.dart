@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/presentation/pages/calorie_calculation_screen/widget/complete_dialog.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
 
 class CalorieCalculationScreen extends StatelessWidget {
   const CalorieCalculationScreen({super.key});
@@ -19,7 +19,8 @@ class CalorieCalculationScreen extends StatelessWidget {
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: const Text('Calculation', style: TextStyle(color: Colors.white)),
+              title: const Text('Calculation',
+                  style: TextStyle(color: Colors.white)),
             ),
             SliverToBoxAdapter(
               child: Padding(
@@ -27,7 +28,11 @@ class CalorieCalculationScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('2780 cal', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                    const Text('2780 cal',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     _buildCalorieProgressBar(),
                     const SizedBox(height: 16),
@@ -39,15 +44,23 @@ class CalorieCalculationScreen extends StatelessWidget {
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text('Food list', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                child: Text('Food list',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
               ),
             ),
             SliverList(
               delegate: SliverChildListDelegate([
-                _buildFoodItem('Big Mac', '590 Cal.', 'assets/images/burger.png'),
-                _buildFoodItem('Double Quarter Pounder', '740 Cal.', 'assets/images/piza.png'),
-                _buildFoodItem('Big Mac', '590 Cal.', 'assets/images/burger.png'),
-                _buildFoodItem('Double Quarter Pounder with Cheese', '740 Cal.', 'assets/images/burger.png'),
+                _buildFoodItem(
+                    'Big Mac', '590 Cal.', 'assets/images/burger.png'),
+                _buildFoodItem('Double Quarter Pounder', '740 Cal.',
+                    'assets/images/piza.png'),
+                _buildFoodItem(
+                    'Big Mac', '590 Cal.', 'assets/images/burger.png'),
+                _buildFoodItem('Double Quarter Pounder with Cheese', '740 Cal.',
+                    'assets/images/burger.png'),
               ]),
             ),
             SliverToBoxAdapter(
@@ -92,16 +105,22 @@ class CalorieCalculationScreen extends StatelessWidget {
             child: Container(
               decoration: const BoxDecoration(
                 color: Colors.red,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(10), bottomLeft: Radius.circular(10)),
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    bottomLeft: Radius.circular(10)),
               ),
-              child: const Center(child: Text('780cal', style: TextStyle(color: Colors.white, fontSize: 12))),
+              child: const Center(
+                  child: Text('780cal',
+                      style: TextStyle(color: Colors.white, fontSize: 12))),
             ),
           ),
           Expanded(
             flex: 46,
             child: Container(
               color: Colors.green,
-              child: const Center(child: Text('1280cal', style: TextStyle(color: Colors.white, fontSize: 12))),
+              child: const Center(
+                  child: Text('1280cal',
+                      style: TextStyle(color: Colors.white, fontSize: 12))),
             ),
           ),
           const Expanded(
@@ -129,18 +148,23 @@ class CalorieCalculationScreen extends StatelessWidget {
               SizedBox(width: 8),
               Text('Break fast :', style: TextStyle(color: Colors.white)),
               Spacer(),
-              Text('1280 cal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              Text('1280 cal',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ],
           ),
           const Divider(color: Colors.grey),
           _buildCalculationRow('Total protine add', '78g'),
-          _buildCalculationRow('Remaining calorie', '758 cal', valueColor: Colors.red),
-          _buildCalculationRow('Total calories consumed', '1230 cal', valueColor: Colors.green),
+          _buildCalculationRow('Remaining calorie', '758 cal',
+              valueColor: Colors.red),
+          _buildCalculationRow('Total calories consumed', '1230 cal',
+              valueColor: Colors.green),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Add more items', style: TextStyle(color: Colors.white)),
+              const Text('Add more items',
+                  style: TextStyle(color: Colors.white)),
               IconButton(
                 icon: const Icon(Icons.add_circle, color: Colors.green),
                 onPressed: () {},
@@ -152,14 +176,16 @@ class CalorieCalculationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCalculationRow(String label, String value, {Color valueColor = Colors.white}) {
+  Widget _buildCalculationRow(String label, String value,
+      {Color valueColor = Colors.white}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: TextStyle(color: valueColor, fontWeight: FontWeight.bold)),
+          Text(value,
+              style: TextStyle(color: valueColor, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -181,14 +207,18 @@ class CalorieCalculationScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                Text(name,
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
                 Text(calories, style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ),
           Row(
             children: [
-              IconButton(icon: const Icon(Icons.remove, color: Colors.white), onPressed: () {}),
+              IconButton(
+                  icon: const Icon(Icons.remove, color: Colors.white),
+                  onPressed: () {}),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -197,7 +227,9 @@ class CalorieCalculationScreen extends StatelessWidget {
                 ),
                 child: const Text('1', style: TextStyle(color: Colors.white)),
               ),
-              IconButton(icon: const Icon(Icons.add, color: Colors.white), onPressed: () {}),
+              IconButton(
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  onPressed: () {}),
             ],
           ),
         ],
@@ -205,7 +237,7 @@ class CalorieCalculationScreen extends StatelessWidget {
     );
   }
 
-Widget _buildTotalCaloriesBar(BuildContext context) {
+  Widget _buildTotalCaloriesBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -215,12 +247,15 @@ Widget _buildTotalCaloriesBar(BuildContext context) {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Total : 1230 cal', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          const Text('Total : 1230 cal',
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ElevatedButton(
             onPressed: () => _showCompletionDialog(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
             ),
             child: const Text('Ate', style: TextStyle(color: Colors.white)),
           ),
@@ -229,7 +264,7 @@ Widget _buildTotalCaloriesBar(BuildContext context) {
     );
   }
 
-    void _showCompletionDialog(BuildContext context) {
+  void _showCompletionDialog(BuildContext context) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -239,15 +274,15 @@ Widget _buildTotalCaloriesBar(BuildContext context) {
           child: CompletionDialog(
             message: "Wow! You've completed 30% of your calorie budget!",
             onComplete: () {
-                  Navigator.pushReplacement(
+              Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
-              );// Navigate to home screen
+                MaterialPageRoute(
+                    builder: (context) => const DashboardScreen()),
+              ); // Navigate to home screen
             },
           ),
         );
       },
     );
   }
-
 }

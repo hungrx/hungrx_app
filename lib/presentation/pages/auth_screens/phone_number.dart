@@ -89,9 +89,9 @@ class PhoneNumberScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 20),
                     const SocialLoginBotton(
-                      iconPath: 'assets/icons/apple.png',
-                      label: 'Apple',
-                      size: 30,
+                      iconPath: 'assets/icons/facebook.png',
+                      label: 'Facebook',
+                      size: 60,
                     ),
                     const SizedBox(width: 20),
                     SocialLoginBotton(

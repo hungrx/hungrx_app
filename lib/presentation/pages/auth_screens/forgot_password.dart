@@ -13,7 +13,10 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  bool _isSubmitted = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
+  bool _otpSent = false;
 
   @override
   Widget build(BuildContext context) {
@@ -25,59 +28,87 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         left: size.height * 0.04,
         right: size.height * 0.04,
         bottom: size.height * 0.04,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const HeaderText(
-              mainHeading: "Forgot Password",
-              subHeading: "Enter your email to reset your password",
-            ),
-            SizedBox(height: size.height * 0.07),
-            if (!_isSubmitted) ...[
-              const CustomTextFormField(
-                hintText: "Enter your Email id",
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              HeaderText(
+                mainHeading: "Forgot Password",
+                subHeading: _otpSent
+                    ? "Enter the OTP sent to your email"
+                    : "Enter your email to reset your password",
               ),
-              const SizedBox(height: 20),
-              CustomButton(
-                data: "Submit",
-                onPressed: () {
-                  setState(() {
-                    _isSubmitted = true;
-                  });
-                },
-              ),
-            ] else ...[
-              Center(
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                      size: 80,
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Password reset successfully.\nCheck your email to proceed.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    const SizedBox(height: 40),
-                    CustomButton(
-                      data: "Back to Login",
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const EmailAuthScreen()),
+              SizedBox(height: size.height * 0.07),
+              if (!_otpSent) ...[
+                CustomTextFormField(
+                  controller: _emailController,
+                  hintText: "Enter your Email id",
+                ),
+                const SizedBox(height: 20),
+                CustomButton(
+                  data: "Send OTP",
+                  onPressed: () {
+                    // TODO: Implement OTP sending logic
+                    setState(() {
+                      _otpSent = true;
+                    });
+                  },
+                ),
+              ] else ...[
+                CustomTextFormField(
+                  controller: _otpController,
+                  hintText: "Enter OTP",
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 20),
+                CustomTextFormField(
+                  controller: _newPasswordController,
+                  hintText: "Enter new password",
+                  isPassword: true,
+                ),
+                const SizedBox(height: 20),
+                CustomButton(
+                  data: "Confirm",
+                  onPressed: () {
+                    // TODO: Implement password reset confirmation logic
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Success"),
+                          content: const Text("Password reset successfully."),
+                          actions: [
+                            TextButton(
+                              child: const Text("OK"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const EmailAuthScreen()),
+                                );
+                              },
+                            ),
+                          ],
                         );
                       },
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _newPasswordController.dispose();
+    _otpController.dispose();
+    super.dispose();
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_picker.dart';
-import 'package:hungrx_app/presentation/widgets/header_section.dart';
+import 'package:hungrx_app/core/widgets/header_section.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class WeightTrackingScreen extends StatelessWidget {

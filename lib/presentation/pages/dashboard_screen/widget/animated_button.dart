@@ -64,7 +64,7 @@ class AnimatedEatFoodButtonState extends State<AnimatedEatFoodButton>
         return Container(
           decoration: BoxDecoration(
               color: _colorAnimation.value,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(36),
               border: Border.all(color: AppColors.buttonColors)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -154,7 +154,7 @@ class AnimatedEatFoodButtonState extends State<AnimatedEatFoodButton>
           foregroundColor: AppColors.primaryColor,
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(50),
           ),
         ),
         child: Row(

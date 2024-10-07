@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
-import 'package:hungrx_app/presentation/pages/health_profile_screens/dialy_expanditure_screen.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_screens/dialy_activity_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_screens/goal_selection_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_screens/widgets/navigation_buttons.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_screens/widgets/prograss_indicator.dart';
 
 class GoalPaceScreen extends StatefulWidget {
   final WeightGoal goal;
+  final double currentWeight;
+  final double goalWeight;
 
-  const GoalPaceScreen({super.key, required this.goal});
+  const GoalPaceScreen({
+    super.key,
+    required this.goal,
+    required this.currentWeight,
+    required this.goalWeight,
+  });
 
   @override
   GoalPaceScreenState createState() => GoalPaceScreenState();
@@ -49,10 +56,11 @@ class GoalPaceScreenState extends State<GoalPaceScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'This is the recommended pace, but you can adjust as needed.',
+                  _getSuggestion(),
                   style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 60),
                 Center(
                   child: Text(
                     _getPaceText(),
@@ -69,12 +77,12 @@ class GoalPaceScreenState extends State<GoalPaceScreen> {
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 10),
                 Slider(
                   value: paceValue,
                   min: 1,
-                  max: 3,
-                  divisions: 2,
+                  max: 4,
+                  divisions: 3,
                   activeColor: AppColors.buttonColors,
                   inactiveColor: Colors.grey[800],
                   onChanged: (value) {
@@ -88,17 +96,29 @@ class GoalPaceScreenState extends State<GoalPaceScreen> {
                   children: _getPaceLabels(),
                 ),
                 const Spacer(),
+                Center(
+                  child: Container(
+                    // margin: EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(15),
+                    decoration:  BoxDecoration(
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                        color: widget.goal == WeightGoal.maintain ? Colors.transparent : const Color.fromARGB(255, 49, 54, 43)),
+                    child: Text(
+                      _getEstimatedTimeToGoal(),
+                      style: const TextStyle(color: Colors.grey, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
                 NavigationButtons(
                   onNextPressed: () {
-                       Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>  const DailyExpenditureScreen(),
-                          ),
-                        );
-                    // Handle next button press
-                    // print('Selected pace: ${_getPaceText()} per week');
-                    // Navigate to the next screen or process the data
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DailyActivityScreen(),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -124,7 +144,7 @@ class GoalPaceScreenState extends State<GoalPaceScreen> {
     if (widget.goal == WeightGoal.maintain) {
       return '0 Kg';
     }
-    double pace = (paceValue - 1) * 0.25 + 0.25; // 0.25, 0.5, or 0.75 kg
+    double pace = (paceValue - 1) * 0.25 + 0.25; // 0.25, 0.5, 0.75, or 1 kg
     return '${pace.toStringAsFixed(2)} Kg';
   }
 
@@ -132,9 +152,49 @@ class GoalPaceScreenState extends State<GoalPaceScreen> {
     if (widget.goal == WeightGoal.maintain) {
       return [const Text('Maintain', style: TextStyle(color: Colors.grey))];
     }
-    return ['Mild', 'Moderate', 'Fast'].map((e) => Text(
-      e,
-      style: const TextStyle(color: Colors.grey),
-    )).toList();
+    return ['Mild', 'Moderate', 'Fast', 'Very Fast']
+        .map((e) => Text(
+              e,
+              style: const TextStyle(color: Colors.grey),
+            ))
+        .toList();
+  }
+
+  String _getSuggestion() {
+    if (widget.goal == WeightGoal.maintain) {
+      return "Maintaining your current weight is a great way to stay healthy.";
+    }
+
+    switch (paceValue.toInt()) {
+      case 1:
+        return "This is a slow but very sustainable pace to reach your goal weight.";
+      case 2:
+        return "This is a good, sustainable pace to reach your goal weight.";
+      case 3:
+        return "This is a challenging but achievable pace. Make sure to stay consistent!";
+      case 4:
+        return "This is a very fast pace. It may be difficult to maintain. Consider a slower pace for long-term success.";
+      default:
+        return "";
+    }
+  }
+
+  String _getEstimatedTimeToGoal() {
+    if (widget.goal == WeightGoal.maintain) {
+      return "";
+    }
+
+    double weeklyPace = (paceValue - 1) * 0.25 + 0.25;
+    double weightDifference = (widget.goalWeight - widget.currentWeight).abs();
+    int weeksToGoal = (weightDifference / weeklyPace).ceil();
+    int monthsToGoal = (weeksToGoal / 4).ceil();
+
+    if (monthsToGoal < 1) {
+      return "You will reach your goal in less than a month!";
+    } else if (monthsToGoal == 1) {
+      return "You will reach your goal in about 1 month.";
+    } else {
+      return "You will reach your goal in about $monthsToGoal months.";
+    }
   }
 }

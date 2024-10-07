@@ -1,0 +1,212 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/presentation/blocs/login_bloc/login_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
+import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_screens/user_info_three.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_screens/user_info_two.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_screens/userr_info_one.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
+import 'package:hungrx_app/routes/route_names.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/email_auth_screen.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/splash_screen.dart';
+import 'package:hungrx_app/presentation/pages/onboarding_screen/onboarding_screen.dart';
+import 'package:hungrx_app/domain/usecases/sign_up_usecase.dart';
+import 'package:hungrx_app/domain/usecases/login_usecase.dart';
+import 'package:hungrx_app/data/repositories/user_repository.dart';
+import 'package:hungrx_app/data/repositories/auth_repository.dart';
+
+class AppRouter {
+  static final GetIt getIt = GetIt.instance;
+
+  static GoRouter get router => _router;
+
+  static final GoRouter _router = GoRouter(
+    routes: <RouteBase>[
+      GoRoute(
+        path: '/',
+        name: RouteNames.splash,
+        builder: (BuildContext context, GoRouterState state) {
+          return const SplashScreen();
+        },
+      ),
+      GoRoute(
+        path: '/onboarding',
+        name: RouteNames.onboarding,
+        builder: (BuildContext context, GoRouterState state) {
+          return const OnboardingPage();
+        },
+      ),
+      GoRoute(
+        path: '/login',
+        name: RouteNames.login,
+        builder: (BuildContext context, GoRouterState state) {
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) => SignUpBloc(
+                  signUpUseCase: SignUpUseCase(
+                    UserRepository(),
+                  ),
+                ),
+              ),
+              BlocProvider(
+                create: (context) => LoginBloc(
+                  loginUseCase: LoginUseCase(
+                    AuthRepository(),
+                  ),
+                ),
+              ),
+            ],
+            child: const EmailAuthScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/signup',
+        name: RouteNames.signup,
+        builder: (BuildContext context, GoRouterState state) {
+          return const EmailAuthScreen(isSignUp: true);
+        },
+      ),
+      GoRoute(
+        path: '/health-profile',
+        name: RouteNames.healthProfile,
+        builder: (BuildContext context, GoRouterState state) {
+          return const Placeholder(); // Replace with actual HealthProfileScreen
+        },
+      ),
+      GoRoute(
+        path: '/user-info-one',
+        name: RouteNames.userInfoOne,
+        builder: (BuildContext context, GoRouterState state) {
+          return const UserInfoScreenOne(); // Replace with actual UserInfoOneScreen
+        },
+      ),
+      GoRoute(
+        path: '/user-info-two',
+        name: RouteNames.userInfoTwo,
+        builder: (BuildContext context, GoRouterState state) {
+          return const UserInfoScreenTwo(); // Replace with actual UserInfoTwoScreen
+        },
+      ),
+      GoRoute(
+        path: '/user-info-three',
+        name: RouteNames.userInfoThree,
+        builder: (BuildContext context, GoRouterState state) {
+          return const UserInfoScreenThree(); // Replace with actual UserInfoThreeScreen
+        },
+      ),
+      GoRoute(
+        path: '/goal-selection',
+        name: RouteNames.goalSelection,
+        builder: (BuildContext context, GoRouterState state) {
+          return const Placeholder(); // Replace with actual GoalSelectionScreen
+        },
+      ),
+      GoRoute(
+        path: '/forgotPassword',
+        name: RouteNames.forgotPassword,
+        builder: (BuildContext context, GoRouterState state) {
+          return const ForgotPasswordScreen(); // Replace with actual TDEEResultsScreen
+        },
+      ),
+      GoRoute(
+        path: '/phoneNumber',
+        name: RouteNames.phoneNumber,
+        builder: (BuildContext context, GoRouterState state) {
+          return const PhoneNumberScreen(); // Replace with actual TDEEResultsScreen
+        },
+      ),
+      GoRoute(
+        path: '/tdee-results',
+        name: RouteNames.tdeeResults,
+        builder: (BuildContext context, GoRouterState state) {
+          return const Placeholder(); // Replace with actual TDEEResultsScreen
+        },
+      ),
+      GoRoute(
+        path: '/home',
+        name: RouteNames.home,
+        builder: (BuildContext context, GoRouterState state) {
+          return const DashboardScreen(); // Replace with actual HomeScreen
+        },
+      ),
+      GoRoute(
+        path: '/dashboard',
+        name: RouteNames.dashboard,
+        builder: (BuildContext context, GoRouterState state) {
+          return const DashboardScreen(); // Replace with actual HomeScreen
+        },
+      ),
+       GoRoute(
+        path: '/eatscreen',
+        name: RouteNames.eatscreen,
+        builder: (BuildContext context, GoRouterState state) {
+          return const EatScreen(); // Replace with actual HomeScreen
+        },
+      ),
+       GoRoute(
+        path: '/foodcart',
+        name: RouteNames.foodcart,
+        builder: (BuildContext context, GoRouterState state) {
+          return const CartScreen(); // Replace with actual HomeScreen
+        },
+      ),
+      GoRoute(
+        path: '/accountSettings',
+        name: RouteNames.accountSettings,
+        builder: (BuildContext context, GoRouterState state) {
+          return const AccountSettingsScreen(); // Replace with actual HomeScreen
+        },
+      ),
+      GoRoute(
+        path: '/restaurants',
+        name: RouteNames.restaurants,
+        builder: (BuildContext context, GoRouterState state) {
+          return const Placeholder(); // Replace with actual RestaurantsScreen
+        },
+      ),
+      GoRoute(
+        path: '/restaurant-details',
+        name: RouteNames.restaurantDetails,
+        builder: (BuildContext context, GoRouterState state) {
+          return const Placeholder(); // Replace with actual RestaurantDetailsScreen
+        },
+      ),
+      GoRoute(
+        path: '/menu',
+        name: RouteNames.menu,
+        builder: (BuildContext context, GoRouterState state) {
+          return const Placeholder(); // Replace with actual MenuScreen
+        },
+      ),
+      GoRoute(
+        path: '/food-item-details',
+        name: RouteNames.foodItemDetails,
+        builder: (BuildContext context, GoRouterState state) {
+          return const Placeholder(); // Replace with actual FoodItemDetailsScreen
+        },
+      ),
+      GoRoute(
+        path: '/profile',
+        name: RouteNames.profile,
+        builder: (BuildContext context, GoRouterState state) {
+          return const UserProfileScreen(); // Replace with actual ProfileScreen
+        },
+      ),
+    ],
+    // Add any global redirect logic here
+    redirect: (BuildContext context, GoRouterState state) {
+      // Check auth state and redirect if necessary
+      return null;
+    },
+  );
+}

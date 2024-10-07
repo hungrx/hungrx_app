@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/restaurent_menu_screen.dart';
-import 'package:hungrx_app/presentation/widgets/header_section.dart';
+import 'package:hungrx_app/core/widgets/header_section.dart';
 
 class RestaurantScreen extends StatefulWidget {
   const RestaurantScreen({super.key});

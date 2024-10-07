@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
-import 'package:hungrx_app/presentation/widgets/bottom_navbar.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/core/widgets/bottom_navbar.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
-import 'package:hungrx_app/presentation/pages/userprofile_screen/user_profile_screen.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class EatScreen extends StatefulWidget {
+  const EatScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  State<EatScreen> createState() => _EatScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _EatScreenState extends State<EatScreen> {
   int _selectedIndex = 1; // Set to 1 for 'Eat' tab
 
   void _onItemTapped(int index) {
@@ -23,25 +21,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     switch (index) {
       case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        context.go('/dashboard');
         break;
       case 1:
         // Already on DashboardScreen, no navigation needed
         break;
       case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const UserProfileScreen()),
-        );
+        context.go('/profile');
         break;
       case 3:
-             Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const CartScreen()),
-        );
+        context.go('/foodcart');
         break;
     }
   }
@@ -117,9 +106,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '20170',
+          '2317',
           style: TextStyle(
-              color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
+              color: Colors.white, fontSize: 38, fontWeight: FontWeight.bold),
         ),
         Text(
           'calorie budget per day',

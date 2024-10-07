@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/widget/animated_button.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/animated_button.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
-import 'package:hungrx_app/presentation/widgets/header_section.dart';
+import 'package:hungrx_app/core/widgets/header_section.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class DailyInsightScreen extends StatefulWidget {
@@ -131,7 +131,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
                 const SizedBox(height: 8),
                 _buildCalorieInfo(Icons.restaurant, 'Total Now', '530 cal'),
                 const SizedBox(height: 8),
-                _buildCalorieInfo(Icons.directions_run, 'Work out', '0 mins'),
+                _buildCalorieInfo(Icons.balance, 'Remaining', '1630 cal'),
               ],
             ),
           ),
@@ -197,49 +197,97 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
   }
 
   Widget _buildMealItem(String name, String calories, double rating) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.tileColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey[800],
-              borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onLongPress: () => _showDeleteDialog(name),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.tileColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.fastfood, color: Colors.white),
             ),
-            child: const Icon(Icons.fastfood, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name,
-                    style: const TextStyle(
-                        color: AppColors.fontColor, fontWeight: FontWeight.bold)),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.green, size: 16),
-                    const SizedBox(width: 4),
-                    Text(rating.toString(),
-                        style: const TextStyle(color: Colors.grey)),
-                  ],
-                ),
-              ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      style: const TextStyle(
+                          color: AppColors.fontColor, fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.green, size: 16),
+                      const SizedBox(width: 4),
+                      Text(rating.toString(),
+                          style: const TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          Text(calories,
-              style: const TextStyle(
-                  color: AppColors.fontColor, fontWeight: FontWeight.bold)),
-        ],
+            Text(calories,
+                style: const TextStyle(
+                    color: AppColors.fontColor, fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
+  }
+  void _showDeleteDialog(String foodName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: AppColors.tileColor,
+          title: Text('Delete $foodName?',
+              style: const TextStyle(color: Colors.white)),
+          content: Text('Are you sure you want to remove $foodName from your meal list?',
+              style: const TextStyle(color: Colors.grey)),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                // Implement delete functionality here
+                // For now, we'll just close the dialog
+                Navigator.of(context).pop();
+                _showDeleteConfirmation(foodName);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(String foodName) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$foodName has been deleted from your meal list.'),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    // Here you would typically update your state to remove the item
+    // setState(() {
+    //   // Remove the item from your data source
+    // });
   }
 
   Widget _buildEatFoodButton() {

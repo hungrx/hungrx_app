@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_informaion_screen.dart';
-import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
-import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/home_screen.dart';
-import 'package:hungrx_app/presentation/widgets/bottom_navbar.dart';
+import 'package:hungrx_app/core/widgets/bottom_navbar.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -23,28 +21,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
     switch (index) {
       case 0:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+       context.go('/dashboard');
         break;
       case 1:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
+      context.go('/eatscreen');
         break;
       case 2:
         // Already on UserProfileScreen, no navigation needed
         break;
       case 3:
-            Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const CartScreen()),
-        );
+        context.go('/foodcart');
         break;
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +52,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           ),
         ),
       ),
-       bottomNavigationBar: BottomNavBar(
+      bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
@@ -70,53 +60,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(),
-              // IconButton(
-              //   icon: Icon(Icons.arrow_back, color: Colors.white),
-              //   onPressed: () {
-              //   Navigator.of(context).pop();
-              //   }, // Implement navigation
-              // ),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.edit, color: Colors.black, size: 16),
-                label: const Text('Edit', style: TextStyle(color: Colors.black)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonColors,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                ),
-                onPressed: () {}, // Implement edit functionality
-              ),
-            ],
+    return const Padding(
+      padding: EdgeInsets.only(top: 40.0, bottom: 20),
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundImage: AssetImage('assets/images/dp.png'),
           ),
-        ),
-        const Padding(
-          padding: EdgeInsets.only(top: 60.0,left: 16),
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: AssetImage('assets/images/dp.png'),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Warren Daniel',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
+          SizedBox(height: 10),
+          Text(
+            'Warren Daniel',
+            style: TextStyle(
+                color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -131,7 +90,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem('TDEE', '20150 cal'),
+          _buildStatItem('TDEE', '2315 cal'),
           _buildStatItem('Weight', '100 Kg'),
           _buildStatItem('Goal', '85 Kg'),
           _buildStatItem('BMI', '18.5'),
@@ -146,7 +105,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
         const SizedBox(height: 4),
         Text(value,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -169,9 +129,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           'Height, weight, age, gender...',
           () {
             Navigator.push(
-  context,
-  MaterialPageRoute(builder: (context) => const BasicInformationScreen()),
-);
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const BasicInformationScreen()),
+            );
           },
         ),
         _buildDetailItem(
@@ -195,7 +156,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   fontWeight: FontWeight.bold)),
         ),
         _buildDetailItem(Icons.person_outline, 'Account',
-            'Change mail, log out, delete account', () {}),
+            'Change mail, log out, delete account', () {
+          context.go('/accountSettings');
+        }),
         _buildDetailItem(Icons.info_outline, 'About',
             'About us, Privacy Policy, app version', () {}),
         _buildDetailItem(Icons.help_outline, 'Help & Support',
@@ -210,7 +173,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       leading: Icon(icon, color: Colors.white),
       title: Text(title, style: const TextStyle(color: Colors.white)),
       subtitle: Text(subtitle, style: const TextStyle(color: Colors.grey)),
-      trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+      trailing:
+          const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
       onTap: ontap, // Implement navigation or action
     );
   }
@@ -228,12 +192,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   fontWeight: FontWeight.bold)),
         ),
         Container(
-
           margin: const EdgeInsets.symmetric(horizontal: 16),
           height: 100,
           decoration: BoxDecoration(
-            image: const DecorationImage(fit: BoxFit.fill,
-              image: AssetImage("assets/images/referrel.jpg")),
+            image: const DecorationImage(
+                fit: BoxFit.fill,
+                image: AssetImage("assets/images/referrel.jpg")),
             color: Colors.grey[800],
             borderRadius: BorderRadius.circular(10),
           ),
@@ -256,7 +220,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton.icon(
             icon: const Icon(Icons.person_add, color: Colors.black),
-            label: const Text('Refer Now', style: TextStyle(color: Colors.black)),
+            label:
+                const Text('Refer Now', style: TextStyle(color: Colors.black)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.buttonColors,
               minimumSize: const Size(double.infinity, 50),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
 import 'components/onboarding_data.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -11,6 +11,7 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
+   
   final controller = OnboardingData();
   final pageController = PageController();
   int currentIndex = 0;
@@ -124,18 +125,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
         color: AppColors.buttonColors,
       ),
       child: TextButton(
-        onPressed: () {
+        onPressed: () async {
           if (currentIndex != controller.items.length - 1) {
             pageController.nextPage(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
             );
           } else {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                  builder: (context) => const PhoneNumberScreen()),
-              (Route<dynamic> route) => false,
-            );
+        //  await widget.onboardingService.setOnboardingAsSeen();
+                context.go('/login');
           }
         },
         child: Text(

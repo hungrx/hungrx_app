@@ -44,20 +44,25 @@ class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
                 ),
                 const SizedBox(height: 30),
                 const Text(
-                  "Please select which sex we should use to\ncalculate your calorie needs:",
+                  "Please select which sex we should use to\ncalculate your calorie needs.",
                   style: TextStyle(color: Colors.grey, fontSize: 16),
                 ),
                 const SizedBox(height: 20),
                 _buildGenderSelector(),
-                const SizedBox(height: 30),
+                const SizedBox(height: 50),
                 const Text(
                   "What's your Age?",
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(color: Colors.grey, fontSize: 18),
                 ),
                 const SizedBox(height: 10),
                 const CustomTextFormField(
                     keyboardType: TextInputType.phone,
                     hintText: 'Enter Your Age'),
+                    const SizedBox(height: 10),
+                     const Text(
+                  "Your age determines how much you should consume(age in year)",
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
                 const Spacer(),
                 NavigationButtons(
                   onNextPressed: () {
@@ -94,14 +99,14 @@ class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
       ),
       child: Row(
         children: [
-          _buildGenderOption('Male'),
-          _buildGenderOption('Female'),
+          _buildGenderOption('Male',Icons.male),
+          _buildGenderOption('Female',Icons.female),
         ],
       ),
     );
   }
 
-  Widget _buildGenderOption(String gender) {
+  Widget _buildGenderOption(String gender,IconData? icon) {
     bool isSelected = selectedGender == gender;
     return Expanded(
       child: GestureDetector(
@@ -112,14 +117,20 @@ class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
             color: isSelected ? AppColors.buttonColors : Colors.transparent,
             borderRadius: BorderRadius.circular(30),
           ),
-          child: Center(
-            child: Text(
-              gender,
-              style: TextStyle(
-                color: isSelected ? Colors.black : Colors.white,
-                fontWeight: FontWeight.bold,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(icon,size: 30,color: isSelected ? Colors.black : Colors.white,),
+              const SizedBox(width: 5,),
+              Text(
+                gender,
+                style: TextStyle(
+                  color: isSelected ? Colors.black : Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

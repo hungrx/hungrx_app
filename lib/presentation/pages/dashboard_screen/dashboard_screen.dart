@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
-import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
-import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
-import 'package:hungrx_app/presentation/widgets/bottom_navbar.dart';
-import 'package:hungrx_app/presentation/pages/home_screen/widget/feedbacks_widget.dart';
-import 'package:hungrx_app/presentation/pages/userprofile_screen/user_profile_screen.dart';
+import 'package:hungrx_app/core/widgets/bottom_navbar.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/feedbacks_widget.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_tracking.dart';
-import 'package:hungrx_app/presentation/widgets/responsive_text.dart';
+import 'package:hungrx_app/core/widgets/responsive_text.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => HomeScreenState();
+  State<DashboardScreen> createState() => DashboardScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class DashboardScreenState extends State<DashboardScreen> {
   double totalCalories = 115300;
   int _selectedIndex = 0;
   final TextEditingController _calorieController = TextEditingController();
@@ -31,7 +30,7 @@ class HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
- void _onItemTapped(int index) {
+  void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
@@ -41,22 +40,13 @@ class HomeScreenState extends State<HomeScreen> {
         // Already on HomeScreen, no navigation needed
         break;
       case 1:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
+       context.go('/eatscreen');
         break;
       case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const UserProfileScreen()),
-        );
+       context.go('/profile');
         break;
       case 3:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const CartScreen()),
-        );
+       context.go('/foodcart');
         break;
     }
   }
@@ -110,41 +100,12 @@ class HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-        bottomNavigationBar: BottomNavBar(
+      bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
     );
   }
-
-  //  Widget _buildBottomNavigationBar() {
-  //   return BottomNavigationBar(
-  //     items: const <BottomNavigationBarItem>[
-  //       BottomNavigationBarItem(
-  //         icon: Icon(Icons.home),
-  //         label: 'Dashboard',
-  //       ),
-  //       BottomNavigationBarItem(
-  //         icon: Icon(Icons.restaurant_menu),
-  //         label: 'Eat',
-  //       ),
-  //       BottomNavigationBarItem(
-  //         icon: Icon(Icons.person),
-  //         label: 'Profile',
-  //       ),
-  //       BottomNavigationBarItem(
-  //         icon: Icon(Icons.shopping_cart),
-  //         label: 'Food Cart',
-  //       ),
-  //     ],
-  //     currentIndex: _selectedIndex,
-  //     selectedItemColor: AppColors.buttonColors,
-  //     unselectedItemColor: Colors.grey,
-  //     onTap: _onItemTapped,
-  //     backgroundColor: AppColors.tileColor,
-  //     type: BottomNavigationBarType.fixed,
-  //   );
-  // }
 
   Widget _buildHeader(BuildContext context) {
     return Row(
@@ -209,14 +170,26 @@ class HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const ResponsiveTextWidget(
-            text: 'Calories to Burn',
-            fontWeight: FontWeight.w600,
-            sizeFactor: 0.04,
-            color: AppColors.fontColor,
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ResponsiveTextWidget(
+                text: 'Calories to Burn',
+                fontWeight: FontWeight.w600,
+                sizeFactor: 0.04,
+                color: AppColors.fontColor,
+              ),
+              ResponsiveTextWidget(
+                text: ' - 15kg',
+                fontWeight: FontWeight.w600,
+                sizeFactor: 0.04,
+                color: AppColors.fontColor,
+              ),
+            ],
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               AnimatedFlipCounter(
                 thousandSeparator: ",",
@@ -232,6 +205,13 @@ class HomeScreenState extends State<HomeScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const ResponsiveTextWidget(
+                text: ' cal',
+                fontWeight: FontWeight.w600,
+                sizeFactor: 0.04,
+                color: AppColors.fontColor,
+              ),
+              // SizedBox(height: 20,)
             ],
           ),
           const SizedBox(height: 8),
@@ -312,7 +292,7 @@ class HomeScreenState extends State<HomeScreen> {
       required String unit,
       required void Function()? ontap,
       required Widget icon}) {
-    return InkWell(
+    return GestureDetector(
       onTap: ontap,
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -338,7 +318,7 @@ class HomeScreenState extends State<HomeScreen> {
                     ResponsiveTextWidget(
                       text: value,
                       fontWeight: FontWeight.w600,
-                      sizeFactor: 0.085,
+                      sizeFactor: 0.075,
                       color: AppColors.fontColor,
                     ),
                     const SizedBox(width: 4),
@@ -377,8 +357,8 @@ class HomeScreenState extends State<HomeScreen> {
             defaultColor: Colors.grey,
             size: 15,
             borderRadius: 4,
-            startDate: DateTime(2024, 9, 7, 20, 30),
-            endDate: DateTime(2025, 3, 7, 20, 30),
+            startDate: DateTime(2024, 8, 1, 20, 30),
+            endDate: DateTime(2024, 12, 30, 20, 30),
             textColor: Colors.grey,
             datasets: {
               // this data daily add after comple the colorie budget
@@ -426,7 +406,7 @@ class HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: _buildBottomButton(
             ontap: () {},
-            title: 'Days',
+            title: 'Days Left',
             value: '290',
           ),
         ),
@@ -438,7 +418,7 @@ class HomeScreenState extends State<HomeScreen> {
       {required String title,
       required String value,
       required void Function()? ontap}) {
-    return InkWell(
+    return GestureDetector(
       onTap: ontap,
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -463,22 +443,4 @@ class HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  // Widget _buildEatFoodButton() {
-  //   return AnimatedEatFoodButton(
-  //     onLogMeal: () {
-  //       Navigator.push(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const LogMealScreen()),
-  //       );
-  //       // Implement log meal functionality
-  //     },
-  //     onNearbyRestaurant: () {
-  //           Navigator.push(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const RestaurantScreen()),
-  //       );
-  //     },
-  //   );
-  // }
 }

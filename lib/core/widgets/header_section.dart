@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/presentation/widgets/responsive_text.dart';
+import 'package:hungrx_app/core/widgets/responsive_text.dart';
 
 class HeaderSection extends StatelessWidget {
   final String title;

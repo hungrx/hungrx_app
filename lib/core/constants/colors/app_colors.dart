@@ -6,8 +6,4 @@ class AppColors {
   static const Color buttonColors = Color(0xFFBADA55); //green
   static const Color fontColor = Color(0xFF9EA29A); //gray
   static const Color tileColor = Color(0xFF101010); //gray
-
-  // static const Color donJuan = Color(0xFF634c51);
-
-// This variable is used to define the padding-right in some layouts
 }

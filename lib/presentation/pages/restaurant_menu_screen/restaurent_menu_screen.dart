@@ -11,6 +11,7 @@ class RestaurantMenuScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
+        
         backgroundColor: Colors.black,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -21,7 +22,9 @@ class RestaurantMenuScreen extends StatelessWidget {
         children: [
           _buildRestaurantInfoCard(),
           _buildSearchBar(),
-          const SizedBox(height: 20,),
+          const SizedBox(
+            height: 20,
+          ),
           Expanded(
             child: _buildMenuList(context),
           ),
@@ -51,12 +54,12 @@ class RestaurantMenuScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.orange,
+                  color: AppColors.primaryColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.star, color: Colors.white, size: 16),
+                    Icon(Icons.star, color: AppColors.buttonColors, size: 16),
                     SizedBox(width: 4),
                     Text('4.2',
                         style: TextStyle(
@@ -91,7 +94,7 @@ class RestaurantMenuScreen extends StatelessWidget {
                   color: AppColors.buttonColors,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.directions, color: Colors.white),
+                child: const Icon(Icons.directions, color: Colors.black),
               ),
             ],
           ),
@@ -124,25 +127,27 @@ class RestaurantMenuScreen extends StatelessWidget {
       children: [
         _buildMenuCategory('Recommended foods', [
           _buildMenuItem(
-              'Big Mac', '590 Cal.', 'assets/images/burger.png', 4.8,context),
+              'Big Mac', '590 Cal.', 'assets/images/burger.png', 4.8, context),
           _buildMenuItem('Double Quarter Pounder with Cheese', '740 Cal.',
-              'assets/images/burger.png', 4.2,context),
+              'assets/images/burger.png', 4.2, context),
         ]),
         _buildMenuCategory('Homestyle Breakfasts', [
-          _buildMenuItem('Pancakes', '540 Cal.', 'assets/images/piza.png', 4.5,context),
           _buildMenuItem(
-              'Egg McMuffin', '300 Cal.', 'assets/images/piza.png', 4.3,context),
+              'Pancakes', '540 Cal.', 'assets/images/piza.png', 4.5, context),
+          _buildMenuItem('Egg McMuffin', '300 Cal.', 'assets/images/piza.png',
+              4.3, context),
         ]),
         _buildMenuCategory('Hash Browns and Sides', [
-          _buildMenuItem(
-              'Hash Browns', '150 Cal.', 'assets/images/burger.png', 4.6,context),
-          _buildMenuItem(
-              'French Fries', '320 Cal.', 'assets/images/piza.png', 4.7,context),
+          _buildMenuItem('Hash Browns', '150 Cal.', 'assets/images/burger.png',
+              4.6, context),
+          _buildMenuItem('French Fries', '320 Cal.', 'assets/images/piza.png',
+              4.7, context),
         ]),
         _buildMenuCategory('McCafé® Coffees', [
+          _buildMenuItem('Cappuccino', '120 Cal.', 'assets/images/burger.png',
+              4.4, context),
           _buildMenuItem(
-              'Cappuccino', '120 Cal.', 'assets/images/burger.png', 4.4,context),
-          _buildMenuItem('Latte', '190 Cal.', 'assets/images/burger.png', 4.2,context),
+              'Latte', '190 Cal.', 'assets/images/burger.png', 4.2, context),
         ]),
       ],
     );
@@ -150,7 +155,6 @@ class RestaurantMenuScreen extends StatelessWidget {
 
   Widget _buildMenuCategory(String category, List<Widget> items) {
     return ExpansionTile(
-
       initiallyExpanded: true,
       title: Text(
         category,
@@ -165,31 +169,27 @@ class RestaurantMenuScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(
-      String name, String calories, String imagePath, double rating,BuildContext context) {
+  Widget _buildMenuItem(String name, String calories, String imagePath,
+      double rating, BuildContext context) {
     return ListTile(
       onTap: () {
         Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => const FoodDetailScreen(
-      foodName: 'Big Mac',
-      imageUrl: 'assets/images/burger.png',
-      nutritionFacts: {
-        'carbohydrate': 46,
-        'fat': 34,
-        'protein': 25,
-        'cholesterol': 85,
-      },
-      description: "McDonald's Big Mac® is a 100% beef burger with a taste like no other. The mouthwatering perfection starts with two 100% pure beef patties ...",
-    ),
-  ),
-);
-        
-
-
-
-
+          context,
+          MaterialPageRoute(
+            builder: (context) => const FoodDetailScreen(
+              foodName: 'Big Mac',
+              imageUrl: 'assets/images/burger.png',
+              nutritionFacts: {
+                'carbohydrate': 46,
+                'fat': 34,
+                'protein': 25,
+                'cholesterol': 85,
+              },
+              description:
+                  "McDonald's Big Mac® is a 100% beef burger with a taste like no other. The mouthwatering perfection starts with two 100% pure beef patties ...",
+            ),
+          ),
+        );
       },
       leading: Image.asset(imagePath, width: 50, height: 50),
       title: Text(name, style: const TextStyle(color: Colors.white)),
@@ -197,20 +197,23 @@ class RestaurantMenuScreen extends StatelessWidget {
         children: [
           const Icon(Icons.star, color: Colors.green, size: 16),
           const SizedBox(width: 4),
-          Text(rating.toString(), style: const TextStyle(color: AppColors.buttonColors)),
+          Text(rating.toString(),
+              style: const TextStyle(color: AppColors.buttonColors)),
           const SizedBox(width: 8),
-       
         ],
       ),
       trailing: SizedBox(
         width: 110,
-        
         child: Row(
           children: [
-               Text(calories, style: const TextStyle(color: Colors.white,fontSize: 14,fontWeight: FontWeight.w800)),
-        
+            Text(calories,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800)),
             IconButton(
-              icon: const Icon(Icons.add_circle_outline, color: AppColors.buttonColors),
+              icon: const Icon(Icons.add_circle_outline,
+                  color: AppColors.buttonColors),
               onPressed: () {},
             ),
           ],
@@ -222,7 +225,7 @@ class RestaurantMenuScreen extends StatelessWidget {
   Widget _buildOrderSummary(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.grey[900],
+      color: Colors.black,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -244,12 +247,13 @@ class RestaurantMenuScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20)),
             ),
             onPressed: () {
-   Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const CalorieCalculationScreen()),
-        );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const CalorieCalculationScreen()),
+              );
             },
-            child: const Text('View order list (5 items) >'),
+            child: const Text('View order list (5 items) >',style: TextStyle(color: AppColors.primaryColor),),
           ),
         ],
       ),

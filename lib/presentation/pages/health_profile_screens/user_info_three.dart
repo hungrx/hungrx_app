@@ -115,8 +115,8 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                         Slider(
                           value: mealsPerDay,
                           min: 1,
-                          max: 5,
-                          divisions: 4,
+                          max: 4,
+                          divisions: 3,
                           activeColor: AppColors.buttonColors,
                           inactiveColor: Colors.grey[800],
                           label: mealsPerDay.round().toString(),
@@ -126,14 +126,17 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                             });
                           },
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [1, 2, 3, 4, 5]
-                              .map((e) => Text(
-                                    e.toString(),
-                                    style: const TextStyle(color: Colors.grey),
-                                  ))
-                              .toList(),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 20,right: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [1, 2, 3, 4]
+                                .map((e) => Text(
+                                      e.toString(),
+                                      style: const TextStyle(color: Colors.grey),
+                                    ))
+                                .toList(),
+                          ),
                         ),
                         const SizedBox(height: 100), // Extra space at the bottom
                       ],
