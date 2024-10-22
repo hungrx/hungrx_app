@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/health_profile_screens/widgets/custom_button.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/custom_button.dart';
 
 class NavigationButtons extends StatelessWidget {
   final VoidCallback? onBackPressed;
   final VoidCallback? onNextPressed;
+  final String buttonText;
 
   const NavigationButtons({
     super.key,
     this.onBackPressed,
-    this.onNextPressed,
+    this.onNextPressed,  this.buttonText= "Next",
   });
 
   @override
@@ -27,6 +28,7 @@ class NavigationButtons extends StatelessWidget {
           child: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         CustomNextButton(
+         btnName: buttonText,
           onPressed: onNextPressed!,
             
           height: 50,

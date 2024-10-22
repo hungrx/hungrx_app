@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/data/repositories/onboarding_service.dart';
 import 'components/onboarding_data.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -11,9 +12,9 @@ class OnboardingPage extends StatefulWidget {
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
-   
   final controller = OnboardingData();
   final pageController = PageController();
+  final OnboardingService _onboardingService = OnboardingService();
   int currentIndex = 0;
 
   @override
@@ -132,8 +133,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
               curve: Curves.easeInOut,
             );
           } else {
-        //  await widget.onboardingService.setOnboardingAsSeen();
-                context.go('/login');
+            await _onboardingService.setOnboardingAsSeen(); // Add this line
+            context.go('/login');
           }
         },
         child: Text(

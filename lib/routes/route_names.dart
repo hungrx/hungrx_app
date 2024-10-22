@@ -6,7 +6,9 @@ class RouteNames {
   static const String userInfoTwo = 'userInfoTwo';
   static const String userInfoOne = 'userInfoOne';
   static const String userInfoThree = 'userInfoThree';
-  static const String goalSelection = 'goalSelection';
+  static const String goalSelection = 'goal-selection';
+  static const String goalPace = 'goal-pace';
+  static const String dailyactivity = 'daily-activity';
   static const String tdeeResults = 'tdeeResults';
   static const String home = 'home';
   static const String dashboard = 'dashboard';
@@ -18,8 +20,10 @@ class RouteNames {
   static const String foodItemDetails = 'foodItemDetails';
   static const String profile = 'profile';
    static const String onboarding = 'onboarding';
-   static const String phoneNumber = 'phoneNumber';
+static const String phoneNumber = 'phoneNumber';
+  static const String otpVerify = 'otpVerify';
    static const String forgotPassword = 'forgotPassword';
    static const String accountSettings = 'accountSettings';
+
 
 }

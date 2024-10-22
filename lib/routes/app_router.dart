@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hungrx_app/presentation/blocs/login_bloc/login_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/email_login_bloc/login_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
-import 'package:hungrx_app/presentation/pages/health_profile_screens/user_info_three.dart';
-import 'package:hungrx_app/presentation/pages/health_profile_screens/user_info_two.dart';
-import 'package:hungrx_app/presentation/pages/health_profile_screens/userr_info_one.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/dialy_activity_screen.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/goal_pace_screen.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/goal_selection_screen.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/tdee_result_screen.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/user_info_three.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/user_info_two.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/userr_info_one.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
@@ -20,8 +25,8 @@ import 'package:hungrx_app/presentation/pages/auth_screens/splash_screen.dart';
 import 'package:hungrx_app/presentation/pages/onboarding_screen/onboarding_screen.dart';
 import 'package:hungrx_app/domain/usecases/sign_up_usecase.dart';
 import 'package:hungrx_app/domain/usecases/login_usecase.dart';
-import 'package:hungrx_app/data/repositories/user_repository.dart';
-import 'package:hungrx_app/data/repositories/auth_repository.dart';
+import 'package:hungrx_app/data/repositories/email_sign_up_repository.dart';
+import 'package:hungrx_app/data/repositories/email_signin_repository.dart';
 
 class AppRouter {
   static final GetIt getIt = GetIt.instance;
@@ -53,14 +58,14 @@ class AppRouter {
               BlocProvider(
                 create: (context) => SignUpBloc(
                   signUpUseCase: SignUpUseCase(
-                    UserRepository(),
+                    UserSignUpRepository(),
                   ),
                 ),
               ),
               BlocProvider(
                 create: (context) => LoginBloc(
                   loginUseCase: LoginUseCase(
-                    AuthRepository(),
+                    UserSignInRepository(),
                   ),
                 ),
               ),
@@ -108,7 +113,21 @@ class AppRouter {
         path: '/goal-selection',
         name: RouteNames.goalSelection,
         builder: (BuildContext context, GoRouterState state) {
-          return const Placeholder(); // Replace with actual GoalSelectionScreen
+          return const GoalSelectionScreen(); // Replace with actual GoalSelectionScreen
+        },
+      ),
+      GoRoute(
+        path: '/goal-pase',
+        name: RouteNames.goalPace,
+        builder: (BuildContext context, GoRouterState state) {
+          return const GoalPaceScreen(); // Replace with actual GoalSelectionScreen
+        },
+      ),
+      GoRoute(
+        path: '/daily-activity',
+        name: RouteNames.dailyactivity,
+        builder: (BuildContext context, GoRouterState state) {
+          return const DailyActivityScreen(); // Replace with actual GoalSelectionScreen
         },
       ),
       GoRoute(
@@ -122,14 +141,22 @@ class AppRouter {
         path: '/phoneNumber',
         name: RouteNames.phoneNumber,
         builder: (BuildContext context, GoRouterState state) {
-          return const PhoneNumberScreen(); // Replace with actual TDEEResultsScreen
+          return const PhoneNumberScreen();
+        },
+      ),
+      GoRoute(
+        path: '/otpVerify/:phoneNumber',
+        name: RouteNames.otpVerify,
+        builder: (BuildContext context, GoRouterState state) {
+          final phoneNumber = state.pathParameters['phoneNumber']!;
+          return OtpScreen(phoneNumber: phoneNumber);
         },
       ),
       GoRoute(
         path: '/tdee-results',
         name: RouteNames.tdeeResults,
         builder: (BuildContext context, GoRouterState state) {
-          return const Placeholder(); // Replace with actual TDEEResultsScreen
+          return const TDEEResultScreen(userId: ,); // Replace with actual TDEEResultsScreen
         },
       ),
       GoRoute(
@@ -146,14 +173,14 @@ class AppRouter {
           return const DashboardScreen(); // Replace with actual HomeScreen
         },
       ),
-       GoRoute(
+      GoRoute(
         path: '/eatscreen',
         name: RouteNames.eatscreen,
         builder: (BuildContext context, GoRouterState state) {
           return const EatScreen(); // Replace with actual HomeScreen
         },
       ),
-       GoRoute(
+      GoRoute(
         path: '/foodcart',
         name: RouteNames.foodcart,
         builder: (BuildContext context, GoRouterState state) {

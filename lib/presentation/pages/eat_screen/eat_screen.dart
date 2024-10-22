@@ -137,7 +137,7 @@ class _EatScreenState extends State<EatScreen> {
         Expanded(
             child: _buildOptionCard(
           'Home',
-          'Log Your Homemade Meals for Easy Tracking and Health Insights',
+          'Log what you eat from home or grocery stores for better calorie management.',
           'assets/images/piza.png',
           () {
             Navigator.push(

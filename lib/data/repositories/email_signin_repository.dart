@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/login_model.dart';
 
-class AuthRepository {
+class UserSignInRepository {
   final String baseUrl = 'https://hungerxapp.onrender.com';
 
   Future<String> login(LoginModel loginModel) async {
@@ -14,26 +14,27 @@ class AuthRepository {
         body: json.encode(loginModel.toJson()),
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
+
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        print('Decoded response data: $responseData');
+
 
         if (responseData is Map<String, dynamic> &&
             responseData.containsKey('data') &&
             responseData['data'] is Map<String, dynamic> &&
-            responseData['data'].containsKey('token')) {
-          final token = responseData['data']['token'] as String;
-          print('Extracted token: $token');
-          await _saveToken(token);
-          return token;
+            responseData['data'].containsKey('userId')) {
+          final userId = responseData['data']['userId'] as String;
+          // print('Extracted userId: $userId');
+          await _saveUserId(userId);
+          return userId;
         } else {
-          throw Exception('Invalid response format: token not found in expected location');
+          throw Exception(
+              'Invalid response format: userId not found in expected location');
         }
       } else {
-        throw Exception('Failed to login: ${response.statusCode} ${response.reasonPhrase}');
+        throw Exception(
+            'Failed to login: ${response.statusCode} ${response.reasonPhrase}');
       }
     } catch (e) {
       print('Error during login: $e');
@@ -41,23 +42,23 @@ class AuthRepository {
     }
   }
 
-  Future<void> _saveToken(String token) async {
+  Future<void> _saveUserId(String userId) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
+    await prefs.setString('user_id', userId);
   }
 
   Future<bool> isLoggedIn() async {
-    final token = await getToken();
-    return token != null && token.isNotEmpty;
+    final userId = await getUserId();
+    return userId != null && userId.isNotEmpty;
   }
 
-  Future<String?> getToken() async {
+  Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    return prefs.getString('user_id');
   }
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
+    await prefs.remove('user_id');
   }
 }

@@ -40,13 +40,13 @@ class DashboardScreenState extends State<DashboardScreen> {
         // Already on HomeScreen, no navigation needed
         break;
       case 1:
-       context.go('/eatscreen');
+        context.go('/eatscreen');
         break;
       case 2:
-       context.go('/profile');
+        context.go('/profile');
         break;
       case 3:
-       context.go('/foodcart');
+        context.go('/foodcart');
         break;
     }
   }
@@ -161,7 +161,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildCalorieCounter() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
       decoration: BoxDecoration(
         color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(16),
@@ -170,26 +170,39 @@ class DashboardScreenState extends State<DashboardScreen> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ResponsiveTextWidget(
+              const ResponsiveTextWidget(
                 text: 'Calories to Burn',
                 fontWeight: FontWeight.w600,
                 sizeFactor: 0.04,
                 color: AppColors.fontColor,
               ),
-              ResponsiveTextWidget(
-                text: ' - 15kg',
-                fontWeight: FontWeight.w600,
-                sizeFactor: 0.04,
-                color: AppColors.fontColor,
+              SizedBox(
+                child: Row(
+                  children: [
+                    AnimatedFlipCounter(
+                      value: int.tryParse("256") ?? 0,
+                      textStyle: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const ResponsiveTextWidget(
+                      text: ' Days left',
+                      fontWeight: FontWeight.w600,
+                      sizeFactor: 0.03,
+                      color: AppColors.fontColor,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
           Row(
             // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               AnimatedFlipCounter(
                 thousandSeparator: ",",
@@ -205,33 +218,36 @@ class DashboardScreenState extends State<DashboardScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const ResponsiveTextWidget(
-                text: ' cal',
-                fontWeight: FontWeight.w600,
-                sizeFactor: 0.04,
-                color: AppColors.fontColor,
+              const Padding(
+                padding: EdgeInsets.only(bottom: 20),
+                child: ResponsiveTextWidget(
+                  text: ' cal',
+                  fontWeight: FontWeight.w600,
+                  sizeFactor: 0.04,
+                  color: AppColors.fontColor,
+                ),
               ),
               // SizedBox(height: 20,)
             ],
           ),
           const SizedBox(height: 8),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ResponsiveTextWidget(
-                text: 'Daily Target',
-                fontWeight: FontWeight.w600,
-                sizeFactor: 0.04,
-                color: AppColors.fontColor,
-              ),
-              ResponsiveTextWidget(
-                text: '2130 cal',
-                fontWeight: FontWeight.w600,
-                sizeFactor: 0.05,
-                color: AppColors.buttonColors,
-              ),
-            ],
-          ),
+          // const Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     ResponsiveTextWidget(
+          //       text: 'Daily Target',
+          //       fontWeight: FontWeight.w600,
+          //       sizeFactor: 0.04,
+          //       color: AppColors.fontColor,
+          //     ),
+          //     ResponsiveTextWidget(
+          //       text: '2130 cal',
+          //       fontWeight: FontWeight.w600,
+          //       sizeFactor: 0.05,
+          //       color: AppColors.buttonColors,
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
@@ -240,6 +256,24 @@ class DashboardScreenState extends State<DashboardScreen> {
   Widget _buildInfoCards() {
     return Row(
       children: [
+        Expanded(
+          child: Container(
+        padding: const EdgeInsets.only(top: 34,left: 16,right: 16,bottom: 34),
+        decoration: BoxDecoration(
+          color: AppColors.tileColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text("value", style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold)),
+            Text("value", style: TextStyle(color: Colors.grey,fontSize: 22,fontWeight: FontWeight.bold)),
+             
+          ],
+        ),
+      ),
+        ),
+        const SizedBox(width: 16),
         Expanded(
           child: _buildInfoCard(
             ontap: () {
@@ -262,36 +296,18 @@ class DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildInfoCard(
-            ontap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const WeightTrackingScreen()),
-              );
-            },
-            title: 'Current Weight',
-            value: '98',
-            unit: 'KG',
-            icon: const FaIcon(
-              FontAwesomeIcons.weightScale,
-              color: AppColors.buttonColors,
-              size: 34,
-            ),
-          ),
-        ),
       ],
     );
   }
 
   Widget _buildInfoCard(
-      {required String title,
-      required String value,
-      required String unit,
+      {required String? title,
+      required String? value,
+      required String? unit,
       required void Function()? ontap,
-      required Widget icon}) {
+      required Widget icon
+      
+      }) {
     return GestureDetector(
       onTap: ontap,
       child: Container(
@@ -304,6 +320,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+
             icon,
             const SizedBox(
               width: 10,
@@ -312,17 +329,17 @@ class DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.grey)),
+                Text(title??'', style: const TextStyle(color: Colors.grey)),
                 Row(
                   children: [
                     ResponsiveTextWidget(
-                      text: value,
+                      text: value??'',
                       fontWeight: FontWeight.w600,
                       sizeFactor: 0.075,
                       color: AppColors.fontColor,
                     ),
                     const SizedBox(width: 4),
-                    Text(unit, style: const TextStyle(color: Colors.grey)),
+                    Text(unit??'', style: const TextStyle(color: Colors.grey)),
                   ],
                 ),
               ],
@@ -336,7 +353,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildHeatmapCalendar() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(left: 10,right: 10,top: 10,bottom: 10),
       decoration: BoxDecoration(
         color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(16),
@@ -355,8 +372,8 @@ class DashboardScreenState extends State<DashboardScreen> {
             margin: const EdgeInsets.all(2),
             fontSize: 0,
             defaultColor: Colors.grey,
-            size: 15,
-            borderRadius: 4,
+            size: 12,
+            borderRadius: 2,
             startDate: DateTime(2024, 8, 1, 20, 30),
             endDate: DateTime(2024, 12, 30, 20, 30),
             textColor: Colors.grey,
@@ -398,16 +415,28 @@ class DashboardScreenState extends State<DashboardScreen> {
             ontap: () {
               _showFeedbackDialog();
             },
-            title: 'Feedbacks',
-            value: '0',
+            title: '',
+            value: 'Feedbacks',
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: _buildBottomButton(
-            ontap: () {},
-            title: 'Days Left',
-            value: '290',
+          child: _buildInfoCard(
+            ontap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const WeightTrackingScreen()),
+              );
+            },
+            title: 'Current Weight',
+            value: '98',
+            unit: 'KG',
+            icon: const FaIcon(
+              FontAwesomeIcons.weightScale,
+              color: AppColors.buttonColors,
+              size: 34,
+            ),
           ),
         ),
       ],
@@ -421,23 +450,16 @@ class DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: ontap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(top: 34,left: 16,right: 16,bottom: 34),
         decoration: BoxDecoration(
           color: AppColors.tileColor,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(title, style: const TextStyle(color: Colors.grey)),
-            const SizedBox(height: 8),
-            AnimatedFlipCounter(
-              value: int.tryParse(value) ?? 0,
-              textStyle: const TextStyle(
-                  color: AppColors.fontColor,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold),
-            ),
+            Text(value, style: const TextStyle(color: Colors.grey,fontSize: 22,fontWeight: FontWeight.bold)),
+             
           ],
         ),
       ),

@@ -98,7 +98,7 @@ class LogMealScreenState extends State<LogMealScreen> {
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold)),
-                  SizedBox(height: 20,),
+                  const SizedBox(height: 20,),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: ['Breakfast', 'Lunch', 'Snacks', 'Dinner'].map((type) {

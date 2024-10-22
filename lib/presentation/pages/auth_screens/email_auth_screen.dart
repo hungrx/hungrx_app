@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/login_bloc/login_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/login_bloc/login_event.dart';
-import 'package:hungrx_app/presentation/blocs/login_bloc/login_state.dart';
+import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_event.dart';
+import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_state.dart';
+import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_event.dart';
+import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_state.dart';
+import 'package:hungrx_app/presentation/blocs/email_login_bloc/login_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/email_login_bloc/login_event.dart';
+import 'package:hungrx_app/presentation/blocs/email_login_bloc/login_state.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_event.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_state.dart';
@@ -90,6 +97,61 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
       }
     }
   }
+    void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.white,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+               const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 64,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Success',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Account creation successful',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.buttonColors,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  context.pushNamed(RouteNames.login);
+                },
+                child: const Text(
+                  'Signin Now',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,10 +161,11 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
         BlocListener<SignUpBloc, SignUpState>(
           listener: (context, state) {
             if (state is SignUpSuccess) {
+                _showSuccessDialog();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Sign up successful!')),
               );
-              context.pushNamed(RouteNames.userInfoOne);
+              // context.pushNamed(RouteNames.login);
             } else if (state is SignUpFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.error)),
@@ -124,6 +187,37 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
             }
           },
         ),
+        
+        BlocListener<GoogleAuthBloc, GoogleAuthState>(
+          listener: (context, state) {
+            if (state is GoogleAuthSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Google Sign-In successful!')),
+              );
+              context.pushNamed(RouteNames.userInfoOne);
+            } else if (state is GoogleAuthFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text('Google Sign-In failed: ${state.error}')),
+              );
+            }
+          },
+        ),
+        BlocListener<FacebookAuthBloc, FacebookAuthState>(
+          listener: (context, state) {
+            if (state is FacebookAuthSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Facebook Sign-In successful!')),
+              );
+              context.pushNamed(RouteNames.home);
+            } else if (state is FacebookAuthFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.error)),
+              );
+            }
+          },
+        ),
+        
       ],
       child: Scaffold(
         resizeToAvoidBottomInset: false,
@@ -141,8 +235,10 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     HeaderText(
-                      mainHeading: _isSignUp ? "Create Account" : "Welcome back,",
-                      subHeading: _isSignUp ? "Let's get started" : "Glad You're here",
+                      mainHeading:
+                          _isSignUp ? "Create Account" : "Welcome back,",
+                      subHeading:
+                          _isSignUp ? "Let's get started" : "Glad You're here",
                     ),
                     SizedBox(height: size.height * (_isSignUp ? 0.04 : 0.07)),
                     CustomTextFormField(
@@ -200,16 +296,25 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const SocialLoginBotton(
+                            SocialLoginBotton(
                               iconPath: 'assets/icons/google.png',
                               label: 'Google',
                               size: 25,
+                              onPressed: () {
+                                BlocProvider.of<GoogleAuthBloc>(context)
+                                    .add(GoogleSignInRequested());
+                              },
                             ),
                             const SizedBox(width: 20),
-                            const SocialLoginBotton(
+                            SocialLoginBotton(
                               iconPath: 'assets/icons/facebook.png',
                               label: 'Facebook',
                               size: 60,
+                              onPressed: () {
+                                context
+                                    .read<FacebookAuthBloc>()
+                                    .add(FacebookSignInRequested());
+                              },
                             ),
                             const SizedBox(width: 20),
                             SocialLoginBotton(
@@ -227,7 +332,8 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
                     const SizedBox(height: 20),
                     CustomNewUserText(
                       text: _isSignUp ? "Already User? " : "New user? ",
-                      buttonText: _isSignUp ? "Login Account" : "Create an account",
+                      buttonText:
+                          _isSignUp ? "Login Account" : "Create an account",
                       onCreateAccountTap: _toggleMode,
                     ),
                   ],
@@ -240,10 +346,72 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
                     ? Container(
                         color: Colors.black.withOpacity(0.5),
                         child: const Center(
-                          child: CircularProgressIndicator(),
+                          child: CircularProgressIndicator(
+                            color: AppColors.buttonColors,
+                          ),
                         ),
                       )
                     : const SizedBox.shrink();
+              },
+            ),
+                BlocBuilder<SignUpBloc, SignUpState>(
+              builder: (context, state) {
+                if (state is SignUpLoading) {
+                  return Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.buttonColors,
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+      BlocBuilder<GoogleAuthBloc, GoogleAuthState>(
+              builder: (context, state) {
+                if (state is GoogleAuthLoading) {
+                  return Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.buttonColors,
+                      ),
+                    ),
+                  );
+                } else if (state is GoogleAuthFailure) {
+                  return Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Google Sign-In Failed',
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            state.error,
+                            style: const TextStyle(color: Colors.red),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () {
+                              BlocProvider.of<GoogleAuthBloc>(context)
+                                  .add(GoogleSignInRequested());
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                } else {
+                  return const SizedBox.shrink();
+                }
               },
             ),
           ],

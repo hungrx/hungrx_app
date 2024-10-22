@@ -5,12 +5,14 @@ class CustomNextButton extends StatelessWidget {
   final VoidCallback onPressed;
   final double width;
   final double height;
+  final String btnName;
 
   const CustomNextButton({
+    
     super.key,
     required this.onPressed,
     this.width = 200,
-    this.height = 50,
+    this.height = 50,  this.btnName ="Next",
   });
 
   @override
@@ -48,10 +50,10 @@ class CustomNextButton extends StatelessWidget {
                 ),
               ),
             ),
-            const Center(
+             Center(
               child: Text(
-                'Next',
-                style: TextStyle(
+                btnName,
+                style: const TextStyle(
                   color: AppColors.primaryColor,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "487283706527",
+    "project_id": "hungrx-app",
+    "storage_bucket": "hungrx-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:487283706527:android:e01e57173721fd5e81f0aa",
+        "android_client_info": {
+          "package_name": "com.hungrx.hungrx_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "487283706527-s1vv52jvfpcpbupe4ebmj421jm246ou2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hungrx.hungrx_app",
+            "certificate_hash": "210d53297de42b372a0d24d4f292d8d85272de31"
+          }
+        },
+        {
+          "client_id": "487283706527-7nlgcdvib3nmsqin5mqp055um22prrvs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOJcptMzCRohuTt4vDsr8kHNlKPL_5Cxo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "487283706527-7nlgcdvib3nmsqin5mqp055um22prrvs.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "487283706527-0dop9npjm3g2rhoajabadjcv32tpf8ab.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hungrx.hungrxApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

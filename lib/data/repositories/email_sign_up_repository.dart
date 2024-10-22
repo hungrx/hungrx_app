@@ -10,7 +10,7 @@ class ApiResponse {
   ApiResponse({required this.success, required this.message, this.data});
 }
 
-class UserRepository {
+class UserSignUpRepository {
   final String baseUrl = 'https://hungerxapp.onrender.com';
 
   Future<ApiResponse> signUp(User user) async {

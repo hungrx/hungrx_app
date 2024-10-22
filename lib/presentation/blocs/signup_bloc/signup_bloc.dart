@@ -19,8 +19,9 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
       }
       
       final response = await signUpUseCase.execute(event.email, event.password);
-      
+      print(response.message);
       if (response.success) {
+        print(response.message);
         emit(SignUpSuccess());
       } else {
         emit(SignUpFailure(response.message));
