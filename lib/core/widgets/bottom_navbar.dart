@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
 class BottomNavBar extends StatelessWidget {
@@ -13,31 +14,86 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard),
-          label: 'Dashboard',
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.tileColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: BottomNavigationBar(
+          items: <BottomNavigationBarItem>[
+            _buildNavItem(
+              icon: Icons.dashboard_outlined,
+              activeIcon: Icons.dashboard,
+              label: 'Dashboard',
+            ),
+            _buildNavItem(
+              icon: Icons.restaurant_menu_outlined,
+              activeIcon: Icons.restaurant_menu,
+              label: 'Eat',
+            ),
+            _buildNavItem(
+              icon: Icons.person_outline,
+              activeIcon: Icons.person,
+              label: 'Profile',
+            ),
+            _buildNavItem(
+              icon: Icons.shopping_cart_outlined,
+              activeIcon: Icons.shopping_cart,
+              label: 'Cart',
+            ),
+          ],
+          currentIndex: currentIndex,
+          selectedItemColor: AppColors.buttonColors,
+          unselectedItemColor: Colors.grey,
+          selectedFontSize: 12,
+          unselectedFontSize: 12,
+          onTap: (index) {
+            // Add haptic feedback for better user experience
+            HapticFeedback.heavyImpact();
+            onTap(index);
+          },
+          backgroundColor: Colors.transparent,
+          type: BottomNavigationBarType.fixed,
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            height: 1.5,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            height: 1.5,
+          ),
+          elevation: 0,
+          enableFeedback: true,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.restaurant_menu),
-          label: 'Eat',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.shopping_cart),
-          label: 'Food Cart',
-        ),
-      ],
-      currentIndex: currentIndex,
-      selectedItemColor: AppColors.buttonColors,
-      unselectedItemColor: Colors.grey,
-      onTap: onTap,
-      backgroundColor: AppColors.tileColor,
-      type: BottomNavigationBarType.fixed,
+      ),
+    );
+  }
+
+  BottomNavigationBarItem _buildNavItem({
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+  }) {
+    return BottomNavigationBarItem(
+      icon: Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Icon(icon),
+      ),
+      activeIcon: Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Icon(activeIcon),
+      ),
+      label: label,
+      tooltip: '', // Disable tooltips for smoother interaction
     );
   }
 }

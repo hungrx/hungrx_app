@@ -19,11 +19,11 @@ class RouteNames {
   static const String menu = 'menu';
   static const String foodItemDetails = 'foodItemDetails';
   static const String profile = 'profile';
-   static const String onboarding = 'onboarding';
-static const String phoneNumber = 'phoneNumber';
+  static const String onboarding = 'onboarding';
+  static const String phoneNumber = 'phoneNumber';
   static const String otpVerify = 'otpVerify';
-   static const String forgotPassword = 'forgotPassword';
-   static const String accountSettings = 'accountSettings';
-
-
+  static const String forgotPassword = 'forgotPassword';
+  static const String accountSettings = 'accountSettings';
+  static const String weightPicker = 'weightPicker';
+  static const String weightTracking = 'weight-tracking';
 }

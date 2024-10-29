@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/tdee_result_model.dart';
-import 'package:hungrx_app/presentation/blocs/result_bloc/result_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/result_bloc/result_event.dart';
-import 'package:hungrx_app/presentation/blocs/result_bloc/result_state.dart';
+import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/premium_container.dart';
 
 class TDEEResultScreen extends StatefulWidget {
-  final String userId;
+  final TDEEResultModel tdeeResult;
 
-  const TDEEResultScreen({super.key, required this.userId});
+  const TDEEResultScreen({super.key, required this.tdeeResult});
 
   @override
   TDEEResultScreenState createState() => TDEEResultScreenState();
@@ -25,7 +24,12 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
   void initState() {
     super.initState();
     _setupAnimations();
-    _fetchData();
+    _controller.forward();
+    // Debug print to verify data
+    print('TDEE Result Data:');
+    print('BMI: ${widget.tdeeResult.bmi}');
+    print('BMR: ${widget.tdeeResult.bmr}');
+    print('TDEE: ${widget.tdeeResult.tdee}');
   }
 
   void _setupAnimations() {
@@ -43,42 +47,37 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
     );
   }
 
-  void _fetchData() {
-    
-    context.read<TDEEBloc>().add(CalculateTDEE(widget.userId));
-  }
-
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: BlocBuilder<TDEEBloc, TDEEState>(
-        builder: (context, state) {
-          if (state is TDEELoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is TDEELoaded) {
-            _controller.forward();
-            return _buildContent(state);
-          } else if (state is TDEEError) {
-            return Center(child: Text('Error: ${state.message}', 
-                                    style: const TextStyle(color: Colors.white)));
-          }
-          return const SizedBox();
-        },
-      ),
-    );
-  }
-
-  Widget _buildContent(TDEELoaded state) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
-            _buildResults(state.result),
-          ],
+      body: GradientContainer(
+        top: size.height * 0.00,
+        left: size.height * 0.01,
+        right: size.height * 0.01,
+        bottom: size.height * 0.01,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: 24),
+                        _buildResults(widget.tdeeResult),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -88,7 +87,16 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Column(
+  
         children: [
+            Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () {
+                      GoRouter.of(context).go('/home');
+                        }),
+                  ),
           Container(
             width: 100,
             height: 100,
@@ -137,39 +145,48 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
           _buildResultCard('Calories to Goal', result.caloriesToReachGoal),
           _buildResultCard('Days to Goal', result.daysToReachGoal),
           _buildResultCard('Goal Pace', result.goalPace),
+            const SizedBox(
+                    height: 50,
+                  ),
+                  FadeTransition(
+                      opacity: _opacityAnimation,
+                      child: const PremiumContainer()),
         ],
       ),
     );
   }
 
   Widget _buildResultCard(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
+   return FadeTransition(
+        opacity: _opacityAnimation,
+      child: Padding(
+         padding: const EdgeInsets.all(1.0),
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

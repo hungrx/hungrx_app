@@ -10,6 +10,17 @@ class TDEERepository {
   Future<TDEEResultModel> calculateMetrics(String userId) async {
     try {
       final data = await _apiService.calculateMetrics(userId);
+        print('API Response: $data');
+      
+      if (data['data'] != null) {
+        final result = TDEEResultModel.fromJson(data['data']);
+        
+        // Debug print
+        print('Parsed Result: $result');
+        
+        return result;
+      }
+      
       return TDEEResultModel.fromJson(data);
     } on ApiException catch (e) {
       throw ApiException(message: 'Repository Error: ${e.message}');

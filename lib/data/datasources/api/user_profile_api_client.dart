@@ -6,20 +6,20 @@ class UserProfileApiClient {
   final String baseUrl = 'https://hungerxapp.onrender.com';
 
   Future<void> addUserProfile(UserInfoProfileModel userProfile) async {
-    print(userProfile.userId);
-    print(userProfile.name);
-    print(userProfile.gender);
-    print(userProfile.heightInCm);
-    print(userProfile.heightInFeet);
-    print(userProfile.heightInInches);
-
-    print(userProfile.isMetric);
-    print(userProfile.weight);
-    print(userProfile.mealsPerDay);
-    print(userProfile.goal);
-    print(userProfile.targetWeight);
-    print(userProfile.weightGainRate);
-    print(userProfile.activityLevel);
+    // print(userProfile.userId);
+    // print(userProfile.name);
+    // print(userProfile.gender);
+    // print(userProfile.age);
+    // print("height cm:${userProfile.heightInCm}");
+    // print("height feet:${userProfile.heightInFeet}");
+    // print("height in:${userProfile.heightInInches}");
+    // print(userProfile.isMetric);
+    // print(userProfile.weight);
+    // print(userProfile.mealsPerDay);
+    // print(userProfile.goal);
+    // print(userProfile.targetWeight);
+    // print(userProfile.weightGainRate);
+    // print(userProfile.activityLevel);
 
     final url = Uri.parse('$baseUrl/users/addName');
     try {
@@ -28,15 +28,26 @@ class UserProfileApiClient {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(userProfile.toJson()),
       );
-      print(response.body);
-      print(response.statusCode);
-      print(response.isRedirect);
 
       if (response.statusCode != 200) {
         throw Exception('Failed to add user profile: ${response.body}');
       }
     } catch (e) {
       throw Exception('Failed to add user profile: $e');
+    }
+  }
+
+  Future<bool> checkUserProfile(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/user-profile/$userId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error checking profile: $e');
+      return false;
     }
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_picker.dart';
 import 'package:hungrx_app/core/widgets/header_section.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class WeightTrackingScreen extends StatelessWidget {
@@ -132,8 +133,8 @@ class WeightTrackingScreen extends StatelessWidget {
               Text(date,
                   style: const TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold)),
-              Text('Total weight lose : $weightLoss',
-                  style: const TextStyle(color: Colors.grey)),
+              const Text('weight increase',
+                  style: TextStyle(color: Colors.red)),
             ],
           ),
           Text(weight,
@@ -150,11 +151,12 @@ class WeightTrackingScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const WeightPickerScreen()),
-          );
+        onPressed: () async{
+          await context.pushNamed(RouteNames.weightPicker);
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => const WeightPickerScreen(userId: '',)),
+          // );
           // Implement weight update logic
         },
         style: ElevatedButton.styleFrom(

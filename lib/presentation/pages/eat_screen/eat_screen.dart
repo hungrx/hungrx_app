@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:hungrx_app/core/widgets/bottom_navbar.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
 
@@ -12,28 +10,8 @@ class EatScreen extends StatefulWidget {
 }
 
 class _EatScreenState extends State<EatScreen> {
-  int _selectedIndex = 1; // Set to 1 for 'Eat' tab
+  int selectedIndex = 1; // Set to 1 for 'Eat' tab
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 0:
-        context.go('/dashboard');
-        break;
-      case 1:
-        // Already on DashboardScreen, no navigation needed
-        break;
-      case 2:
-        context.go('/profile');
-        break;
-      case 3:
-        context.go('/foodcart');
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,10 +36,7 @@ class _EatScreenState extends State<EatScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
+
     );
   }
 

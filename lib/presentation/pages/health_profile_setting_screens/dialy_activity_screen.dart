@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:confetti/confetti.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/data/Models/tdee_result_model.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_event.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_state.dart';
@@ -18,13 +19,15 @@ class DailyActivityScreen extends StatefulWidget {
   DailyActivityScreenState createState() => DailyActivityScreenState();
 }
 
-class DailyActivityScreenState extends State<DailyActivityScreen> with TickerProviderStateMixin {
+class DailyActivityScreenState extends State<DailyActivityScreen>
+    with TickerProviderStateMixin {
   final Map<ActivityLevel, String> activityDescriptions = const {
     ActivityLevel.sedentary: "Little to no exercise, desk job",
     ActivityLevel.lightlyActive: "Light exercise 1-3 days/week",
     ActivityLevel.moderatelyActive: "Moderate exercise 3-5 days/week",
     ActivityLevel.veryActive: "Hard exercise 6-7 days/week",
-    ActivityLevel.extraActive: "Very hard exercise & physical job or 2x training",
+    ActivityLevel.extraActive:
+        "Very hard exercise & physical job or 2x training",
   };
 
   late ConfettiController _confettiController;
@@ -33,7 +36,8 @@ class DailyActivityScreenState extends State<DailyActivityScreen> with TickerPro
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 5));
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 5));
     _dialogAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -47,7 +51,8 @@ class DailyActivityScreenState extends State<DailyActivityScreen> with TickerPro
     super.dispose();
   }
 
-  void _showCelebrationDialog(BuildContext context) {
+  void _showCelebrationDialog(
+      BuildContext context, TDEEResultModel tdeeResult) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -91,8 +96,11 @@ class DailyActivityScreenState extends State<DailyActivityScreen> with TickerPro
     _dialogAnimationController.forward();
 
     Future.delayed(const Duration(seconds: 3), () {
-      Navigator.of(context).pop(); // Close the dialog
-      context.pushNamed(RouteNames.tdeeResults);
+      Navigator.of(context).pop(); // Close dialog
+      context.pushNamed(
+        RouteNames.tdeeResults,
+        extra: tdeeResult,
+      );
     });
   }
 
@@ -104,8 +112,8 @@ class DailyActivityScreenState extends State<DailyActivityScreen> with TickerPro
         children: [
           BlocConsumer<UserProfileFormBloc, UserProfileFormState>(
             listener: (context, state) {
-              if (state.isSuccess) {
-                _showCelebrationDialog(context);
+              if (state.isSuccess && state.tdeeResult != null) {
+                _showCelebrationDialog(context, state.tdeeResult!);
               }
               if (state.errorMessage != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -150,7 +158,8 @@ class DailyActivityScreenState extends State<DailyActivityScreen> with TickerPro
                               children: ActivityLevel.values.map((activity) {
                                 return Column(
                                   children: [
-                                    _buildActivityButton(context, activity, state.activityLevel),
+                                    _buildActivityButton(
+                                        context, activity, state.activityLevel),
                                     const SizedBox(height: 10),
                                   ],
                                 );
@@ -160,15 +169,21 @@ class DailyActivityScreenState extends State<DailyActivityScreen> with TickerPro
                         ),
                         NavigationButtons(
                           buttonText: "Finish",
-                          onNextPressed: () {
-                            if (state.activityLevel != null) {
-                              context.read<UserProfileFormBloc>().add(SubmitForm());
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please select an activity level')),
-                              );
-                            }
-                          },
+                          onNextPressed: state.isLoading
+                              ? (){}
+                              : () {
+                                  if (state.activityLevel != null) {
+                                    context
+                                        .read<UserProfileFormBloc>()
+                                        .add(SubmitForm());
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Please select an activity level')),
+                                    );
+                                  }
+                                },
                         ),
                       ],
                     ),
@@ -177,6 +192,7 @@ class DailyActivityScreenState extends State<DailyActivityScreen> with TickerPro
               );
             },
           ),
+          // Confetti overlay
           Align(
             alignment: Alignment.center,
             child: ConfettiWidget(
@@ -187,53 +203,99 @@ class DailyActivityScreenState extends State<DailyActivityScreen> with TickerPro
               numberOfParticles: 50,
               gravity: 0.05,
               shouldLoop: false,
-              colors: const [Colors.green, Colors.blue, Colors.pink, Colors.orange, Colors.purple],
+              colors: const [
+                Colors.green,
+                Colors.blue,
+                Colors.pink,
+                Colors.orange,
+                Colors.purple
+              ],
             ),
+          ),
+          // Loading overlay based on BLoC state
+          BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
+            builder: (context, state) {
+              if (state.isLoading) {
+                return Container(
+                  color: Colors.black.withOpacity(0.5),
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.buttonColors),
+                        ),
+                        SizedBox(height: 20),
+                        Text(
+                          'Calculating your TDEE...',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActivityButton(BuildContext context, ActivityLevel activity, ActivityLevel? selectedActivity) {
+  Widget _buildActivityButton(BuildContext context, ActivityLevel activity,
+      ActivityLevel? selectedActivity) {
     bool isSelected = selectedActivity == activity;
-    return GestureDetector(
-      onTap: () {
-        context.read<UserProfileFormBloc>().add(ActivityLevelChanged(activity));
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: isSelected ? AppColors.buttonColors : Colors.grey[700]!,
-            width: 1,
+    return BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
+      builder: (context, state) {
+        return GestureDetector(
+          onTap: state.isLoading
+              ? null
+              : () {
+                  context
+                      .read<UserProfileFormBloc>()
+                      .add(ActivityLevelChanged(activity));
+                },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors.grey[900],
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: isSelected ? AppColors.buttonColors : Colors.grey[700]!,
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  activity.toString().split('.').last,
+                  style: TextStyle(
+                    color: isSelected ? AppColors.buttonColors : Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  activityDescriptions[activity]!,
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              activity.toString().split('.').last,
-              style: TextStyle(
-                color: isSelected ? AppColors.buttonColors : Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              activityDescriptions[activity]!,
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

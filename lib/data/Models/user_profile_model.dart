@@ -14,8 +14,10 @@ class UserInfoProfileModel extends Equatable {
   final double targetWeight;
   final double weightGainRate;
   final String activityLevel;
+  final int age;
 
   const UserInfoProfileModel({
+    required this.age,
     required this.userId,
     required this.name,
     required this.gender,
@@ -32,6 +34,7 @@ class UserInfoProfileModel extends Equatable {
   });
 
   Map<String, dynamic> toJson() => {
+        'age': age,
         'userId': userId,
         'name': name,
         'gender': gender,
@@ -49,6 +52,7 @@ class UserInfoProfileModel extends Equatable {
 
   @override
   List<Object?> get props => [
+        age,
         userId,
         name,
         gender,

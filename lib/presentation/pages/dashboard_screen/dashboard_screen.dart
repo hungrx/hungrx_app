@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:animated_flip_counter/animated_flip_counter.dart';
-import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
-import 'package:hungrx_app/core/widgets/bottom_navbar.dart';
-import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/feedbacks_widget.dart';
-import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
-import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_tracking.dart';
-import 'package:hungrx_app/core/widgets/responsive_text.dart';
-import 'package:percent_indicator/percent_indicator.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
+import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_state.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/dashboard_widgets.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/streak_map.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/water_container.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,47 +18,32 @@ class DashboardScreen extends StatefulWidget {
 
 class DashboardScreenState extends State<DashboardScreen> {
   double totalCalories = 115300;
-  int _selectedIndex = 0;
-  final TextEditingController _calorieController = TextEditingController();
+  int selectedIndex = 0;
 
-  @override
-  void dispose() {
-    _calorieController.dispose();
-    super.dispose();
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 0:
-        // Already on HomeScreen, no navigation needed
-        break;
-      case 1:
-        context.go('/eatscreen');
-        break;
-      case 2:
-        context.go('/profile');
-        break;
-      case 3:
-        context.go('/foodcart');
-        break;
-    }
-  }
-
-  void _showFeedbackDialog() {
-    showDialog(
-      barrierDismissible: true,
+  void _showDrinkBottomSheet() {
+    showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) {
-        return FeedbackDialog(
-          onSubmit: (rating, feedback) {
-            // Handle the feedback submission here
-          },
-        );
-      },
+      backgroundColor: AppColors.tileColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(10),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Add Water Intake',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            // Add your water intake UI here
+          ],
+        ),
+      ),
     );
   }
 
@@ -69,400 +51,101 @@ class DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(context),
-                      const SizedBox(height: 20),
-                      _buildCalorieCounter(),
-                      const SizedBox(height: 20),
-                      _buildInfoCards(),
-                      const SizedBox(height: 20),
-                      _buildHeatmapCalendar(),
-                      const SizedBox(height: 20),
-                      _buildBottomButtons(),
-                    ],
+      body: BlocConsumer<HomeBloc, HomeState>(
+        listener: (context, state) {
+          if (state is HomeError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is HomeInitial || state is HomeLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is HomeLoaded) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<HomeBloc>().add(RefreshHomeData());
+              },
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        DashboardWidgets.buildHeader(state.homeData, context),
+                        const SizedBox(height: 16),
+                        DashboardWidgets.buildCalorieCounter(state.homeData),
+                        const SizedBox(height: 16),
+                        DashboardWidgets.buildDailyTargetAndRemaining(
+                            state.homeData, context),
+                        const SizedBox(height: 16),
+                        _buildStreakCalendar(),
+                        const SizedBox(height: 16),
+                        _buildDrinkButton(),
+                        const SizedBox(height: 16),
+                        DashboardWidgets.buildBottomButtons(
+                            context, state.homeData),
+                        // ... rest of your widgets
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            // Padding(
-            //   padding: const EdgeInsets.all(16.0),
-            //   child: _buildEatFoodButton(),
-            // ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const ResponsiveTextWidget(
-              text: 'Hi, Warren Daniel',
-              fontWeight: FontWeight.bold,
-              sizeFactor: 0.06,
-              color: Colors.white,
-            ),
-            ResponsiveTextWidget(
-              text: _getGreeting(),
-              fontWeight: FontWeight.bold,
-              sizeFactor: 0.035,
-              color: AppColors.fontColor,
-            ),
-          ],
-        ),
-        InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const UserProfileScreen()),
             );
-          },
-          child: const CircleAvatar(
-            radius: 25,
-            backgroundImage: AssetImage('assets/images/dp.png'),
-          ),
-        ),
-      ],
-    );
-  }
+          }
 
-  String _getGreeting() {
-    var hour = DateTime.now().hour;
-    if (hour < 12) {
-      return 'Good Morning';
-    }
-    if (hour < 17) {
-      return 'Good Afternoon';
-    }
-    if (hour < 21) {
-      return 'Good Evening';
-    }
-    return 'Good Night';
-  }
-
-  Widget _buildCalorieCounter() {
-    return Container(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
-      decoration: BoxDecoration(
-        color: AppColors.tileColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const ResponsiveTextWidget(
-                text: 'Calories to Burn',
-                fontWeight: FontWeight.w600,
-                sizeFactor: 0.04,
-                color: AppColors.fontColor,
-              ),
-              SizedBox(
-                child: Row(
-                  children: [
-                    AnimatedFlipCounter(
-                      value: int.tryParse("256") ?? 0,
-                      textStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const ResponsiveTextWidget(
-                      text: ' Days left',
-                      fontWeight: FontWeight.w600,
-                      sizeFactor: 0.03,
-                      color: AppColors.fontColor,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Row(
-            // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              AnimatedFlipCounter(
-                thousandSeparator: ",",
-                negativeSignDuration: const Duration(milliseconds: 5000),
-                duration: const Duration(milliseconds: 5000),
-                value: totalCalories,
-                wholeDigits: 6,
-                fractionDigits: 0,
-                textStyle: const TextStyle(
-                  fontFamily: "digifont",
-                  color: Colors.white,
-                  fontSize: 78,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: ResponsiveTextWidget(
-                  text: ' cal',
-                  fontWeight: FontWeight.w600,
-                  sizeFactor: 0.04,
-                  color: AppColors.fontColor,
-                ),
-              ),
-              // SizedBox(height: 20,)
-            ],
-          ),
-          const SizedBox(height: 8),
-          // const Row(
-          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //   children: [
-          //     ResponsiveTextWidget(
-          //       text: 'Daily Target',
-          //       fontWeight: FontWeight.w600,
-          //       sizeFactor: 0.04,
-          //       color: AppColors.fontColor,
-          //     ),
-          //     ResponsiveTextWidget(
-          //       text: '2130 cal',
-          //       fontWeight: FontWeight.w600,
-          //       sizeFactor: 0.05,
-          //       color: AppColors.buttonColors,
-          //     ),
-          //   ],
-          // ),
-        ],
+          return const Center(child: Text('Something went wrong'));
+        },
       ),
     );
   }
 
-  Widget _buildInfoCards() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-        padding: const EdgeInsets.only(top: 34,left: 16,right: 16,bottom: 34),
-        decoration: BoxDecoration(
-          color: AppColors.tileColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text("value", style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold)),
-            Text("value", style: TextStyle(color: Colors.grey,fontSize: 22,fontWeight: FontWeight.bold)),
-             
-          ],
-        ),
-      ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildInfoCard(
-            ontap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const DailyInsightScreen()),
-              );
-            },
-            title: 'Remaining',
-            value: '530',
-            unit: 'cal',
-            icon: CircularPercentIndicator(
-              radius: 30,
-              lineWidth: 5,
-              percent: 0.25,
-              progressColor: AppColors.buttonColors,
-              backgroundColor: Colors.grey[800]!,
-              circularStrokeCap: CircularStrokeCap.round,
-            ),
-          ),
-        ),
-      ],
+ 
+
+
+
+  Widget _buildStreakCalendar() {
+    return const StreakCalendar(
     );
   }
 
-  Widget _buildInfoCard(
-      {required String? title,
-      required String? value,
-      required String? unit,
-      required void Function()? ontap,
-      required Widget icon
-      
-      }) {
+  Widget _buildDrinkButton() {
     return GestureDetector(
-      onTap: ontap,
+      onTap: _showDrinkBottomSheet,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        height: 100, // Add fixed height for better animation
+        // padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AppColors.tileColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
-            icon,
-            const SizedBox(
-              width: 10,
-            ),
-            Column(
+        child: WaterContainer(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title??'', style: const TextStyle(color: Colors.grey)),
-                Row(
-                  children: [
-                    ResponsiveTextWidget(
-                      text: value??'',
-                      fontWeight: FontWeight.w600,
-                      sizeFactor: 0.075,
-                      color: AppColors.fontColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(unit??'', style: const TextStyle(color: Colors.grey)),
-                  ],
+                Text(
+                  'Water',
+                  style: GoogleFonts.stickNoBills(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+                const Icon(Icons.local_drink, color: Colors.white),
               ],
             ),
-            const SizedBox(height: 8),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHeatmapCalendar() {
-    return Container(
-      padding: const EdgeInsets.only(left: 10,right: 10,top: 10,bottom: 10),
-      decoration: BoxDecoration(
-        color: AppColors.tileColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const ResponsiveTextWidget(
-            text: "Streaks 🔥",
-            fontWeight: FontWeight.w600,
-            sizeFactor: 0.04,
-            color: AppColors.fontColor,
-          ),
-          HeatMap(
-            margin: const EdgeInsets.all(2),
-            fontSize: 0,
-            defaultColor: Colors.grey,
-            size: 12,
-            borderRadius: 2,
-            startDate: DateTime(2024, 8, 1, 20, 30),
-            endDate: DateTime(2024, 12, 30, 20, 30),
-            textColor: Colors.grey,
-            datasets: {
-              // this data daily add after comple the colorie budget
-              DateTime(2024, 9, 1): 1,
-              DateTime(2024, 9, 2): 2,
-              DateTime(2024, 9, 3): 1,
-              DateTime(2024, 9, 4): 13,
-              DateTime(2024, 9, 5): 6,
-              DateTime(2024, 9, 6): 6,
-              DateTime(2024, 9, 7): 6,
-              DateTime(2024, 9, 8): 6,
-              DateTime(2024, 9, 9): 6,
-              DateTime(2024, 9, 10): 1,
-              DateTime(2024, 9, 11): 6,
-              DateTime(2024, 9, 12): 6,
-              DateTime(2024, 9, 13): 1,
-            },
-            colorMode: ColorMode.color,
-            showText: false,
-            scrollable: true,
-            showColorTip: false,
-            colorsets: const {
-              1: Colors.red,
-              2: Colors.green,
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildBottomButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildBottomButton(
-            ontap: () {
-              _showFeedbackDialog();
-            },
-            title: '',
-            value: 'Feedbacks',
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildInfoCard(
-            ontap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const WeightTrackingScreen()),
-              );
-            },
-            title: 'Current Weight',
-            value: '98',
-            unit: 'KG',
-            icon: const FaIcon(
-              FontAwesomeIcons.weightScale,
-              color: AppColors.buttonColors,
-              size: 34,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomButton(
-      {required String title,
-      required String value,
-      required void Function()? ontap}) {
-    return GestureDetector(
-      onTap: ontap,
-      child: Container(
-        padding: const EdgeInsets.only(top: 34,left: 16,right: 16,bottom: 34),
-        decoration: BoxDecoration(
-          color: AppColors.tileColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(value, style: const TextStyle(color: Colors.grey,fontSize: 22,fontWeight: FontWeight.bold)),
-             
-          ],
-        ),
-      ),
-    );
-  }
+ 
 }

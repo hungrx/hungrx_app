@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/data/Models/user_profile_model.dart';
+import 'package:hungrx_app/data/repositories/tdee_repository.dart';
 
 import 'package:hungrx_app/data/repositories/user_info_profile_repository.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_event.dart';
@@ -8,11 +9,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfileFormBloc
     extends Bloc<UserProfileFormEvent, UserProfileFormState> {
-final UserProfileRepository _userProfileRepository;
+  final UserProfileRepository _userProfileRepository;
+  final TDEERepository _tdeeRepository;
 
   UserProfileFormBloc(
-      this._userProfileRepository,)
-      : super(const UserProfileFormState()) {
+    this._userProfileRepository,
+    this._tdeeRepository,
+  ) : super(const UserProfileFormState()) {
     on<NameChanged>(_onNameChanged);
     on<UnitChanged>(_onUnitChanged);
     on<GenderChanged>(_onGenderChanged);
@@ -47,7 +50,7 @@ final UserProfileRepository _userProfileRepository;
 
   void _onHeightChanged(
       HeightChanged event, Emitter<UserProfileFormState> emit) {
-    emit(state.copyWith(height: event.height));
+    emit(state.copyWith(heightInCm: event.height));
   }
 
   void _onHeightFeetChanged(
@@ -95,14 +98,14 @@ final UserProfileRepository _userProfileRepository;
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_id') ?? '';
-
       final userProfile = UserInfoProfileModel(
+        age: int.tryParse(state.age!) ?? 0,
         userId: userId,
         name: state.name ?? '',
         gender: state.gender?.toLowerCase() ?? '',
-        heightInCm: double.tryParse(state.height)??0,
-        heightInFeet: double.tryParse(state.heightFeet)??0,
-        heightInInches: double.tryParse(state.heightInches)??0,
+        heightInCm: double.tryParse(state.heightInCm) ?? 0,
+        heightInFeet: double.tryParse(state.heightFeet) ?? 0,
+        heightInInches: double.tryParse(state.heightInches) ?? 0,
         isMetric: state.isMetric,
         weight: double.parse(state.weight ?? '0'),
         mealsPerDay: state.mealsPerDay?.round() ?? 3,
@@ -111,11 +114,23 @@ final UserProfileRepository _userProfileRepository;
         weightGainRate: _mapweightGainRate(state.weightPace),
         activityLevel: _mapActivityLevelToString(state.activityLevel),
       );
-
+      emit(state.copyWith(isLoading: true));
       await _userProfileRepository.addUserProfile(userProfile);
-      emit(state.copyWith(isSubmitting: false, isSuccess: true));
+      final tdeeResult = await _tdeeRepository.calculateMetrics(userId);
+      // print(userId);
+      // print(tdeeResult.height);
+      // print(tdeeResult.weight);
+      // print(tdeeResult.bmi);
+      // print(tdeeResult.bmr);
+      // print(tdeeResult.tdee);
+      // print(tdeeResult.dailyCaloriesGoal);
+      // print(tdeeResult.goalPace);
+      // print(tdeeResult.daysToReachGoal);
+
+      emit(state.copyWith(
+          isSubmitting: false, isSuccess: true, tdeeResult: tdeeResult,isLoading: false,));
     } catch (error) {
-      emit(state.copyWith(isSubmitting: false, errorMessage: error.toString()));
+      emit(state.copyWith(isSubmitting: false, errorMessage: error.toString(), isLoading: false,));
     }
   }
 

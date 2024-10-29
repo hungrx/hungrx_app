@@ -7,9 +7,7 @@ class OtpUseCase {
   OtpUseCase(this.repository);
 
   Future<void> sendOtp(String phoneNumber) async {
-    print("send otp");
     final otpSendModel = OtpSendModel(phoneNumber: phoneNumber);
-    print(phoneNumber);
     await repository.sendOtp(otpSendModel);
   }
 

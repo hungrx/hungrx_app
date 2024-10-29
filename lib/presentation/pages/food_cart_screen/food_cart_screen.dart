@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/core/widgets/bottom_navbar.dart';
+
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -11,7 +10,7 @@ class CartScreen extends StatefulWidget {
 }
 
 class CartScreenState extends State<CartScreen> {
-  int _selectedIndex = 3; // Assuming cart is the 4th item in the bottom nav
+  int selectedIndex = 3; // Assuming cart is the 4th item in the bottom nav
 
   @override
   Widget build(BuildContext context) {
@@ -54,52 +53,9 @@ class CartScreenState extends State<CartScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          _navigateToScreen(index);
-        },
-      ),
+
     );
   }
-
-  void _navigateToScreen(int index) {
-   
-    switch (index) {
-      case 0:
-         context.go('/dashboard');
-        break;
-      case 1:
-         context.go('/eatscreen');
-        break;
-      case 2:
-        context.go('/profile');
-        break;
-      case 3:
-        // Already on CartScreen
-        return;
-      default:
-        return;
-    }
-
-  }
-
-  // Widget _buildTotalCalorieWarning() {
-  //   return Container(
-  //     padding: const EdgeInsets.all(8),
-  //     decoration: BoxDecoration(
-  //       color: Colors.red.withOpacity(0.2),
-  //       borderRadius: BorderRadius.circular(20),
-  //     ),
-  //     child: const Text(
-  //       "you're over recommended calorie for this meal by 240cal 😮",
-  //       style: TextStyle(color: Colors.red, fontSize: 12),
-  //     ),
-  //   );
-  // }
 
   Widget _buildFixedTotalCalorieFooter() {
     return Container(

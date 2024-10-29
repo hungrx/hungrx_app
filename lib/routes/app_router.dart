@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/data/Models/tdee_result_model.dart';
+import 'package:hungrx_app/data/datasources/api/weight_update_api.dart';
+import 'package:hungrx_app/data/repositories/weight_update_repository.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/domain/usecases/update_weight_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/email_login_bloc/login_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
+import 'package:hungrx_app/presentation/layout/root_layout.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
@@ -19,6 +26,8 @@ import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/use
 import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
+import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_picker.dart';
+import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_tracking.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/email_auth_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/splash_screen.dart';
@@ -35,6 +44,55 @@ class AppRouter {
 
   static final GoRouter _router = GoRouter(
     routes: <RouteBase>[
+      ShellRoute(
+        builder: (context, state, child) => RootLayout(child: child),
+        routes: [
+          // Home/Dashboard route
+          GoRoute(
+            path: '/home',
+            name: RouteNames.home,
+            builder: (context, state) => const DashboardScreen(),
+          ),
+          // Eat Screen route
+          GoRoute(
+            path: '/eatscreen',
+            name: RouteNames.eatscreen,
+            builder: (context, state) => const EatScreen(),
+          ),
+          // Profile route
+          GoRoute(
+            path: '/profile',
+            name: RouteNames.profile,
+            builder: (context, state) => const UserProfileScreen(),
+          ),
+          // Cart route
+          GoRoute(
+            path: '/foodcart',
+            name: RouteNames.foodcart,
+            builder: (context, state) => const CartScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/weight-picker',
+        name: RouteNames.weightPicker,
+        builder: (context, state) => BlocProvider(
+          create: (context) => WeightUpdateBloc(
+            UpdateWeightUseCase(
+              WeightUpdateRepository(
+                WeightUpdateApiService(),
+              ),
+            ),
+            AuthService(),
+          ),
+          child: const WeightPickerScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/weight-tracking',
+        name: RouteNames.weightTracking,
+        builder: (context, state) => const WeightTrackingScreen(),
+      ),
       GoRoute(
         path: '/',
         name: RouteNames.splash,
@@ -156,35 +214,8 @@ class AppRouter {
         path: '/tdee-results',
         name: RouteNames.tdeeResults,
         builder: (BuildContext context, GoRouterState state) {
-          return const TDEEResultScreen(userId: ,); // Replace with actual TDEEResultsScreen
-        },
-      ),
-      GoRoute(
-        path: '/home',
-        name: RouteNames.home,
-        builder: (BuildContext context, GoRouterState state) {
-          return const DashboardScreen(); // Replace with actual HomeScreen
-        },
-      ),
-      GoRoute(
-        path: '/dashboard',
-        name: RouteNames.dashboard,
-        builder: (BuildContext context, GoRouterState state) {
-          return const DashboardScreen(); // Replace with actual HomeScreen
-        },
-      ),
-      GoRoute(
-        path: '/eatscreen',
-        name: RouteNames.eatscreen,
-        builder: (BuildContext context, GoRouterState state) {
-          return const EatScreen(); // Replace with actual HomeScreen
-        },
-      ),
-      GoRoute(
-        path: '/foodcart',
-        name: RouteNames.foodcart,
-        builder: (BuildContext context, GoRouterState state) {
-          return const CartScreen(); // Replace with actual HomeScreen
+          final tdeeResult = state.extra as TDEEResultModel;
+          return TDEEResultScreen(tdeeResult: tdeeResult);
         },
       ),
       GoRoute(
@@ -220,13 +251,6 @@ class AppRouter {
         name: RouteNames.foodItemDetails,
         builder: (BuildContext context, GoRouterState state) {
           return const Placeholder(); // Replace with actual FoodItemDetailsScreen
-        },
-      ),
-      GoRoute(
-        path: '/profile',
-        name: RouteNames.profile,
-        builder: (BuildContext context, GoRouterState state) {
-          return const UserProfileScreen(); // Replace with actual ProfileScreen
         },
       ),
     ],

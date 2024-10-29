@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/data/datasources/api/tdee_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/user_profile_api_client.dart';
+import 'package:hungrx_app/data/repositories/tdee_repository.dart';
 import 'package:hungrx_app/data/repositories/user_info_profile_repository.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_event.dart';
@@ -50,11 +52,15 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
 
   @override
   Widget build(BuildContext context) {
+    final tdeeApiService = TDEEApiService();
+final tdeeRepository = TDEERepository(tdeeApiService);
+    final userProfileApiClient = UserProfileApiClient();
+    final userProfileRepository = UserProfileRepository(userProfileApiClient);
     Size size = MediaQuery.of(context).size;
     return BlocProvider(
       create: (context) => UserProfileFormBloc(
-        UserProfileRepository(UserProfileApiClient())
-      ),
+              userProfileRepository,
+            tdeeRepository),
       child: Scaffold(
         // resizeToAvoidBottomInset: false,
         body: GradientContainer(

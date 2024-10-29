@@ -153,6 +153,45 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
     );
   }
 
+   void _showLoadingOverlay(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WillPopScope(
+        onWillPop: () async => false,
+        child: Container(
+          color: Colors.black.withOpacity(0.5),
+          child: const Center(
+            child: CircularProgressIndicator(
+              color: AppColors.buttonColors,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _hideLoadingOverlay(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    }
+  }
+
+  void _handleGoogleAuthError(BuildContext context, String error) {
+    _hideLoadingOverlay(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -188,18 +227,20 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
           },
         ),
         
-        BlocListener<GoogleAuthBloc, GoogleAuthState>(
+// In EmailAuthScreen
+BlocListener<GoogleAuthBloc, GoogleAuthState>(
           listener: (context, state) {
-            if (state is GoogleAuthSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Google Sign-In successful!')),
+            if (state is GoogleAuthLoading) {
+              _showLoadingOverlay(context);
+            } else if (state is GoogleAuthSuccess) {
+              _hideLoadingOverlay(context);
+              context.pushNamed(
+                RouteNames.userInfoOne,
+                // Pass any necessary data here if needed
+                // extra: state.user,
               );
-              context.pushNamed(RouteNames.userInfoOne);
             } else if (state is GoogleAuthFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content: Text('Google Sign-In failed: ${state.error}')),
-              );
+              _handleGoogleAuthError(context, state.error);
             }
           },
         ),
@@ -369,51 +410,51 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
                 return const SizedBox.shrink();
               },
             ),
-      BlocBuilder<GoogleAuthBloc, GoogleAuthState>(
-              builder: (context, state) {
-                if (state is GoogleAuthLoading) {
-                  return Container(
-                    color: Colors.black.withOpacity(0.5),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.buttonColors,
-                      ),
-                    ),
-                  );
-                } else if (state is GoogleAuthFailure) {
-                  return Container(
-                    color: Colors.black.withOpacity(0.5),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Google Sign-In Failed',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            state.error,
-                            style: const TextStyle(color: Colors.red),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              BlocProvider.of<GoogleAuthBloc>(context)
-                                  .add(GoogleSignInRequested());
-                            },
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
-            ),
+      // BlocBuilder<GoogleAuthBloc, GoogleAuthState>(
+      //         builder: (context, state) {
+      //           if (state is GoogleAuthLoading) {
+      //             return Container(
+      //               color: Colors.black.withOpacity(0.5),
+      //               child: const Center(
+      //                 child: CircularProgressIndicator(
+      //                   color: AppColors.buttonColors,
+      //                 ),
+      //               ),
+      //             );
+      //           } else if (state is GoogleAuthFailure) {
+      //             return Container(
+      //               color: Colors.black.withOpacity(0.5),
+      //               child: Center(
+      //                 child: Column(
+      //                   mainAxisAlignment: MainAxisAlignment.center,
+      //                   children: [
+      //                     const Text(
+      //                       'Google Sign-In Failed',
+      //                       style: TextStyle(color: Colors.white, fontSize: 18),
+      //                     ),
+      //                     const SizedBox(height: 10),
+      //                     Text(
+      //                       state.error,
+      //                       style: const TextStyle(color: Colors.red),
+      //                       textAlign: TextAlign.center,
+      //                     ),
+      //                     const SizedBox(height: 20),
+      //                     ElevatedButton(
+      //                       onPressed: () {
+      //                         BlocProvider.of<GoogleAuthBloc>(context)
+      //                             .add(GoogleSignInRequested());
+      //                       },
+      //                       child: const Text('Retry'),
+      //                     ),
+      //                   ],
+      //                 ),
+      //               ),
+      //             );
+      //           } else {
+      //             return const SizedBox.shrink();
+      //           }
+      //         },
+      //       ),
           ],
         ),
       ),

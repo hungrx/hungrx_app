@@ -9,6 +9,7 @@ import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_conta
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/navigation_buttons.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/prograss_indicator.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_textfield.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/toggle_button.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 
 class UserInfoScreenThree extends StatefulWidget {
@@ -57,6 +58,51 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
                               ),
+                            ),
+                             const SizedBox(height: 20),
+                            const Text(
+                              "How many times do you typically\neat in a day?",
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 16),
+                            ),
+                            const SizedBox(height: 10),
+                            Slider(
+                              value: state.mealsPerDay ?? 1,
+                              min: 1,
+                              max: 4,
+                              divisions: 3,
+                              activeColor: AppColors.buttonColors,
+                              inactiveColor: Colors.grey[800],
+                              label: state.mealsPerDay.toString(),
+                              onChanged: (value) {
+                                context
+                                    .read<UserProfileFormBloc>()
+                                    .add(MealsPerDayChanged(value));
+                              },
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 20, right: 20),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [1, 2, 3, 4]
+                                    .map((e) => Text(
+                                          e.toString(),
+                                          style: const TextStyle(
+                                              color: Colors.grey),
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+
+
+                            const SizedBox(height: 50),
+                             
+                            const Text(
+                              "Select Measurement System",
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 16),
                             ),
                             const SizedBox(height: 20),
                             UnitToggle(
@@ -134,42 +180,6 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                     .add(WeightChanged(value));
                               },
                             ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              "How many times do you typically\neat in a day?",
-                              style:
-                                  TextStyle(color: Colors.grey, fontSize: 16),
-                            ),
-                            const SizedBox(height: 10),
-                            Slider(
-                              value: state.mealsPerDay ?? 1,
-                              min: 1,
-                              max: 4,
-                              divisions: 3,
-                              activeColor: AppColors.buttonColors,
-                              inactiveColor: Colors.grey[800],
-                              label: state.mealsPerDay.toString(),
-                              onChanged: (value) {
-                                context
-                                    .read<UserProfileFormBloc>()
-                                    .add(MealsPerDayChanged(value));
-                              },
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 20, right: 20),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [1, 2, 3, 4]
-                                    .map((e) => Text(
-                                          e.toString(),
-                                          style: const TextStyle(
-                                              color: Colors.grey),
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
                             const SizedBox(height: 100),
                           ],
                         ),
@@ -215,76 +225,3 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
     );
   }
 }
-
-class UnitToggle extends StatelessWidget {
-  final bool isMetric;
-  final ValueChanged<bool> onToggle;
-
-  const UnitToggle({
-    super.key,
-    required this.isMetric,
-    required this.onToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 200,
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.grey[800],
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Stack(
-        children: [
-          AnimatedAlign(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            alignment: isMetric ? Alignment.centerRight : Alignment.centerLeft,
-            child: Container(
-              width: 100,
-              height: 50,
-              decoration: BoxDecoration(
-                color: AppColors.buttonColors,
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => onToggle(false),
-                  child: Center(
-                    child: Text(
-                      'Imperial',
-                      style: TextStyle(
-                        color: !isMetric ? Colors.black : Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => onToggle(true),
-                  child: Center(
-                    child: Text(
-                      'Metric',
-                      style: TextStyle(
-                        color: isMetric ? Colors.black : Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-// UnitToggle widget remains unchanged

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_informaion_screen.dart';
-import 'package:hungrx_app/core/widgets/bottom_navbar.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -12,29 +11,6 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
-  int _selectedIndex = 2; // Set to 2 for 'Profile' tab
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 0:
-       context.go('/dashboard');
-        break;
-      case 1:
-      context.go('/eatscreen');
-        break;
-      case 2:
-        // Already on UserProfileScreen, no navigation needed
-        break;
-      case 3:
-        context.go('/foodcart');
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,10 +28,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
+
     );
   }
 

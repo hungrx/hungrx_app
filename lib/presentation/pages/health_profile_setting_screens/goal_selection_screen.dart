@@ -64,7 +64,7 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
 
           try {
             if (state.isMetric) {
-              height = double.tryParse(state.height) ?? 0;
+              height = double.tryParse(state.heightInCm) ?? 0;
             } else {
               double feet = double.tryParse(state.heightFeet) ?? 0;
               double inches = double.tryParse(state.heightInches) ?? 0;

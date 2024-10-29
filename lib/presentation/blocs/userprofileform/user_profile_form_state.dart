@@ -1,12 +1,13 @@
 import 'package:equatable/equatable.dart';
+import 'package:hungrx_app/data/Models/tdee_result_model.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
 
-
 class UserProfileFormState extends Equatable {
+  final TDEEResultModel? tdeeResult;
   final String? name;
   final String? gender;
   final String? age;
-  final String height;
+  final String heightInCm;
   final String heightFeet;
   final String heightInches;
   final String? weight;
@@ -19,12 +20,15 @@ class UserProfileFormState extends Equatable {
   final bool isSubmitting;
   final bool isSuccess;
   final String? errorMessage;
+  final bool isLoading;
 
   const UserProfileFormState({
+    this.isLoading = false,
+    this.tdeeResult,
     this.name,
     this.gender,
     this.age,
-    this.height = '',
+    this.heightInCm = '',
     this.heightFeet = '',
     this.heightInches = '',
     this.weight,
@@ -40,10 +44,12 @@ class UserProfileFormState extends Equatable {
   });
 
   UserProfileFormState copyWith({
+    TDEEResultModel? tdeeResult,
+    bool? isLoading,
     String? name,
     String? gender,
     String? age,
-    String? height,
+    String? heightInCm,
     String? heightFeet,
     String? heightInches,
     String? weight,
@@ -58,10 +64,12 @@ class UserProfileFormState extends Equatable {
     String? errorMessage,
   }) {
     return UserProfileFormState(
+      isLoading: isLoading ?? this.isLoading,
+      tdeeResult: tdeeResult ?? this.tdeeResult,
       name: name ?? this.name,
       gender: gender ?? this.gender,
       age: age ?? this.age,
-      height: height ?? this.height,
+      heightInCm: heightInCm ?? this.heightInCm,
       heightFeet: heightFeet ?? this.heightFeet,
       heightInches: heightInches ?? this.heightInches,
       weight: weight ?? this.weight,
@@ -79,10 +87,11 @@ class UserProfileFormState extends Equatable {
 
   @override
   List<Object?> get props => [
+        isLoading,
         name,
         gender,
         age,
-        height,
+        heightInCm,
         heightFeet,
         heightInches,
         weight,
@@ -94,6 +103,7 @@ class UserProfileFormState extends Equatable {
         isMetric,
         isSubmitting,
         isSuccess,
-        errorMessage
+        errorMessage,
+        tdeeResult
       ];
 }
