@@ -15,9 +15,9 @@ void setupDependencies() {
   getIt.registerLazySingleton(() => TDEEApiService());
 
   // Repositories
-  getIt.registerLazySingleton(
-    () => UserProfileRepository(getIt<UserProfileApiClient>()),
-  );
+  // getIt.registerLazySingleton(
+  //   () => UserProfileRepository(getIt<UserProfileApiClient>()),
+  // );
   getIt.registerLazySingleton(
     () => TDEERepository(getIt<TDEEApiService>()),
   );

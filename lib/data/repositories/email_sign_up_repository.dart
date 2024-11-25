@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/user_model.dart';
+import 'package:hungrx_app/data/Models/email_model.dart';
+
+
+
 
 class ApiResponse {
   final bool success;

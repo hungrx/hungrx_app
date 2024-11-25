@@ -9,6 +9,7 @@ class TDEEApiService {
   TDEEApiService({http.Client? client}) : _client = client ?? http.Client();
 
   Future<Map<String, dynamic>> calculateMetrics(String userId) async {
+  
     try {
       final response = await _client.post(
         Uri.parse(ApiConstants.baseUrl + ApiConstants.calculateMetricsEndpoint),
@@ -17,9 +18,8 @@ class TDEEApiService {
         },
         body: json.encode({'userId': userId}),
       );
-
       final decodedResponse = json.decode(response.body);
-
+print(response.body);
       if (response.statusCode == 200) {
         return decodedResponse['data'];
       } else {

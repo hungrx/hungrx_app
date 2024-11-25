@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
@@ -8,6 +9,7 @@ import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/dashboard_
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/streak_map.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/water_container.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,32 +22,32 @@ class DashboardScreenState extends State<DashboardScreen> {
   double totalCalories = 115300;
   int selectedIndex = 0;
 
-  void _showDrinkBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.tileColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(10),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Add Water Intake',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            // Add your water intake UI here
-          ],
-        ),
-      ),
-    );
-  }
+  // void _showDrinkBottomSheet() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     backgroundColor: AppColors.tileColor,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  //     ),
+  //     builder: (context) => Container(
+  //       padding: const EdgeInsets.all(10),
+  //       child: const Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Text(
+  //             'Add Water Intake',
+  //             style: TextStyle(
+  //               color: Colors.white,
+  //               fontSize: 20,
+  //               fontWeight: FontWeight.bold,
+  //             ),
+  //           ),
+  //           // Add your water intake UI here
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +117,9 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildDrinkButton() {
     return GestureDetector(
-      onTap: _showDrinkBottomSheet,
+      onTap: (){
+        context.pushNamed(RouteNames.waterIntake);
+      },
       child: Container(
         height: 100, // Add fixed height for better animation
         // padding: const EdgeInsets.all(20),

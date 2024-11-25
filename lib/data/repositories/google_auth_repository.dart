@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/errors/google_auth_error.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,7 +13,13 @@ class GoogleAuthRepository {
   Future<User?> signIn() async {
     try {
       final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null;
+
+      if (googleUser == null) {
+        throw GoogleAuthException(
+          message: 'Sign in cancelled by user',
+          isCancelled: true,
+        );
+      }
 
       final googleAuth = await googleUser.authentication;
 
@@ -22,39 +30,58 @@ class GoogleAuthRepository {
 
       final userCredential = await _auth.signInWithCredential(credential);
       User? user = userCredential.user;
+      // print(user);
 
       if (user != null) {
         await _storeUserInDatabase(user);
+        return user;
+      } else {
+        throw Exception('Failed to get user data from Google Sign In');
       }
-
-      return user;
-    } catch (error) {
-      print('Error signing in with Google: $error');
-      return null;
+    } on PlatformException catch (e) {
+      throw GoogleAuthException(
+        message: 'Platform error occurred: ${e.message}',
+      );
+    } catch (e) {
+      if (e is GoogleAuthException) {
+        rethrow;
+      }
+      throw GoogleAuthException(
+        message: 'Failed to sign in with Google: $e',
+      );
     }
   }
 
   Future<String> _storeUserInDatabase(User user) async {
+    // print(user.displayName);
     try {
       final url =
           Uri.parse('https://hungerxapp.onrender.com/users/signup/google');
+
+      final requestBody = {
+        'googleId': user.uid,
+        'email': user.email,
+        'name': user.displayName,
+      };
+
+      print('Request body: $requestBody');
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'googleId': user.uid,
-          'email': user.email,
-          'name': user.displayName,
-        }),
+        body: json.encode(requestBody),
       );
+
+      print(response.body);
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        if (responseData is Map<String, dynamic> &&
-            responseData.containsKey('user') &&
-            responseData['user'] is Map<String, dynamic> &&
-            responseData['user'].containsKey('id')) {
-          final userId = responseData['user']['id'] as String;
+
+        if (responseData['status'] == true &&
+            responseData['data'] != null &&
+            responseData['data']['user'] != null) {
+          final userId = responseData['data']['user']['id'] as String;
+          print('Successfully got user ID: $userId');
           await _saveUserId(userId);
           return userId;
         } else {
@@ -72,19 +99,34 @@ class GoogleAuthRepository {
   }
 
   Future<void> _saveUserId(String userId) async {
-    print("Saving user ID: $userId");
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_id', userId);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_id', userId);
+      print('Successfully saved user ID to SharedPreferences');
+    } catch (e) {
+      print('Error saving user ID: $e');
+      throw Exception('Failed to save user ID locally');
+    }
   }
 
   Future<String?> getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('user_id');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('user_id');
+    } catch (e) {
+      print('Error getting user ID: $e');
+      return null;
+    }
   }
 
   Future<bool> isLoggedIn() async {
-    final userId = await getUserId();
-    return userId != null && userId.isNotEmpty;
+    try {
+      final userId = await getUserId();
+      return userId != null && userId.isNotEmpty;
+    } catch (e) {
+      print('Error checking login status: $e');
+      return false;
+    }
   }
 
   Future<void> signOut() async {

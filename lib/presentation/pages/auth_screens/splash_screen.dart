@@ -29,9 +29,10 @@ class SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _checkConnectivityAndNavigate();
+
     // _navigateToNextScreen();
-  
   }
+
   Future<void> _checkConnectivityAndNavigate() async {
     // Initial connectivity check
     context.read<ConnectivityBloc>().add(CheckConnectivity());
@@ -41,39 +42,52 @@ class SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 4));
 
     if (!mounted) return;
-// auth service .is loggedin method is check the use logged in or not
+
     final bool isLoggedIn = await _authService.isLoggedIn();
-    final bool isProfileComplete =
-        await _authService.isProfileComplete() ?? true;
     final bool hasSeenOnboarding = await _onboardingService.hasSeenOnboarding();
+    String route = '/login';
 
     if (isLoggedIn) {
       try {
-        final homeData = await _authService.fetchHomeData();
         final userId = await _authService.getUserId();
-        if (homeData != null && mounted) {
-          print(userId);
-          // Initialize HomeBloc with fetched data
-          context.read<HomeBloc>().add(InitializeHomeData(homeData));
-        }
+        if (userId != null) {
+          // Check profile completion
+          final bool isProfileComplete =
+              await _authService.checkProfileCompletion(userId);
 
-        if (userId != null && mounted) {
-          context.read<StreakBloc>().add(FetchStreakData(userId));
+          // Fetch home data if needed
+          final homeData = await _authService.fetchHomeData();
+          if (homeData != null && mounted) {
+            context.read<HomeBloc>().add(InitializeHomeData(homeData));
+          }
+
+          // Update streaks
+          if (mounted) {
+            context.read<StreakBloc>().add(FetchStreakData(userId));
+          }
+          // print(isProfileComplete);
+          // Determine route based on profile completion
+          route = isProfileComplete ? '/home' : '/user-info-one';
         }
       } catch (e) {
-        print('Error fetching initial home data: $e');
+        print('Error during navigation checks: $e');
+        // Show error to user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content:
+                    Text('Error checking profile status. Please try again.')),
+          );
+        }
+        route = '/login'; // Fallback to login on error
       }
-    }
-    if (!mounted) return;
-
-    String route = '/login';
-    if (isLoggedIn) {
-      route = isProfileComplete ? '/home' : '/user-info-one';
     } else if (!hasSeenOnboarding) {
       route = '/onboarding';
     }
 
-    GoRouter.of(context).go(route);
+    if (mounted) {
+      GoRouter.of(context).go(route);
+    }
   }
 
   @override
@@ -115,8 +129,8 @@ class SplashScreenState extends State<SplashScreen> {
                   ),
                   const SizedBox(height: 20),
                   const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.buttonColors),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
                   ),
                 ],
               ),

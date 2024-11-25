@@ -97,7 +97,8 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
       }
     }
   }
-    void _showSuccessDialog() {
+
+  void _showSuccessDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -109,7 +110,7 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-               const Icon(
+              const Icon(
                 Icons.check_circle,
                 color: Colors.green,
                 size: 64,
@@ -153,7 +154,7 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
     );
   }
 
-   void _showLoadingOverlay(BuildContext context) {
+  void _showLoadingOverlay(BuildContext context) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -188,6 +189,13 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),
+        action: SnackBarAction(
+          label: 'Retry',
+          textColor: Colors.white,
+          onPressed: () {
+            context.read<GoogleAuthBloc>().add(GoogleSignInRequested());
+          },
+        ),
       ),
     );
   }
@@ -200,7 +208,7 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
         BlocListener<SignUpBloc, SignUpState>(
           listener: (context, state) {
             if (state is SignUpSuccess) {
-                _showSuccessDialog();
+              _showSuccessDialog();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Sign up successful!')),
               );
@@ -226,9 +234,9 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
             }
           },
         ),
-        
+
 // In EmailAuthScreen
-BlocListener<GoogleAuthBloc, GoogleAuthState>(
+        BlocListener<GoogleAuthBloc, GoogleAuthState>(
           listener: (context, state) {
             if (state is GoogleAuthLoading) {
               _showLoadingOverlay(context);
@@ -236,8 +244,17 @@ BlocListener<GoogleAuthBloc, GoogleAuthState>(
               _hideLoadingOverlay(context);
               context.pushNamed(
                 RouteNames.userInfoOne,
-                // Pass any necessary data here if needed
                 // extra: state.user,
+              );
+            } else if (state is GoogleAuthCancelled) {
+              _hideLoadingOverlay(context);
+              // Optionally show a subtle message
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Sign in cancelled'),
+                  duration: Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
               );
             } else if (state is GoogleAuthFailure) {
               _handleGoogleAuthError(context, state.error);
@@ -258,204 +275,168 @@ BlocListener<GoogleAuthBloc, GoogleAuthState>(
             }
           },
         ),
-        
       ],
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: Stack(
-          children: [
-            GradientContainer(
-              top: size.height * 0.09,
-              left: size.height * 0.04,
-              right: size.height * 0.04,
-              bottom: size.height * 0.04,
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    HeaderText(
-                      mainHeading:
-                          _isSignUp ? "Create Account" : "Welcome back,",
-                      subHeading:
-                          _isSignUp ? "Let's get started" : "Glad You're here",
-                    ),
-                    SizedBox(height: size.height * (_isSignUp ? 0.04 : 0.07)),
-                    CustomTextFormField(
-                      controller: _emailController,
-                      hintText: "Enter your Email id",
-                      validator: _validateEmail,
-                    ),
-                    const SizedBox(height: 20),
-                    CustomTextFormField(
-                      controller: _passwordController,
-                      isPassword: true,
-                      hintText: "Enter your Password",
-                      validator: _validatePassword,
-                    ),
-                    if (!_isSignUp) ...[
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            context.pushNamed(RouteNames.forgotPassword);
-                          },
-                          child: const Text(
-                            "Forgot Password?",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
+      child: WillPopScope(
+        onWillPop: () async {
+          // Handle back button press while authentication is in progress
+          if (context.read<GoogleAuthBloc>().state is GoogleAuthLoading) {
+            _hideLoadingOverlay(context);
+            return false;
+          }
+          return true;
+        },
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: Stack(
+            children: [
+              GradientContainer(
+                top: size.height * 0.09,
+                left: size.height * 0.04,
+                right: size.height * 0.04,
+                bottom: size.height * 0.04,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      HeaderText(
+                        mainHeading:
+                            _isSignUp ? "Create Account" : "Welcome back,",
+                        subHeading:
+                            _isSignUp ? "Let's get started" : "Glad You're here",
                       ),
-                    ],
-                    if (_isSignUp) ...[
+                      SizedBox(height: size.height * (_isSignUp ? 0.04 : 0.07)),
+                      CustomTextFormField(
+                        controller: _emailController,
+                        hintText: "Enter your Email id",
+                        validator: _validateEmail,
+                      ),
                       const SizedBox(height: 20),
                       CustomTextFormField(
-                        controller: _reenterPasswordController,
+                        controller: _passwordController,
                         isPassword: true,
-                        hintText: "Re-enter your Password",
-                        validator: _validateReenterPassword,
+                        hintText: "Enter your Password",
+                        validator: _validatePassword,
                       ),
-                    ],
-                    const Spacer(),
-                    BlocBuilder<LoginBloc, LoginState>(
-                      builder: (context, state) {
-                        return CustomButton(
-                          data: _isSignUp ? "Agree & SignUp" : "Agree & Login",
-                          onPressed: state is LoginLoading ? null : _submitForm,
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    const ClickableTermsAndPolicyText(
-                      policyUrl: "https://www.hungrx.com/",
-                      termsUrl: "https://www.hungrx.com/",
-                    ),
-                    Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SocialLoginBotton(
-                              iconPath: 'assets/icons/google.png',
-                              label: 'Google',
-                              size: 25,
-                              onPressed: () {
-                                BlocProvider.of<GoogleAuthBloc>(context)
-                                    .add(GoogleSignInRequested());
-                              },
+                      if (!_isSignUp) ...[
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              context.pushNamed(RouteNames.forgotPassword);
+                            },
+                            child: const Text(
+                              "Forgot Password?",
+                              style: TextStyle(color: Colors.white),
                             ),
-                            const SizedBox(width: 20),
-                            SocialLoginBotton(
-                              iconPath: 'assets/icons/facebook.png',
-                              label: 'Facebook',
-                              size: 60,
-                              onPressed: () {
-                                context
-                                    .read<FacebookAuthBloc>()
-                                    .add(FacebookSignInRequested());
-                              },
-                            ),
-                            const SizedBox(width: 20),
-                            SocialLoginBotton(
-                              iconPath: 'assets/icons/call.png',
-                              label: 'Phone',
-                              size: 25,
-                              onPressed: () {
-                                context.pushNamed(RouteNames.phoneNumber);
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    CustomNewUserText(
-                      text: _isSignUp ? "Already User? " : "New user? ",
-                      buttonText:
-                          _isSignUp ? "Login Account" : "Create an account",
-                      onCreateAccountTap: _toggleMode,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            BlocBuilder<LoginBloc, LoginState>(
-              builder: (context, state) {
-                return state is LoginLoading
-                    ? Container(
-                        color: Colors.black.withOpacity(0.5),
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.buttonColors,
                           ),
                         ),
-                      )
-                    : const SizedBox.shrink();
-              },
-            ),
-                BlocBuilder<SignUpBloc, SignUpState>(
-              builder: (context, state) {
-                if (state is SignUpLoading) {
-                  return Container(
-                    color: Colors.black.withOpacity(0.5),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.buttonColors,
+                      ],
+                      if (_isSignUp) ...[
+                        const SizedBox(height: 20),
+                        CustomTextFormField(
+                          controller: _reenterPasswordController,
+                          isPassword: true,
+                          hintText: "Re-enter your Password",
+                          validator: _validateReenterPassword,
+                        ),
+                      ],
+                      const Spacer(),
+                      BlocBuilder<LoginBloc, LoginState>(
+                        builder: (context, state) {
+                          return CustomButton(
+                            data: _isSignUp ? "Agree & SignUp" : "Agree & Login",
+                            onPressed: state is LoginLoading ? null : _submitForm,
+                          );
+                        },
                       ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-      // BlocBuilder<GoogleAuthBloc, GoogleAuthState>(
-      //         builder: (context, state) {
-      //           if (state is GoogleAuthLoading) {
-      //             return Container(
-      //               color: Colors.black.withOpacity(0.5),
-      //               child: const Center(
-      //                 child: CircularProgressIndicator(
-      //                   color: AppColors.buttonColors,
-      //                 ),
-      //               ),
-      //             );
-      //           } else if (state is GoogleAuthFailure) {
-      //             return Container(
-      //               color: Colors.black.withOpacity(0.5),
-      //               child: Center(
-      //                 child: Column(
-      //                   mainAxisAlignment: MainAxisAlignment.center,
-      //                   children: [
-      //                     const Text(
-      //                       'Google Sign-In Failed',
-      //                       style: TextStyle(color: Colors.white, fontSize: 18),
-      //                     ),
-      //                     const SizedBox(height: 10),
-      //                     Text(
-      //                       state.error,
-      //                       style: const TextStyle(color: Colors.red),
-      //                       textAlign: TextAlign.center,
-      //                     ),
-      //                     const SizedBox(height: 20),
-      //                     ElevatedButton(
-      //                       onPressed: () {
-      //                         BlocProvider.of<GoogleAuthBloc>(context)
-      //                             .add(GoogleSignInRequested());
-      //                       },
-      //                       child: const Text('Retry'),
-      //                     ),
-      //                   ],
-      //                 ),
-      //               ),
-      //             );
-      //           } else {
-      //             return const SizedBox.shrink();
-      //           }
-      //         },
-      //       ),
-          ],
+                      const SizedBox(height: 20),
+                      const ClickableTermsAndPolicyText(
+                        policyUrl: "https://www.hungrx.com/",
+                        termsUrl: "https://www.hungrx.com/",
+                      ),
+                      Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SocialLoginBotton(
+                                iconPath: 'assets/icons/google.png',
+                                label: 'Google',
+                                size: 25,
+                                onPressed: () {
+                                  BlocProvider.of<GoogleAuthBloc>(context)
+                                      .add(GoogleSignInRequested());
+                                },
+                              ),
+                              const SizedBox(width: 20),
+                              SocialLoginBotton(
+                                iconPath: 'assets/icons/facebook.png',
+                                label: 'Facebook',
+                                size: 60,
+                                onPressed: () {
+                                  context
+                                      .read<FacebookAuthBloc>()
+                                      .add(FacebookSignInRequested());
+                                },
+                              ),
+                              const SizedBox(width: 20),
+                              SocialLoginBotton(
+                                iconPath: 'assets/icons/call.png',
+                                label: 'Phone',
+                                size: 25,
+                                onPressed: () {
+                                  context.pushNamed(RouteNames.phoneNumber);
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      CustomNewUserText(
+                        text: _isSignUp ? "Already User? " : "New user? ",
+                        buttonText:
+                            _isSignUp ? "Login Account" : "Create an account",
+                        onCreateAccountTap: _toggleMode,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              BlocBuilder<LoginBloc, LoginState>(
+                builder: (context, state) {
+                  return state is LoginLoading
+                      ? Container(
+                          color: Colors.black.withOpacity(0.5),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.buttonColors,
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink();
+                },
+              ),
+              BlocBuilder<SignUpBloc, SignUpState>(
+                builder: (context, state) {
+                  if (state is SignUpLoading) {
+                    return Container(
+                      color: Colors.black.withOpacity(0.5),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.buttonColors,
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -107,7 +107,7 @@ class GoalPaceScreen extends StatelessWidget {
                                   _getEstimatedTimeToGoal(
                                     state.weightGoal,
                                     state.weightPace ?? 2.0,
-                                    double.tryParse(state.weight ?? '0') ?? 0,
+                                    double.tryParse(state.weight)??0,
                                     double.tryParse(
                                             state.targetWeight ?? '0') ??
                                         0,

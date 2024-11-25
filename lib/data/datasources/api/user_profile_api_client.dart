@@ -28,26 +28,13 @@ class UserProfileApiClient {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(userProfile.toJson()),
       );
-
+// print(response.body);
+// print(response.statusCode);
       if (response.statusCode != 200) {
         throw Exception('Failed to add user profile: ${response.body}');
       }
     } catch (e) {
       throw Exception('Failed to add user profile: $e');
-    }
-  }
-
-  Future<bool> checkUserProfile(String userId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/user-profile/$userId'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Error checking profile: $e');
-      return false;
     }
   }
 }

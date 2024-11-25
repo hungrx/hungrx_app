@@ -7,12 +7,14 @@ class HomeApiService {
   final String baseUrl = 'https://hungerxapp.onrender.com';
 
   Future<HomeData> fetchHomeData(String userId) async {
+ 
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/home'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );
+    
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         return HomeData.fromJson(jsonData['data']);

@@ -1,33 +1,81 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/core/widgets/header_section.dart';
+import 'package:hungrx_app/data/Models/weight_history_model.dart';
+import 'package:hungrx_app/data/datasources/api/weight_history_api.dart';
+import 'package:hungrx_app/data/repositories/weight_history_repository.dart';
+import 'package:hungrx_app/domain/usecases/get_weight_history_usecase.dart';
+import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_event.dart';
+import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_state.dart';
 import 'package:hungrx_app/routes/route_names.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-class WeightTrackingScreen extends StatelessWidget {
-  const WeightTrackingScreen({super.key});
+class WeightTrackingScreen extends StatefulWidget {
+  const WeightTrackingScreen({
+    super.key,
+  });
+
+  @override
+  State<WeightTrackingScreen> createState() => _WeightTrackingScreenState();
+}
+
+class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
+  String? userId;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeUserId();
+  }
+
+  Future<void> _initializeUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getString('user_id');
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildWeightGraph(),
-                    _buildWeightEntries(),
-                  ],
-                ),
-              ),
-            ),
-            _buildUpdateWeightButton(context),
-          ],
+    if (isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return BlocProvider(
+      create: (context) => WeightHistoryBloc(
+        GetWeightHistoryUseCase(
+          WeightHistoryRepository(
+            WeightHistoryApi(),
+          ),
+        ),
+      )..add(FetchWeightHistory(userId ?? "")),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: BlocBuilder<WeightHistoryBloc, WeightHistoryState>(
+            builder: (context, state) {
+              return Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: _buildContent(context, state),
+                  ),
+                  _buildUpdateWeightButton(context),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -39,15 +87,33 @@ class WeightTrackingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWeightGraph() {
-    final List<ChartData> chartData = [
-      ChartData("Mar", 35),
-      ChartData("Jun", 28),
-      ChartData("Jul", 34),
-      ChartData("Aug", 32),
-      ChartData("Sep", 40),
-      ChartData("Oct", 45)
-    ];
+  Widget _buildContent(BuildContext context, WeightHistoryState state) {
+    if (state is WeightHistoryLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (state is WeightHistoryLoaded) {
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildWeightGraph(state.weightHistory),
+            _buildWeightEntries(state.weightHistory),
+          ],
+        ),
+      );
+    } else if (state is WeightHistoryNoRecords) {
+      return _buildNoRecordsView();
+    } else if (state is WeightHistoryError) {
+      return _buildErrorView(context, state.message);
+    }
+    return const SizedBox();
+  }
+
+  Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
+    final List<ChartData> chartData = weightHistory.history
+        .where((entry) =>
+            entry.date != "Current Weight") // Filter out Current Weight
+        .map((entry) => ChartData(entry.getGraphDate(), entry.weight))
+        .toList();
+
     return Container(
       margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -59,15 +125,14 @@ class WeightTrackingScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Current W: 75Kg',
-            style: TextStyle(
+          Text(
+            'Current W: ${weightHistory.currentWeight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
+            style: const TextStyle(
                 color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Expanded(
             child: SfCartesianChart(
-            
               primaryXAxis: const CategoryAxis(
                 majorGridLines: MajorGridLines(width: 1),
                 labelStyle: TextStyle(color: Colors.white),
@@ -95,7 +160,7 @@ class WeightTrackingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWeightEntries() {
+  Widget _buildWeightEntries(WeightHistoryModel weightHistory) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -104,19 +169,35 @@ class WeightTrackingScreen extends StatelessWidget {
           child: Text(
             'Weight Entry',
             style: TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        _buildWeightEntryItem('12-jun-20234', '50KG', '3kg'),
-        _buildWeightEntryItem('12-jun-20234', '45KG', '3kg'),
-        _buildWeightEntryItem('12-jun-20234', '42KG', '3kg'),
-        _buildWeightEntryItem('12-jun-20234', '35KG', '3kg'),
-        _buildWeightEntryItem('12-jun-20234', '35KG', '3kg'),
+        ...List.generate(weightHistory.history.length, (index) {
+          final entry = weightHistory.history[index];
+          final previousWeight = index < weightHistory.history.length - 1
+              ? weightHistory.history[index + 1].weight
+              : entry.weight;
+          final weightDiff = entry.weight - previousWeight;
+
+          return _buildWeightEntryItem(
+            entry.getFormattedDate(),
+            '${entry.weight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
+            weightDiff,
+            weightHistory.isMetric,
+          );
+        }),
       ],
     );
   }
 
-  Widget _buildWeightEntryItem(String date, String weight, String weightLoss) {
+  Widget _buildWeightEntryItem(
+      String date, String weight, double weightDiff, bool isMetric) {
+    final isIncrease = weightDiff > 0;
+    final diffText = weightDiff.abs().toStringAsFixed(1);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -133,8 +214,16 @@ class WeightTrackingScreen extends StatelessWidget {
               Text(date,
                   style: const TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold)),
-              const Text('weight increase',
-                  style: TextStyle(color: Colors.red)),
+              if (weightDiff != 0)
+                Text(
+                  isIncrease
+                      ? 'Weight increased by $diffText${isMetric ? 'kg' : 'lbs'}'
+                      : 'Weight decreased by $diffText${isMetric ? 'kg' : 'lbs'}',
+                  style: TextStyle(
+                    color: isIncrease ? Colors.red : Colors.green,
+                    fontSize: 12,
+                  ),
+                ),
             ],
           ),
           Text(weight,
@@ -151,13 +240,8 @@ class WeightTrackingScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: ElevatedButton(
-        onPressed: () async{
+        onPressed: () async {
           await context.pushNamed(RouteNames.weightPicker);
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => const WeightPickerScreen(userId: '',)),
-          // );
-          // Implement weight update logic
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.buttonColors,
@@ -179,6 +263,114 @@ class WeightTrackingScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNoRecordsView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.scale_outlined,
+            size: 80,
+            color: Colors.grey[700],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Weight Records Found',
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start tracking your weight journey\nby adding your first weight record',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              context.pushNamed(RouteNames.weightPicker);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.buttonColors,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: const Text(
+              'Add First Weight Record',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorView(BuildContext context, String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 60,
+            color: Colors.red[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Oops! Something went wrong',
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              context.read<WeightHistoryBloc>().add(
+                    FetchWeightHistory(userId ?? ""),
+                  );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.buttonColors,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: const Text(
+              'Try Again',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/tdee_result_model.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
+import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_event.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/premium_container.dart';
 
@@ -16,6 +22,7 @@ class TDEEResultScreen extends StatefulWidget {
 
 class TDEEResultScreenState extends State<TDEEResultScreen>
     with SingleTickerProviderStateMixin {
+  final AuthService _authService = AuthService();
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
@@ -25,11 +32,6 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
     super.initState();
     _setupAnimations();
     _controller.forward();
-    // Debug print to verify data
-    print('TDEE Result Data:');
-    print('BMI: ${widget.tdeeResult.bmi}');
-    print('BMR: ${widget.tdeeResult.bmr}');
-    print('TDEE: ${widget.tdeeResult.tdee}');
   }
 
   void _setupAnimations() {
@@ -45,6 +47,44 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
     _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: const Interval(0.5, 1.0)),
     );
+  }
+
+  Future<void> _navigateToHome(BuildContext context) async {
+    try {
+      final userId = await _authService.getUserId();
+      
+      if (!mounted) return;
+
+      if (userId == null) {
+        GoRouter.of(context).go('/home');
+        return;
+      }
+
+      final homeData = await _authService.fetchHomeData();
+      
+      if (!mounted) return;
+
+      if (homeData != null) {
+        context.read<HomeBloc>().add(InitializeHomeData(homeData));
+        context.read<StreakBloc>().add(FetchStreakData(userId));
+      }
+
+      // Using context.go instead of GoRouter.of(context).go() for more concise code
+      context.go('/home');
+    } catch (e) {
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error navigating to home: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      
+      // Navigate to home even if there's an error
+      context.go('/home');
+    }
   }
 
   @override
@@ -68,7 +108,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _buildHeader(),
+                        _buildHeader(context),
                         const SizedBox(height: 24),
                         _buildResults(widget.tdeeResult),
                       ],
@@ -83,20 +123,18 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Column(
-  
         children: [
-            Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () {
-                      GoRouter.of(context).go('/home');
-                        }),
-                  ),
+          Align(
+            alignment: Alignment.topRight,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => _navigateToHome(context), // Fixed: Added context and proper function call
+            ),
+          ),
           Container(
             width: 100,
             height: 100,
@@ -145,26 +183,24 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
           _buildResultCard('Calories to Goal', result.caloriesToReachGoal),
           _buildResultCard('Days to Goal', result.daysToReachGoal),
           _buildResultCard('Goal Pace', result.goalPace),
-            const SizedBox(
-                    height: 50,
-                  ),
-                  FadeTransition(
-                      opacity: _opacityAnimation,
-                      child: const PremiumContainer()),
+          const SizedBox(height: 50),
+          FadeTransition(
+            opacity: _opacityAnimation,
+            child: const PremiumContainer(),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildResultCard(String title, String value) {
-   return FadeTransition(
-        opacity: _opacityAnimation,
+    return FadeTransition(
+      opacity: _opacityAnimation,
       child: Padding(
-         padding: const EdgeInsets.all(1.0),
+        padding: const EdgeInsets.all(1.0),
         child: Container(
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(

@@ -17,5 +17,6 @@ class GoogleAuthSuccess extends GoogleAuthState {
 class GoogleAuthFailure extends GoogleAuthState {
   final String error;
 
-  GoogleAuthFailure(this.error);
+  GoogleAuthFailure({required this.error});
 }
+class GoogleAuthCancelled extends GoogleAuthState {}

@@ -7,37 +7,44 @@ class RestaurantMenuScreen extends StatelessWidget {
   const RestaurantMenuScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.black,
+    appBar: AppBar(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        
-        backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+    ),
+    body: Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildRestaurantInfoCard(),
+                _buildSearchBar(),
+         
+                _buildMenuList(context),
+              ],
+            ),
+          ),
         ),
-      ),
-      body: Column(
-        children: [
-          _buildRestaurantInfoCard(),
-          _buildSearchBar(),
-          const SizedBox(
-            height: 20,
-          ),
-          Expanded(
-            child: _buildMenuList(context),
-          ),
-          _buildOrderSummary(context),
-        ],
-      ),
-    );
-  }
-
+        _buildOrderSummary(context),
+      ],
+    ),
+  );
+}
   Widget _buildRestaurantInfoCard() {
     return Container(
+      decoration: BoxDecoration(
+         color: Colors.grey[900],
+        borderRadius: const BorderRadius.all(Radius.circular(16))
+        
+      ),
       padding: const EdgeInsets.all(16),
-      color: Colors.grey[900],
+     
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -105,15 +112,16 @@ class RestaurantMenuScreen extends StatelessWidget {
 
   Widget _buildSearchBar() {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.only(top: 16, left: 0, right: 0, bottom: 16),
+      // padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.grey[800],
+        color:  Colors.grey[900],
         borderRadius: BorderRadius.circular(25),
       ),
       child: const TextField(
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
+           prefixIcon: Icon(Icons.search, color: Colors.grey),
           hintText: 'Find the foods under your daily kcal...',
           hintStyle: TextStyle(color: Colors.grey),
           border: InputBorder.none,
@@ -124,6 +132,8 @@ class RestaurantMenuScreen extends StatelessWidget {
 
   Widget _buildMenuList(BuildContext context) {
     return ListView(
+      shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildMenuCategory('Recommended foods', [
           _buildMenuItem(

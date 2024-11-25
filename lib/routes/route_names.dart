@@ -26,4 +26,6 @@ class RouteNames {
   static const String accountSettings = 'accountSettings';
   static const String weightPicker = 'weightPicker';
   static const String weightTracking = 'weight-tracking';
+  static const String feedback = 'feedback';
+  static const String waterIntake = 'waterIntake';
 }

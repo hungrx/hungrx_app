@@ -101,7 +101,7 @@ class StreakCalendar extends StatelessWidget {
                   ],
                 ),
                 SizedBox(
-                  height: 140,
+                  height: MediaQuery.of(context).size.height*0.19,
                   child: ShaderMask(
                     shaderCallback: (Rect bounds) {
                       return const LinearGradient(

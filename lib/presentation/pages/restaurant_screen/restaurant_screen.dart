@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/restaurent_menu_screen.dart';
 import 'package:hungrx_app/core/widgets/header_section.dart';
 
@@ -11,8 +10,6 @@ class RestaurantScreen extends StatefulWidget {
 }
 
 class RestaurantScreenState extends State<RestaurantScreen> {
-  String selectedFoodType = 'Non-Veg Food';
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,7 +21,7 @@ class RestaurantScreenState extends State<RestaurantScreen> {
             _buildHeader(),
             _buildSearchBar(),
             _buildNearbyRestaurants(),
-            _buildFoodTypeSelector(),
+            // _buildFoodTypeSelector(),
             Expanded(child: _buildRestaurantList()),
           ],
         ),
@@ -45,7 +42,7 @@ class RestaurantScreenState extends State<RestaurantScreen> {
         decoration: BoxDecoration(
           color: Colors.grey[900],
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: AppColors.buttonColors),
+         
         ),
         child: const TextField(
           style: TextStyle(color: Colors.white),
@@ -62,55 +59,17 @@ class RestaurantScreenState extends State<RestaurantScreen> {
   }
 
   Widget _buildNearbyRestaurants() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             'Nearby Restaurant',
             style: TextStyle(
                 color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.map, size: 18),
-            label: const Text('Show Map'),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.black,
-              backgroundColor: AppColors.buttonColors,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-            ),
-            onPressed: () {
-              // Implement show map functionality
-            },
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFoodTypeSelector() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: ['Veg Food', 'Non-Veg Food', 'Mixed'].map((type) {
-          return GestureDetector(
-            onTap: () => setState(() => selectedFoodType = type),
-            child: Text(
-              type,
-              style: TextStyle(
-                color: selectedFoodType == type
-                    ? AppColors.buttonColors
-                    : Colors.grey,
-                fontWeight: selectedFoodType == type
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }
@@ -123,7 +82,7 @@ class RestaurantScreenState extends State<RestaurantScreen> {
           ontap: () {},
           name: 'Mc Donald\'s',
           imageUrl:
-              'https://www.nrn.com/sites/nrn.com/files/Mcd%20Drive%20Thru.jpg', // Replace with actual image URL
+              'assets/images/maclog.png', // Replace with actual image URL
           rating: 4.2,
           address: '541 6th Ave, New York',
           distance: '0.2 km',
@@ -171,7 +130,7 @@ class RestaurantItem extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
-                'assets/images/maclog.png',
+                imageUrl,
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
@@ -199,15 +158,6 @@ class RestaurantItem extends StatelessWidget {
                       style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: AppColors.buttonColors,
-                shape: BoxShape.circle,
-              ),
-              child:
-                  const Icon(Icons.directions, color: Colors.black, size: 20),
             ),
           ],
         ),

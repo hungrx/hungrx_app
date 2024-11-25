@@ -1,5 +1,9 @@
-import '../../data/models/user_model.dart';
-import '../../data/repositories/email_sign_up_repository.dart';
+
+
+import 'package:hungrx_app/data/Models/email_model.dart';
+import 'package:hungrx_app/data/repositories/email_sign_up_repository.dart';
+
+
 
 class SignUpUseCase {
   final UserSignUpRepository repository;

@@ -1,13 +1,14 @@
 import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/core/widgets/responsive_text.dart';
 import 'package:hungrx_app/data/Models/home_screen_model.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
-import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/feedbacks_widget.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class DashboardWidgets {
@@ -174,11 +175,11 @@ class DashboardWidgets {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CircularPercentIndicator(
-                    radius: 25,
-                    lineWidth: 5,
+                    radius: 22,
+                    lineWidth: 4,
                     percent: data.remaining / data.dailyCalorieGoal,
-                    progressColor: Colors.green,
-                    backgroundColor: Colors.grey[800]!,
+                    progressColor: Colors.grey[800]!,
+                    backgroundColor: Colors.green,
                     circularStrokeCap: CircularStrokeCap.round,
                   ),
                   Column(
@@ -226,14 +227,11 @@ class DashboardWidgets {
         Expanded(
           child: GestureDetector(
             onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => FeedbackDialog(
-                  onSubmit: (rating, feedback) {
-                    // Handle feedback
-                  },
-                ),
-              );
+              // showDialog(
+              //   context: context,
+              //   builder: (context) => const FeedbackDialog(),
+              // );
+              context.pushNamed(RouteNames.feedback);
             },
             child: Container(
               padding: const EdgeInsets.only(
@@ -261,10 +259,8 @@ class DashboardWidgets {
             onTap: () async {
               final AuthService authService = AuthService();
               final userId = await authService.getUserId();
-              if (userId != null) {
-                if (!context.mounted) return;
-
-              
+              if (userId != null && context.mounted) {
+                context.pushNamed(RouteNames.weightTracking);
               }
             },
             child: Container(

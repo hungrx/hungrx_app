@@ -3,17 +3,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/data/Models/tdee_result_model.dart';
+import 'package:hungrx_app/data/datasources/api/feedback_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/weight_update_api.dart';
+import 'package:hungrx_app/data/repositories/feedback_repository.dart';
 import 'package:hungrx_app/data/repositories/weight_update_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/domain/usecases/submit_feedback_usecase.dart';
 import 'package:hungrx_app/domain/usecases/update_weight_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/email_login_bloc/login_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/feedback_bloc/feedback_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
 import 'package:hungrx_app/presentation/layout/root_layout.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/feedbacks_widget.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/dialy_activity_screen.dart';
@@ -26,6 +31,7 @@ import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/use
 import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
+import 'package:hungrx_app/presentation/pages/water_intake_screeen/water_intake.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_picker.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_tracking.dart';
 import 'package:hungrx_app/routes/route_names.dart';
@@ -53,6 +59,13 @@ class AppRouter {
             name: RouteNames.home,
             builder: (context, state) => const DashboardScreen(),
           ),
+           GoRoute(
+      path: '/water-intake',  // URL path
+      name: RouteNames.waterIntake,
+      builder: (BuildContext context, GoRouterState state) {
+        return const WaterIntakeScreen();
+      },
+    ),
           // Eat Screen route
           GoRoute(
             path: '/eatscreen',
@@ -88,6 +101,22 @@ class AppRouter {
           child: const WeightPickerScreen(),
         ),
       ),
+      GoRoute(
+  path: '/feedback',
+  name: RouteNames.feedback,
+  builder: (BuildContext context, GoRouterState state) {
+    return BlocProvider(
+      create: (context) => FeedbackBloc(
+        SubmitFeedbackUseCase(
+          FeedbackRepository(
+            FeedbackApiService(),
+          ),
+        ),
+      ),
+      child: const FeedbackDialog(),
+    );
+  },
+),
       GoRoute(
         path: '/weight-tracking',
         name: RouteNames.weightTracking,

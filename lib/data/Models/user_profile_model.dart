@@ -42,7 +42,7 @@ class UserInfoProfileModel extends Equatable {
         'heightInFeet': heightInFeet,
         'heightInInches': heightInInches,
         'isMetric': isMetric,
-        'weight': weight,
+        'weightInKg': weight,
         'mealsPerDay': mealsPerDay,
         'goal': goal,
         'targetWeight': targetWeight,

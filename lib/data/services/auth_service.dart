@@ -1,6 +1,6 @@
 import 'package:hungrx_app/data/Models/home_screen_model.dart';
 import 'package:hungrx_app/data/datasources/api/home_screen_api_service.dart';
-import 'package:hungrx_app/data/repositories/user_info_profile_repository.dart';
+import 'package:hungrx_app/data/datasources/api/user_profile_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hungrx_app/data/repositories/email_signin_repository.dart';
 import 'package:hungrx_app/data/repositories/google_auth_repository.dart';
@@ -12,7 +12,7 @@ class AuthService {
   final UserSignInRepository _emailSignInRepository = UserSignInRepository();
   final GoogleAuthRepository _googleAuthRepository = GoogleAuthRepository();
   final OtpRepository _otpRepository = OtpRepository();
-  UserProfileRepository? _userProfileRepository;
+final UserProfileApiService _userProfileApiService = UserProfileApiService();
 
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
@@ -29,14 +29,16 @@ class AuthService {
 
     return false;
   }
-
-  Future<bool?> isProfileComplete() async {
-    print("isprofile complete");
-    final isLogged = await isLoggedIn();
-    if (!isLogged) return false;
-
-    return await _userProfileRepository?.hasUserProfile();
+ Future<bool> checkProfileCompletion(String userId) async {
+    try {
+      final response = await _userProfileApiService.checkUserProfile(userId);
+      return response.status  == true;
+    } catch (e) {
+      print('Error checking profile completion: $e');
+      return false;
+    }
   }
+
 
   Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -44,7 +46,6 @@ class AuthService {
   }
 
   Future<HomeData?> fetchHomeData() async {
-    print("fethomedata");
     try {
       final userId = await getUserId();
       if (userId != null) {

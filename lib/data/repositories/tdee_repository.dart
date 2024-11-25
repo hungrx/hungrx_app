@@ -8,6 +8,7 @@ class TDEERepository {
   TDEERepository(this._apiService);
 
   Future<TDEEResultModel> calculateMetrics(String userId) async {
+    print(userId);
     try {
       final data = await _apiService.calculateMetrics(userId);
         print('API Response: $data');

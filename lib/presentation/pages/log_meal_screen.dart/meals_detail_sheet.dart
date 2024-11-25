@@ -26,7 +26,7 @@ class MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border.all(color: AppColors.buttonColors, width: 2),
+        border: Border.all(color: AppColors.buttonColors, width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

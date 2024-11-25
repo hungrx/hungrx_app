@@ -71,7 +71,7 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
               height = (feet * 12) + inches;
             }
 
-            weight = double.tryParse(state.weight ?? '0') ?? 0;
+            weight = double.tryParse(state.weight) ?? 0;
 
             if (height > 0 && weight > 0) {
               bmi = calculateBMI(height, weight, state.isMetric);

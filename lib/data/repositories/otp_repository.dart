@@ -12,7 +12,7 @@ class OtpRepository {
       headers: {'Content-Type': 'application/json'},
       body: json.encode(otpSendModel.toJson()),
     );
-
+print(response.body);
     if (response.statusCode != 200) {
       print(response.statusCode);
       throw Exception('Failed to send OTP');
@@ -27,7 +27,7 @@ class OtpRepository {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(otpVerifyModel.toJson()),
       );
-
+print(response.body);
       if (response.statusCode == 200) {
         final responseBody = json.decode(response.body);
         final userId = responseBody['userId'];

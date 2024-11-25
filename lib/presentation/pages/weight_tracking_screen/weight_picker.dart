@@ -192,7 +192,7 @@ class WeightPickerScreenState extends State<WeightPickerScreen> {
                                     }
                                     final homeData =
                                         await _authService.fetchHomeData();
-                                        print(homeData);
+                                      
                                     if (homeData != null) {
                                       // Initialize HomeBloc with fetched data
                                       context

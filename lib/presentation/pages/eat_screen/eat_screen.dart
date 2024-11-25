@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hungrx_app/core/utils/size_utils.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
 
@@ -19,20 +20,22 @@ class _EatScreenState extends State<EatScreen> {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 20),
-              _buildSearchBar(),
-              const SizedBox(height: 20),
-              _buildCalorieBudget(),
-              const SizedBox(height: 20),
-              _buildOptionsGrid(),
-              const Spacer(),
-              _buildEnjoyCalories(),
-            ],
+          padding:  EdgeInsets.all(12.w),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 20),
+                _buildSearchBar(),
+                const SizedBox(height: 20),
+                _buildCalorieBudget(),
+                const SizedBox(height: 20),
+                _buildOptionsGrid(),
+                // const Spacer(),
+                _buildEnjoyCalories(),
+              ],
+            ),
           ),
         ),
       ),

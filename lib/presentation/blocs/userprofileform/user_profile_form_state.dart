@@ -10,7 +10,7 @@ class UserProfileFormState extends Equatable {
   final String heightInCm;
   final String heightFeet;
   final String heightInches;
-  final String? weight;
+  final String weight;
   final double? mealsPerDay;
   final WeightGoal? weightGoal;
   final String? targetWeight;
@@ -31,7 +31,7 @@ class UserProfileFormState extends Equatable {
     this.heightInCm = '',
     this.heightFeet = '',
     this.heightInches = '',
-    this.weight,
+    this.weight='',
     this.mealsPerDay,
     this.weightGoal,
     this.targetWeight,

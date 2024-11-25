@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hungrx_app/core/utils/size_utils.dart';
 import 'package:hungrx_app/data/datasources/api/streak_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/tdee_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/user_profile_api_client.dart';
@@ -33,6 +35,9 @@ import 'package:hungrx_app/data/repositories/email_sign_up_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -73,7 +78,7 @@ class MyApp extends StatelessWidget {
           create: (context) => StreakBloc(getStreakUseCase),
         ),
 
-         BlocProvider<ConnectivityBloc>(
+        BlocProvider<ConnectivityBloc>(
           create: (context) => ConnectivityBloc(
             connectivityRepository: connectivityRepository,
           ),
@@ -128,6 +133,13 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         routerConfig: AppRouter.router,
+        builder: (context, child) {
+          SizeUtils.init(context);
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.0)),
+            child: child!,
+          );
+        },
       ),
     );
   }
