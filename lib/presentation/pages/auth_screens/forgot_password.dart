@@ -48,7 +48,7 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 CustomButton(
                   data: "Send OTP",
                   onPressed: () {
-                    // TODO: Implement OTP sending logic
+                   
                     setState(() {
                       _otpSent = true;
                     });
@@ -70,7 +70,7 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 CustomButton(
                   data: "Confirm",
                   onPressed: () {
-                    // TODO: Implement password reset confirmation logic
+                   
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {

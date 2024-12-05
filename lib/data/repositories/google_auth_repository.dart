@@ -56,7 +56,7 @@ class GoogleAuthRepository {
     // print(user.displayName);
     try {
       final url =
-          Uri.parse('https://hungerxapp.onrender.com/users/signup/google');
+          Uri.parse('https://hungrxbackend.onrender.com/users/signup/google');
 
       final requestBody = {
         'googleId': user.uid,
@@ -64,7 +64,7 @@ class GoogleAuthRepository {
         'name': user.displayName,
       };
 
-      print('Request body: $requestBody');
+      // print('Request body: $requestBody');
 
       final response = await http.post(
         url,
@@ -72,7 +72,7 @@ class GoogleAuthRepository {
         body: json.encode(requestBody),
       );
 
-      print(response.body);
+      // print(response.body);
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -81,7 +81,7 @@ class GoogleAuthRepository {
             responseData['data'] != null &&
             responseData['data']['user'] != null) {
           final userId = responseData['data']['user']['id'] as String;
-          print('Successfully got user ID: $userId');
+          // print('Successfully got user ID: $userId');
           await _saveUserId(userId);
           return userId;
         } else {
@@ -93,7 +93,7 @@ class GoogleAuthRepository {
             'Failed to store user in database. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error during login: $e');
+      // print('Error during login: $e');
       throw Exception('Failed to login: $e');
     }
   }
@@ -102,9 +102,9 @@ class GoogleAuthRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_id', userId);
-      print('Successfully saved user ID to SharedPreferences');
+      // print('Successfully saved user ID to SharedPreferences');
     } catch (e) {
-      print('Error saving user ID: $e');
+      // print('Error saving user ID: $e');
       throw Exception('Failed to save user ID locally');
     }
   }
@@ -114,7 +114,7 @@ class GoogleAuthRepository {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString('user_id');
     } catch (e) {
-      print('Error getting user ID: $e');
+      // print('Error getting user ID: $e');
       return null;
     }
   }
@@ -124,7 +124,7 @@ class GoogleAuthRepository {
       final userId = await getUserId();
       return userId != null && userId.isNotEmpty;
     } catch (e) {
-      print('Error checking login status: $e');
+      // print('Error checking login status: $e');
       return false;
     }
   }
@@ -136,7 +136,7 @@ class GoogleAuthRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_id');
     } catch (error) {
-      print('Error signing out from Google: $error');
+      // print('Error signing out from Google: $error');
     }
   }
 }

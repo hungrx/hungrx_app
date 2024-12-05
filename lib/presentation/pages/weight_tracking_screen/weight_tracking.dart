@@ -4,9 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/core/widgets/header_section.dart';
 import 'package:hungrx_app/data/Models/weight_history_model.dart';
-import 'package:hungrx_app/data/datasources/api/weight_history_api.dart';
-import 'package:hungrx_app/data/repositories/weight_history_repository.dart';
-import 'package:hungrx_app/domain/usecases/get_weight_history_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_event.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_state.dart';
@@ -39,6 +36,12 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
       userId = prefs.getString('user_id');
       isLoading = false;
     });
+
+    // Fetch weight history when screen loads
+    if (userId != null) {
+      // ignore: use_build_context_synchronously
+      context.read<WeightHistoryBloc>().add(FetchWeightHistory(userId!));
+    }
   }
 
   @override
@@ -52,30 +55,21 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
       );
     }
 
-    return BlocProvider(
-      create: (context) => WeightHistoryBloc(
-        GetWeightHistoryUseCase(
-          WeightHistoryRepository(
-            WeightHistoryApi(),
-          ),
-        ),
-      )..add(FetchWeightHistory(userId ?? "")),
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: SafeArea(
-          child: BlocBuilder<WeightHistoryBloc, WeightHistoryState>(
-            builder: (context, state) {
-              return Column(
-                children: [
-                  _buildHeader(),
-                  Expanded(
-                    child: _buildContent(context, state),
-                  ),
-                  _buildUpdateWeightButton(context),
-                ],
-              );
-            },
-          ),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: BlocBuilder<WeightHistoryBloc, WeightHistoryState>(
+          builder: (context, state) {
+            return Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: _buildContent(context, state),
+                ),
+                _buildUpdateWeightButton(context),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -134,6 +128,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
           Expanded(
             child: SfCartesianChart(
               primaryXAxis: const CategoryAxis(
+                isInversed: true,
                 majorGridLines: MajorGridLines(width: 1),
                 labelStyle: TextStyle(color: Colors.white),
               ),
@@ -241,7 +236,11 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
       padding: const EdgeInsets.all(16.0),
       child: ElevatedButton(
         onPressed: () async {
-          await context.pushNamed(RouteNames.weightPicker);
+          final result = await context.pushNamed(RouteNames.weightPicker);
+          if (result == true && userId != null) {
+            // ignore: use_build_context_synchronously
+            context.read<WeightHistoryBloc>().add(FetchWeightHistory(userId!));
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.buttonColors,
@@ -298,7 +297,10 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
-              context.pushNamed(RouteNames.weightPicker);
+              context.goNamed(
+                RouteNames.weightPicker,
+                pathParameters: {'userId': userId!},
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.buttonColors,
@@ -326,48 +328,17 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.error_outline,
+            Icons.emoji_emotions,
             size: 60,
             color: Colors.red[400],
           ),
           const SizedBox(height: 16),
           Text(
-            'Oops! Something went wrong',
+            'No weight History available',
             style: TextStyle(
               color: Colors.grey[400],
               fontSize: 20,
               fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              context.read<WeightHistoryBloc>().add(
-                    FetchWeightHistory(userId ?? ""),
-                  );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.buttonColors,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            child: const Text(
-              'Try Again',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
             ),
           ),
         ],

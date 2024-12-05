@@ -16,7 +16,7 @@ class OtpAuthBloc extends Bloc<OtpAuthEvent, OtpAuthState> {
 
     emit(OtpSendLoading());
     try {
-print("reached");
+// print("reached");
       await otpUseCase.sendOtp(event.phoneNumber);
       emit(OtpSendSuccess());
     } catch (e) {
@@ -31,7 +31,7 @@ print("reached");
       final token = await otpUseCase.verifyOtp(event.phoneNumber, event.otp);
       emit(OtpVerifySuccess(token));
     } catch (e) {
-      print(e);
+      // print(e);
       emit(OtpVerifyFailure(e.toString()));
     }
   }

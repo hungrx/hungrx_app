@@ -45,12 +45,12 @@ void _onGoogleSignInRequested(
   ) async {
     emit(GoogleAuthLoading());
     try {
-      print('Starting Google Sign-Out process');
+      // print('Starting Google Sign-Out process');
       await googleAuthUseCase.signOut();
-      print('Google Sign-Out successful');
+      // print('Google Sign-Out successful');
       emit(GoogleAuthInitial());
     } catch (e) {
-      print('Error during Google Sign-Out: $e');
+      // print('Error during Google Sign-Out: $e');
       emit(GoogleAuthFailure(error: 'Sign-Out failed: ${e.toString()}'));
     }
   }

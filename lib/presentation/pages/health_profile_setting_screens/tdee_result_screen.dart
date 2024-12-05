@@ -56,6 +56,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
       if (!mounted) return;
 
       if (userId == null) {
+        // ignore: use_build_context_synchronously
         GoRouter.of(context).go('/home');
         return;
       }
@@ -65,7 +66,9 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
       if (!mounted) return;
 
       if (homeData != null) {
+        // ignore: use_build_context_synchronously
         context.read<HomeBloc>().add(InitializeHomeData(homeData));
+        // ignore: use_build_context_synchronously
         context.read<StreakBloc>().add(FetchStreakData(userId));
       }
 
@@ -83,6 +86,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
       );
       
       // Navigate to home even if there's an error
+      // ignore: use_build_context_synchronously
       context.go('/home');
     }
   }

@@ -1,224 +1,309 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/food_details_screen/food_detail_screen.dart';
-import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/meals_detail_sheet.dart';
+import 'package:hungrx_app/data/Models/get_search_history_log_response.dart';
+import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_state.dart';
+import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
+import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_state.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 
-class LogMealScreen extends StatefulWidget {
+class LogMealScreen extends StatelessWidget {
   const LogMealScreen({super.key});
 
   @override
-  LogMealScreenState createState() => LogMealScreenState();
+  Widget build(BuildContext context) {
+    return BlocBuilder<UserBloc, UserState>(
+      builder: (context, userState) {
+        if (userState is UserLoaded) {
+          return LogMealView(userId: userState.userId ?? "");
+        }
+        // Show loading or redirect to login if user is not authenticated
+        return const SizedBox();
+      },
+    );
+  }
 }
 
-class LogMealScreenState extends State<LogMealScreen> {
-  String selectedMealType = 'Breakfast';
-  String sortOption = 'Recently Added';
+class LogMealView extends StatefulWidget {
+  final String userId;
+  const LogMealView({super.key, required this.userId});
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.black,
-    appBar: AppBar(
-      backgroundColor: Colors.black,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: const Text('Log your meal', style: TextStyle(color: Colors.white)),
-    ),
-    body: SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSearchBar(),
-            // const SizedBox(height: 20),
-            _buildMealTypeSelector(),
-            // const SizedBox(height: 20),
-            _buildHistoryHeader(),
-            // If _buildFoodList() returns a ListView, modify it like this:
-            SizedBox(
-              // Set a fixed height or calculate based on screen size
-              height: MediaQuery.of(context).size.height * 0.6, // Example: 60% of screen height
-              child: _buildFoodList(),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
+  State<LogMealView> createState() => _LogMealViewState();
 }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Expanded(
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(30),
-            
-            border: Border.all(color: Colors.grey, width: 1,),
-            
-          ),
-          child: const TextField(
-            style: TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'Search foods or scan',
-              hintStyle: TextStyle(color: Colors.grey),
-              prefixIcon: Icon(Icons.search, color: Colors.grey),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 15),
-            ),
+class _LogMealViewState extends State<LogMealView> {
+  @override
+  void initState() {
+    super.initState();
+    // Trigger search history refresh when screen loads
+    context.read<SearchHistoryLogBloc>().add(
+          GetSearchHistoryLogRequested(userId: widget.userId),
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'Log your meal',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSearchBar(context),
+              _buildHistoryHeader(),
+              _buildFoodList(),
+            ],
           ),
         ),
       ),
     );
   }
 
-Widget _buildMealTypeSelector() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Select Meal',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: ['Breakfast', 'Lunch', 'Snacks', 'Dinner'].map((type) {
-            bool isSelected = selectedMealType == type;
-            return GestureDetector(
-              onTap: () => setState(() => selectedMealType = type),
-              child: Row(
-                children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected ? AppColors.buttonColors : Colors.grey,
-                        width: 2,
-                      ),
-                    ),
-                    child: isSelected
-                        ? Center(
-                            child: Container(
-                              width: 14,
-                              height: 14,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.buttonColors,
-                              ),
-                            ),
-                          )
-                        : null,
+  Widget _buildSearchBar(BuildContext context) {
+    return BlocBuilder<SearchBloc, SearchState>(
+      builder: (context, state) {
+        return Column(
+          children: [
+            Padding( 
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: TextField(
+                  style: const TextStyle(color: Colors.white),
+                  onTap: () {
+                    context.pushNamed(RouteNames.grocerySeach).then((_) {
+                      // ignore: use_build_context_synchronously
+                      context.read<SearchHistoryLogBloc>().add(
+                            GetSearchHistoryLogRequested(userId: widget.userId),
+                          );
+                    });
+                  },
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Search your food',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey),
+                    border: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    type,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            );
-          }).toList(),
-        ),
-      ],
-    ),
-  );
-}
+            ),
+       
+          ],
+        );
+      },
+    );
+  }
 
   Widget _buildHistoryHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text('History',
-              style: TextStyle(
+    return BlocBuilder<SearchHistoryLogBloc, SearchHistoryLogState>(
+      builder: (context, state) {
+        final currentSortOption = state is SearchHistoryLogSuccess
+            ? state.currentSortOption
+            : 'Recently Added';
+
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Search History',
+                style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
-                  fontWeight: FontWeight.bold)),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: const BoxDecoration(),
-            child: DropdownButton<String>(
-              dropdownColor: Colors.black,
-              value: sortOption,
-              icon: const Icon(Icons.arrow_drop_down,
-                  color: AppColors.buttonColors),
-              style:  const TextStyle(color: Colors.grey),
-              underline: const SizedBox(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  sortOption = newValue!;
-                });
-              },
-              items: <String>[
-                'Recently Added',
-                'Alphabetical',
-                'Calories: High to Low',
-                'Calories: Low to High'
-              ].map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                child: DropdownButton<String>(
+                  dropdownColor: Colors.black,
+                  value: currentSortOption,
+                  icon: const Icon(Icons.arrow_drop_down,
+                      color: AppColors.buttonColors),
+                  style: const TextStyle(color: Colors.grey),
+                  underline: const SizedBox(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      context.read<SearchHistoryLogBloc>().add(
+                            SortSearchHistoryLogRequested(sortOption: newValue),
+                          );
+                    }
+                  },
+                  items: <String>[
+                    'Recently Added',
+                    'Alphabetical',
+                    'Calories: High to Low',
+                    'Calories: Low to High'
+                  ].map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildFoodList() {
-    
-    return ListView.builder(
-      shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-      itemCount: 12, 
-      itemBuilder: (context, index) {
-        return _buildFoodItem('Boiled Egg', '1.0 cup (chopped)', '590 Cal.');
+    return BlocBuilder<SearchHistoryLogBloc, SearchHistoryLogState>(
+      builder: (context, state) {
+        if (state is SearchHistoryLogLoading) {
+
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.buttonColors),
+          );
+        }
+
+        if (state is SearchHistoryLogFailure) {
+          return const Center(
+            child: Column(
+              children: [
+                Icon(Icons.error_outline, color: Colors.red,size: 25,),
+                SizedBox(height: 20,),
+                Text(
+                  'Some Error Occurred',
+                  style: TextStyle(color: Colors.red,fontSize: 16),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (state is SearchHistoryLogSuccess) {
+          if (state.items.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.only(top: 200),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.history,
+                      size: 40,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'No Search History Available',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Your recent food searches will appear here',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: state.items.length,
+            itemBuilder: (context, index) {
+              final item = state.items[index];
+              // print("brand:${item.name}");
+              // print("naemd:${item.name}");
+              // print("size:${item.servingInfo.size}");
+              // print(item.image);
+              // print(item.nutritionFacts.calories);
+
+              return _buildFoodItem(
+                context: context,
+                foodItem: item,
+                name: item.name,
+                description:
+                    '${item.servingInfo.size} ${item.servingInfo.unit}',
+                calories:
+                    '${item.nutritionFacts.calories?.toStringAsFixed(1) ?? "N/A"} Cal.',
+                brandName: item.brandName,
+                imageUrl: item.image,
+                onTap: () {
+                  context.pushNamed(
+                    RouteNames.foodDetail,
+                    pathParameters: {'id': item.foodId},
+                    extra: {
+                      'isSearchScreen': true, // or false based on your screen
+                      'searchFood':
+                          item, // pass if it's a search food item
+                      // 'foodItem': food, // pass if it's a regular food item
+                    },
+                  );
+                  //  !add detail screen
+                },
+              );
+            },
+          );
+        }
+
+        // Default case when state is not handled
+        return const Center(
+          child: Text(
+            'Something went wrong',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
+            ),
+          ),
+        );
       },
     );
   }
 
-  Widget _buildFoodItem(String name, String description, String calories) {
+  Widget _buildFoodItem({
+    required BuildContext context,
+    required GetSearchHistoryLogItem foodItem,
+    required String name,
+    required String description,
+    required String calories,
+    required String brandName,
+    required String imageUrl,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
-      onTap: () {
-                Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const FoodDetailScreen(
-              foodName: 'Boiled egg',
-              imageUrl: 'assets/images/burger.png',
-              nutritionFacts: {
-                'carbohydrate': 46,
-                'fat': 34,
-                'protein': 25,
-                'cholesterol': 85,
-              },
-              description:
-                  "boiled egg with big eggs and full of protiens ...",
-            ),
-          ),
-        );
-        
-      },
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         padding: const EdgeInsets.all(16),
@@ -227,33 +312,94 @@ Widget _buildMealTypeSelector() {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(description, style: const TextStyle(color: Colors.grey)),
-              ],
+            // Food Image
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[800],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.fastfood,
+                      color: Colors.grey,
+                      size: 30,
+                    );
+                  },
+                ),
+              ),
             ),
-            Row(
+            const SizedBox(width: 16),
+            // Food Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    brandName,
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Calories and Add Button
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(calories, style: const TextStyle(color: Colors.white)),
-                const SizedBox(width: 10),
+                Text(
+                  calories,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 GestureDetector(
                   onTap: () {
-                    _showMealDetailsBottomSheet(context, name, description);
+                    _showMealDetailsBottomSheet(
+                      foodItem,
+                      context,
+                      foodItem.name,
+                      '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+                    );
                   },
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.add_circle_outline,
-                        color: AppColors.buttonColors, size: 30),
+                    child: const Icon(
+                      Icons.add_circle,
+                      color: AppColors.buttonColors,
+                      size: 35,
+                    ),
                   ),
                 ),
               ],
@@ -265,32 +411,40 @@ Widget _buildMealTypeSelector() {
   }
 
   void _showMealDetailsBottomSheet(
-      BuildContext context, String name, String description) {
+    GetSearchHistoryLogItem foodItem,
+    BuildContext context,
+    String name,
+    String description,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
+        // print("print logefood:${foodItem.foodId}");
+
         return SingleChildScrollView(
           child: Container(
             padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom),
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: MealDetailsBottomSheet(
+              isHistoryScreen: true,
+              productId: foodItem.foodId,
+              userId: widget.userId,
+              calories: foodItem.nutritionFacts.calories ?? 0,
               mealName: name,
-              mealDescription: description,
+              servingInfo: description,
             ),
           ),
         );
       },
     ).then((value) {
       if (value != null) {
-        // Handle the returned data (number of servings and serving size)
-        print(
-            'Servings: ${value['servings']}, Serving Size: ${value['servingSize']}');
-        // Implement your logic to add the meal to the user's log
+        debugPrint(
+          'Servings: ${value['servings']}, Serving Size: ${value['servingSize']}',
+        );
       }
     });
   }
-
-// ... (rest of the LogMealScreen code)
 }

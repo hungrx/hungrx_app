@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/core/utils/size_utils.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/data/Models/eat_screen_model.dart';
+import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_state.dart';
+import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_event.dart';
+import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_state.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 
 class EatScreen extends StatefulWidget {
   const EatScreen({super.key});
@@ -11,84 +21,131 @@ class EatScreen extends StatefulWidget {
 }
 
 class _EatScreenState extends State<EatScreen> {
-  int selectedIndex = 1; // Set to 1 for 'Eat' tab
-
-
+  @override
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Padding(
-          padding:  EdgeInsets.all(12.w),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 20),
-                _buildSearchBar(),
-                const SizedBox(height: 20),
-                _buildCalorieBudget(),
-                const SizedBox(height: 20),
-                _buildOptionsGrid(),
-                // const Spacer(),
-                _buildEnjoyCalories(),
-              ],
+    return BlocListener<UserBloc, UserState>(
+      listener: (context, state) {
+        if (state is UserLoaded) {
+          final userId = state.userId;
+          if (userId != null) {
+            context.read<EatScreenBloc>().add(
+                  GetEatScreenDataEvent(userId),
+                );
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: BlocBuilder<EatScreenBloc, EatScreenState>(
+              builder: (context, state) {
+                if (state is EatScreenLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is EatScreenError) {
+                  return Center(
+                      child: Text(state.message,
+                          style: const TextStyle(color: Colors.red)));
+                } else if (state is EatScreenLoaded) {
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(state.data.data),
+                        const SizedBox(height: 20),
+                        _buildSearchBar(context),
+                        const SizedBox(height: 20),
+                        _buildCalorieBudget(state.data.data.dailyCalorieGoal),
+                        const SizedBox(height: 20),
+                        _buildOptionsGrid(),
+                        _buildEnjoyCalories(),
+                      ],
+                    ),
+                  );
+                }
+                return const SizedBox();
+              },
             ),
           ),
         ),
       ),
-
     );
   }
 
-  Widget _buildHeader() {
-    return const Row(
+  Widget _buildHeader(EatScreenData data) {
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Hi, Warren Daniel',
-          style: TextStyle(
-              color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+          'Hi, ${data.name}',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         CircleAvatar(
           radius: 25,
-          backgroundImage: AssetImage('assets/images/dp.png'),
+          backgroundImage: NetworkImage(data.profilePhoto),
         ),
       ],
     );
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: const TextField(
-        style: TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: 'search your food',
-          hintStyle: TextStyle(color: Colors.grey),
-          prefixIcon: Icon(Icons.search, color: Colors.grey),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        ),
-      ),
+  Widget _buildSearchBar(BuildContext context) {
+    return BlocBuilder<EatScreenSearchBloc, EatScreenSearchState>(
+      builder: (context, state) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: TextField(
+            style: const TextStyle(color: Colors.white),
+            onTap: () {
+              // Navigate to search screen when the search bar is tapped
+              context.pushNamed(RouteNames.eatScreenSearch);
+            },
+            readOnly: true, // Make it non-editable in this view
+            decoration: InputDecoration(
+              hintText: 'Search your food',
+              hintStyle: const TextStyle(color: Colors.grey),
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+              suffixIcon: state is SearchLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.grey),
+                        ),
+                      ),
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildCalorieBudget() {
-    return const Column(
+  Widget _buildCalorieBudget(String dailyCalorieGoal) {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '2317',
-          style: TextStyle(
+          dailyCalorieGoal,
+          style: const TextStyle(
               color: Colors.white, fontSize: 38, fontWeight: FontWeight.bold),
         ),
-        Text(
+        const Text(
           'calorie budget per day',
           style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
@@ -167,19 +224,4 @@ class _EatScreenState extends State<EatScreen> {
           color: Colors.grey[800], fontSize: 66, fontWeight: FontWeight.bold),
     );
   }
-
-  // Widget _buildBottomNavBar() {
-  //   return BottomNavigationBar(
-  //     backgroundColor: Colors.black,
-  //     selectedItemColor: Colors.white,
-  //     unselectedItemColor: Colors.grey,
-  //     type: BottomNavigationBarType.fixed,
-  //     items: [
-  //       BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-  //       BottomNavigationBarItem(icon: Icon(Icons.restaurant_menu), label: 'Eat'),
-  //       BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-  //       BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'food cart'),
-  //     ],
-  //   );
-  // }
 }

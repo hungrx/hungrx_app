@@ -34,7 +34,7 @@ final UserProfileApiService _userProfileApiService = UserProfileApiService();
       final response = await _userProfileApiService.checkUserProfile(userId);
       return response.status  == true;
     } catch (e) {
-      print('Error checking profile completion: $e');
+      // print('Error checking profile completion: $e');
       return false;
     }
   }
@@ -53,7 +53,7 @@ final UserProfileApiService _userProfileApiService = UserProfileApiService();
       }
       return null;
     } catch (e) {
-      print('Error fetching home data: $e');
+      // print('Error fetching home data: $e');
       return null;
     }
   }

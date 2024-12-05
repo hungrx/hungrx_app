@@ -47,7 +47,9 @@ class StreakCalendar extends StatelessWidget {
           final streakData = state.streakData;
           final streakMap = streakData.getStreakMap();
           final startingDate = streakData.startDate();
-          final endingDate  = streakData.endDate();
+          final endingDate = streakData.endDate();
+          // print(streakMap);
+          // print(startingDate);
           return Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -101,7 +103,7 @@ class StreakCalendar extends StatelessWidget {
                   ],
                 ),
                 SizedBox(
-                  height: MediaQuery.of(context).size.height*0.19,
+                  height: MediaQuery.of(context).size.height * 0.16,
                   child: ShaderMask(
                     shaderCallback: (Rect bounds) {
                       return const LinearGradient(
@@ -138,10 +140,11 @@ class StreakCalendar extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 14),
+                // const SizedBox(height: 14),
 
                 // Streak Stats
                 Row(
+                 
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(

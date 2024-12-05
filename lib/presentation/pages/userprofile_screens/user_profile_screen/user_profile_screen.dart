@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_informaion_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/goal_settings_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -109,7 +110,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           },
         ),
         _buildDetailItem(
-            Icons.flag_outlined, 'Primary Goal', 'Gain weight...', () {}),
+            Icons.flag_outlined, 'Primary Goal', 'Gain weight...', () {
+                  Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const GoalSettingsScreen()),
+            );
+            }),
         _buildDetailItem(
             Icons.pie_chart_outline, 'Statistics', 'Current status...', () {}),
       ],

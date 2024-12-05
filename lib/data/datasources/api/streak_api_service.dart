@@ -1,17 +1,17 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class StreakApiService {
-  final String baseUrl = 'https://hungerxapp.onrender.com';
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 
+class StreakApiService {
   Future<Map<String, dynamic>> fetchUserStreak(String userId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/trackuser'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.trackuser),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );
-
+    // print(" track user${response.body}");
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/animated_button.dart';
-import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
 import 'package:hungrx_app/core/widgets/header_section.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
@@ -34,10 +32,10 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
             Expanded(
               child: _buildMealList(),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: _buildEatFoodButton(),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.all(16.0),
+            //   child: _buildEatFoodButton(),
+            // ),
           ],
         ),
       ),
@@ -290,16 +288,16 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
     // });
   }
 
-  Widget _buildEatFoodButton() {
-    return AnimatedEatFoodButton(
-      onLogMeal: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LogMealScreen()),
-        );
-        // Implement log meal functionality
-      },
-      onNearbyRestaurant: () {},
-    );
-  }
+  // Widget _buildEatFoodButton() {
+  //   return AnimatedEatFoodButton(
+  //     onLogMeal: () {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const LogMealScreen()),
+  //       );
+  //       // Implement log meal functionality
+  //     },
+  //     onNearbyRestaurant: () {},
+  //   );
+  // }
 }

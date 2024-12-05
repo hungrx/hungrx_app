@@ -63,7 +63,7 @@ class WeightEntry {
       
       return "$formattedDay-${months[month - 1]}-$year";
     } catch (e) {
-      print('Date parsing error: $e for date: $date');
+      // print('Date parsing error: $e for date: $date');
       return date;
     }
   }
@@ -89,7 +89,7 @@ class WeightEntry {
       
       return "$formattedDay-${months[month - 1]}";
     } catch (e) {
-      print('Date parsing error: $e for date: $date');
+      // print('Date parsing error: $e for date: $date');
       return date;
     }
   }

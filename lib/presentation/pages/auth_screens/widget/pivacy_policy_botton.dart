@@ -46,10 +46,10 @@ class ClickableTermsAndPolicyText extends StatelessWidget {
             if (await canLaunchUrlString(url)) {
               await launchUrlString(url);
             } else {
-              print("Could not launch $url");
+              // print("Could not launch $url");
             }
           } catch (e) {
-            print("Error launching URL: $e");
+            // print("Error launching URL: $e");
           }
         },
     );

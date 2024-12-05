@@ -5,6 +5,10 @@ import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
+import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_event.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_event.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_state.dart';
@@ -62,6 +66,7 @@ class WeightPickerScreenState extends State<WeightPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userState = context.watch<UserBloc>().state;
     return Scaffold(
       backgroundColor: Colors.black,
       body: BlocListener<WeightUpdateBloc, WeightUpdateState>(
@@ -183,21 +188,34 @@ class WeightPickerScreenState extends State<WeightPickerScreen> {
                             onPressed: state is WeightUpdateLoading
                                 ? null
                                 : () async {
-                                    if (selectedValue.isNotEmpty) {
+                                    if (selectedValue.isNotEmpty &&
+                                        userState is UserLoaded) {
+                                      // Update weight
                                       context.read<WeightUpdateBloc>().add(
                                             UpdateWeightRequested(
                                               double.parse(selectedValue),
                                             ),
                                           );
-                                    }
-                                    final homeData =
-                                        await _authService.fetchHomeData();
-                                      
-                                    if (homeData != null) {
-                                      // Initialize HomeBloc with fetched data
-                                      context
-                                          .read<HomeBloc>()
-                                          .add(InitializeHomeData(homeData));
+
+                                      // Refresh weight history
+                                      context.read<WeightHistoryBloc>().add(
+                                            FetchWeightHistory(
+                                                userState.userId ?? ""),
+                                          );
+
+                                      // Fetch home data and update
+                                      final homeData =
+                                          await _authService.fetchHomeData();
+                                      if (homeData != null) {
+                                        context
+                                            .read<HomeBloc>()
+                                            .add(InitializeHomeData(homeData));
+                                      }
+
+                                      // Pop back to previous screen after successful update
+                                      if (mounted) {
+                                        Navigator.pop(context, true);
+                                      }
                                     }
                                   },
                             style: ElevatedButton.styleFrom(

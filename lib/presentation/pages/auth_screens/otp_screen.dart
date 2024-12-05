@@ -103,7 +103,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           return null;
                         },
                         onCompleted: (pin) {
-                          print("enter:$pin");
+                          // print("enter:$pin");
                         },
                       ),
                       const Spacer(),

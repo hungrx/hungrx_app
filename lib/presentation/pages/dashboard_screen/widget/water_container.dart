@@ -16,7 +16,7 @@ class WaterAnimationPainter extends CustomPainter {
  @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
-      ..color = const Color(0xff3B6ABA).withOpacity(.4)
+      ..color = Colors.transparent
       ..style = PaintingStyle.fill;
 
     // Create a rounded rectangle path for clipping

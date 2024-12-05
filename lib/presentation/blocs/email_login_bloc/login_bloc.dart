@@ -13,12 +13,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   Future<void> _onLoginSubmitted(LoginSubmitted event, Emitter<LoginState> emit) async {
     emit(LoginLoading());
     try {
-      print("reached");
+      // print("reached");
       final token = await loginUseCase.execute(event.email, event.password);
-      print("hi whaht up$token");
+      // print("hi whaht up$token");
       emit(LoginSuccess(token));
     } catch (e) {
-       print("error occures$e");
+      //  print("error occures$e");
       emit(LoginFailure(e.toString()));
     }
   }

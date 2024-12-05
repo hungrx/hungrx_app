@@ -97,6 +97,7 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
 
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.of(context).pop(); // Close dialog
+      // ignore: use_build_context_synchronously
       context.pushNamed(
         RouteNames.tdeeResults,
         extra: tdeeResult,

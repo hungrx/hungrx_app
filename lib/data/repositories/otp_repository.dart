@@ -4,7 +4,7 @@ import 'package:hungrx_app/data/models/otp_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpRepository {
-  final String baseUrl = 'https://hungerxapp.onrender.com';
+  final String baseUrl = 'https://hungrxbackend.onrender.com';
 
   Future<void> sendOtp(OtpSendModel otpSendModel) async {
     final response = await http.post(
@@ -12,22 +12,22 @@ class OtpRepository {
       headers: {'Content-Type': 'application/json'},
       body: json.encode(otpSendModel.toJson()),
     );
-print(response.body);
+// print(response.body);
     if (response.statusCode != 200) {
-      print(response.statusCode);
+      // print(response.statusCode);
       throw Exception('Failed to send OTP');
     }
   }
 
   Future<String> verifyOtp(OtpVerifyModel otpVerifyModel) async {
-    print("reached here");
+    // print("reached here");
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/verifyOTP'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(otpVerifyModel.toJson()),
       );
-print(response.body);
+// print(response.body);
       if (response.statusCode == 200) {
         final responseBody = json.decode(response.body);
         final userId = responseBody['userId'];
@@ -46,7 +46,7 @@ print(response.body);
   }
 
   Future<void> _saveUserId(String userId) async {
-    print(userId);
+    // print(userId);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_id', userId);
   }

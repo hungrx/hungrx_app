@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/data/Models/food_item_model.dart';
+import 'package:hungrx_app/data/Models/get_search_history_log_response.dart';
 import 'package:hungrx_app/data/Models/tdee_result_model.dart';
 import 'package:hungrx_app/data/datasources/api/feedback_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/weight_update_api.dart';
@@ -20,7 +22,9 @@ import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/feedbacks_widget.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
+import 'package:hungrx_app/presentation/pages/eat_screen/widgets/search_widget.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
+import 'package:hungrx_app/presentation/pages/food_details_screen/food_detail_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/dialy_activity_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/goal_pace_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/goal_selection_screen.dart';
@@ -29,6 +33,7 @@ import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/use
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/user_info_two.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/userr_info_one.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/food_search_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/presentation/pages/water_intake_screeen/water_intake.dart';
@@ -59,13 +64,13 @@ class AppRouter {
             name: RouteNames.home,
             builder: (context, state) => const DashboardScreen(),
           ),
-           GoRoute(
-      path: '/water-intake',  // URL path
-      name: RouteNames.waterIntake,
-      builder: (BuildContext context, GoRouterState state) {
-        return const WaterIntakeScreen();
-      },
-    ),
+          GoRoute(
+            path: '/water-intake', // URL path
+            name: RouteNames.waterIntake,
+            builder: (BuildContext context, GoRouterState state) {
+              return const WaterIntakeScreen();
+            },
+          ),
           // Eat Screen route
           GoRoute(
             path: '/eatscreen',
@@ -89,34 +94,49 @@ class AppRouter {
       GoRoute(
         path: '/weight-picker',
         name: RouteNames.weightPicker,
-        builder: (context, state) => BlocProvider(
-          create: (context) => WeightUpdateBloc(
-            UpdateWeightUseCase(
-              WeightUpdateRepository(
-                WeightUpdateApiService(),
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) => WeightUpdateBloc(
+              UpdateWeightUseCase(
+                WeightUpdateRepository(
+                  WeightUpdateApiService(),
+                ),
               ),
+              AuthService(),
             ),
-            AuthService(),
-          ),
-          child: const WeightPickerScreen(),
-        ),
+            child: const WeightPickerScreen(),
+          );
+        },
       ),
       GoRoute(
-  path: '/feedback',
-  name: RouteNames.feedback,
-  builder: (BuildContext context, GoRouterState state) {
-    return BlocProvider(
-      create: (context) => FeedbackBloc(
-        SubmitFeedbackUseCase(
-          FeedbackRepository(
-            FeedbackApiService(),
-          ),
-        ),
+        path: '/eatScreenSearch',
+        name: RouteNames.eatScreenSearch,
+        builder: (context, state) => const SearchScreen(),
       ),
-      child: const FeedbackDialog(),
-    );
-  },
-),
+
+      //! log screen search food
+
+      GoRoute(
+        path: '/search',
+        name: RouteNames.grocerySeach,
+        builder: (context, state) => const FoodSearchScreen(),
+      ),
+      GoRoute(
+        path: '/feedback',
+        name: RouteNames.feedback,
+        builder: (BuildContext context, GoRouterState state) {
+          return BlocProvider(
+            create: (context) => FeedbackBloc(
+              SubmitFeedbackUseCase(
+                FeedbackRepository(
+                  FeedbackApiService(),
+                ),
+              ),
+            ),
+            child: const FeedbackDialog(),
+          );
+        },
+      ),
       GoRoute(
         path: '/weight-tracking',
         name: RouteNames.weightTracking,
@@ -231,6 +251,29 @@ class AppRouter {
           return const PhoneNumberScreen();
         },
       ),
+GoRoute(
+  path: '/food/:id',
+  name: RouteNames.foodDetail,
+  builder: (BuildContext context, GoRouterState state) {
+    final Map<String, dynamic>? params = state.extra as Map<String, dynamic>?;
+
+    if (params == null) {
+      return const Scaffold(
+        body: Center(child: Text('Food details not found')),
+      );
+    }
+
+    final bool isSearchScreen = params['isSearchScreen'] as bool? ?? false;
+    final searchFood = isSearchScreen ? params['searchFood'] as GetSearchHistoryLogItem? : null;
+    final foodItem = !isSearchScreen ? params['foodItem'] as FoodItemModel? : null;
+
+    return FoodDetailScreen(
+      isSearchScreen: isSearchScreen,
+      searchFood: searchFood,
+      foodItem: foodItem,
+    );
+  },
+),
       GoRoute(
         path: '/otpVerify/:phoneNumber',
         name: RouteNames.otpVerify,
@@ -275,6 +318,7 @@ class AppRouter {
           return const Placeholder(); // Replace with actual MenuScreen
         },
       ),
+
       GoRoute(
         path: '/food-item-details',
         name: RouteNames.foodItemDetails,

@@ -3,8 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:hungrx_app/data/Models/email_model.dart';
 
 
-
-
 class ApiResponse {
   final bool success;
   final String message;
@@ -14,11 +12,11 @@ class ApiResponse {
 }
 
 class UserSignUpRepository {
-  final String baseUrl = 'https://hungerxapp.onrender.com';
+  final String baseUrl = 'https://hungrxbackend.onrender.com';
 
   Future<ApiResponse> signUp(User user) async {
     try {
-      print("Attempting to sign up user: ${user.email}");
+      // print("Attempting to sign up user: ${user.email}");
       final response = await http.post(
         Uri.parse('$baseUrl/users/signup/email'),
         headers: {'Content-Type': 'application/json'},
@@ -29,8 +27,8 @@ class UserSignUpRepository {
         }),
       );
 
-      print("Response status code: ${response.statusCode}");
-      print("Response body: ${response.body}");
+      // print("Response status code: ${response.statusCode}");
+      // print("Response body: ${response.body}");
 
       // Parse the response body
       Map<String, dynamic> responseBody = json.decode(response.body);
@@ -62,7 +60,7 @@ class UserSignUpRepository {
         );
       }
     } catch (e) {
-      print("Exception occurred during sign up: $e");
+      // print("Exception occurred during sign up: $e");
       return ApiResponse(
         success: false,
         message: 'An error occurred: ${e.toString()}',

@@ -1,50 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/calorie_calculation_screen/calculation_tracking.dart';
-import 'package:hungrx_app/presentation/pages/food_details_screen/food_detail_screen.dart';
 
 class RestaurantMenuScreen extends StatelessWidget {
   const RestaurantMenuScreen({super.key});
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.black,
-    appBar: AppBar(
+  Widget build(BuildContext context) {
+    return Scaffold(
       backgroundColor: Colors.black,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
-    ),
-    body: Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildRestaurantInfoCard(),
-                _buildSearchBar(),
-         
-                _buildMenuList(context),
-              ],
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildRestaurantInfoCard(),
+                  _buildSearchBar(),
+                  _buildMenuList(context),
+                ],
+              ),
             ),
           ),
-        ),
-        _buildOrderSummary(context),
-      ],
-    ),
-  );
-}
+          _buildOrderSummary(context),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRestaurantInfoCard() {
     return Container(
       decoration: BoxDecoration(
-         color: Colors.grey[900],
-        borderRadius: const BorderRadius.all(Radius.circular(16))
-        
-      ),
+          color: Colors.grey[900],
+          borderRadius: const BorderRadius.all(Radius.circular(16))),
       padding: const EdgeInsets.all(16),
-     
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -115,13 +111,13 @@ Widget build(BuildContext context) {
       margin: const EdgeInsets.only(top: 16, left: 0, right: 0, bottom: 16),
       // padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color:  Colors.grey[900],
+        color: Colors.grey[900],
         borderRadius: BorderRadius.circular(25),
       ),
       child: const TextField(
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
-           prefixIcon: Icon(Icons.search, color: Colors.grey),
+          prefixIcon: Icon(Icons.search, color: Colors.grey),
           hintText: 'Find the foods under your daily kcal...',
           hintStyle: TextStyle(color: Colors.grey),
           border: InputBorder.none,
@@ -133,7 +129,7 @@ Widget build(BuildContext context) {
   Widget _buildMenuList(BuildContext context) {
     return ListView(
       shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildMenuCategory('Recommended foods', [
           _buildMenuItem(
@@ -183,23 +179,15 @@ Widget build(BuildContext context) {
       double rating, BuildContext context) {
     return ListTile(
       onTap: () {
+      
         Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const FoodDetailScreen(
-              foodName: 'Big Mac',
-              imageUrl: 'assets/images/burger.png',
-              nutritionFacts: {
-                'carbohydrate': 46,
-                'fat': 34,
-                'protein': 25,
-                'cholesterol': 85,
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+
+                return const SizedBox();
               },
-              description:
-                  "McDonald's Big Mac® is a 100% beef burger with a taste like no other. The mouthwatering perfection starts with two 100% pure beef patties ...",
-            ),
-          ),
-        );
+            ));
       },
       leading: Image.asset(imagePath, width: 50, height: 50),
       title: Text(name, style: const TextStyle(color: Colors.white)),
@@ -254,7 +242,8 @@ Widget build(BuildContext context) {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.buttonColors,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
             onPressed: () {
               Navigator.push(
@@ -263,7 +252,10 @@ Widget build(BuildContext context) {
                     builder: (context) => const CalorieCalculationScreen()),
               );
             },
-            child: const Text('View order list (5 items) >',style: TextStyle(color: AppColors.primaryColor),),
+            child: const Text(
+              'View order list (5 items) >',
+              style: TextStyle(color: AppColors.primaryColor),
+            ),
           ),
         ],
       ),

@@ -28,4 +28,8 @@ class RouteNames {
   static const String weightTracking = 'weight-tracking';
   static const String feedback = 'feedback';
   static const String waterIntake = 'waterIntake';
+  static const String eatScreenSearch = 'eatScreenSearch';
+  static const String grocerySeach = 'grocerySeach';
+  static const String foodDetail = 'foodDetail';
+
 }

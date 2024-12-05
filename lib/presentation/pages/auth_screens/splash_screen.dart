@@ -29,12 +29,9 @@ class SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _checkConnectivityAndNavigate();
-
-    // _navigateToNextScreen();
   }
 
   Future<void> _checkConnectivityAndNavigate() async {
-    // Initial connectivity check
     context.read<ConnectivityBloc>().add(CheckConnectivity());
   }
 
@@ -66,11 +63,10 @@ class SplashScreenState extends State<SplashScreen> {
             context.read<StreakBloc>().add(FetchStreakData(userId));
           }
           // print(isProfileComplete);
-          // Determine route based on profile completion
           route = isProfileComplete ? '/home' : '/user-info-one';
         }
       } catch (e) {
-        print('Error during navigation checks: $e');
+        // print('Error during navigation checks: $e');
         // Show error to user
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -109,28 +105,20 @@ class SplashScreenState extends State<SplashScreen> {
           }
 
           return Scaffold(
-            backgroundColor: AppColors.primaryColor,
+            backgroundColor: AppColors.buttonColors,
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/images/companylogo.jpeg',
+                    'assets/images/companylogo.png',
                     width: 350,
                     height: 350,
-                  ),
-                  const Text(
-                    'hungrX',
-                    style: TextStyle(
-                      fontSize: 79,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.buttonColors,
-                    ),
                   ),
                   const SizedBox(height: 20),
                   const CircularProgressIndicator(
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+                        AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
                   ),
                 ],
               ),

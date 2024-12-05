@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/login_model.dart';
 
 class UserSignInRepository {
-  final String baseUrl = 'https://hungerxapp.onrender.com';
+  final String baseUrl = 'https://hungrxbackend.onrender.com';
 
   Future<String> login(LoginModel loginModel) async {
     try {
@@ -37,7 +37,7 @@ class UserSignInRepository {
             'Failed to login: ${response.statusCode} ${response.reasonPhrase}');
       }
     } catch (e) {
-      print('Error during login: $e');
+      // print('Error during login: $e');
       throw Exception('Failed to login: $e');
     }
   }
