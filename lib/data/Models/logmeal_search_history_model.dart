@@ -16,14 +16,20 @@ class LogMealSearchHistoryModel {
   });
 
   factory LogMealSearchHistoryModel.fromJson(Map<String, dynamic> json) {
-    return LogMealSearchHistoryModel(
-      userId: json['userId'],
-      productId: json['productId'],
-      foodItem: FoodItemModel.fromJson(json['foodItem']),
-      searchInfo: SearchInfoModel.fromJson(json['searchInfo']),
-      viewedAt: json['viewedAt'],
-      id: json['_id'],
-    );
+    try {
+      return LogMealSearchHistoryModel(
+        userId: json['userId']?.toString() ?? '',
+        productId: json['productId']?.toString() ?? '',
+        foodItem: FoodItemModel.fromJson(json['foodItem'] ?? {}),
+        searchInfo: SearchInfoModel.fromJson(json['searchInfo'] ?? {}),
+        viewedAt: json['viewedAt']?.toString() ?? '',
+        id: json['_id']?.toString() ?? '',
+      );
+    } catch (e) {
+      print('Error parsing LogMealSearchHistoryModel: $json');
+      print('Error details: $e');
+      rethrow;
+    }
   }
 }
 
@@ -41,12 +47,18 @@ class FoodItemModel {
   });
 
   factory FoodItemModel.fromJson(Map<String, dynamic> json) {
-    return FoodItemModel(
-      id: json['id'],
-      name: json['name'],
-      brandName: json['brandName'],
-      image: json['image'],
-    );
+    try {
+      return FoodItemModel(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        brandName: json['brandName']?.toString() ?? '',
+        image: json['image']?.toString() ?? '',
+      );
+    } catch (e) {
+      print('Error parsing FoodItemModel: $json');
+      print('Error details: $e');
+      rethrow;
+    }
   }
 }
 
@@ -62,10 +74,16 @@ class SearchInfoModel {
   });
 
   factory SearchInfoModel.fromJson(Map<String, dynamic> json) {
-    return SearchInfoModel(
-      date: json['date'],
-      time: json['time'],
-      timestamp: json['timestamp'],
-    );
+    try {
+      return SearchInfoModel(
+        date: json['date']?.toString() ?? '',
+        time: json['time']?.toString() ?? '',
+        timestamp: json['timestamp']?.toString() ?? '',
+      );
+    } catch (e) {
+      print('Error parsing SearchInfoModel: $json');
+      print('Error details: $e');
+      rethrow;
+    }
   }
 }

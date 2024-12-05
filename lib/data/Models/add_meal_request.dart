@@ -38,8 +38,7 @@ class AddMealResponse {
     required this.updatedCalories,
   });
 
-  factory AddMealResponse.fromJson(Map<String, dynamic> json) =>
-      AddMealResponse(
+  factory AddMealResponse.fromJson(Map<String, dynamic> json) => AddMealResponse(
         success: json['success'] ?? false,
         message: json['message'] ?? '',
         date: json['date'] ?? '',
@@ -64,10 +63,20 @@ class UpdatedCalories {
     required this.caloriesToReachGoal,
   });
 
-  factory UpdatedCalories.fromJson(Map<String, dynamic> json) =>
-      UpdatedCalories(
-        remaining: json['remaining'] ?? 0,
-        consumed: json['consumed'] ?? 0,
-        caloriesToReachGoal: json['caloriesToReachGoal'] ?? 0,
-      );
+  factory UpdatedCalories.fromJson(Map<String, dynamic> json) {
+    // Helper function to safely convert values to double
+    double toDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is int) return value.toDouble();
+      if (value is double) return value;
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    return UpdatedCalories(
+      remaining: toDouble(json['remaining']),
+      consumed: toDouble(json['consumed']),
+      caloriesToReachGoal: toDouble(json['caloriesToReachGoal']),
+    );
+  }
 }

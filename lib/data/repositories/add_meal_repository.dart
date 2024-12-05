@@ -10,8 +10,8 @@ class AddMealRepository {
     try {
       return await _api.addMealToUser(request);
     } catch (e) {
-      // print(e);
-      // print("hello");
+      print(e);
+      print("hello");
       throw Exception('Repository error: $e');
     }
   }

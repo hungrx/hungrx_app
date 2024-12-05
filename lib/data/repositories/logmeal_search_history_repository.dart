@@ -16,13 +16,22 @@ class LogMealSearchHistoryRepository {
         productId: productId,
       );
 
-      if (response['status'] == true) {
+      // Print response for debugging
+      print('Repository response: $response');
+
+      if (response['status'] == true && response['data'] != null) {
         return LogMealSearchHistoryModel.fromJson(response['data']);
       } else {
-        throw Exception(response['message'] ?? 'Failed to add to history');
+        throw Exception(response['message'] ?? 'Failed to add to history: Invalid response format');
       }
     } catch (e) {
-      throw Exception('Repository error: $e');
+      print('Repository error details: $e');
+      if (e is FormatException) {
+        throw Exception('Repository error: Invalid data format');
+      } else if (e is TypeError) {
+        throw Exception('Repository error: Unexpected data type in response');
+      }
+      throw Exception('Repository error: ${e.toString()}');
     }
   }
 }

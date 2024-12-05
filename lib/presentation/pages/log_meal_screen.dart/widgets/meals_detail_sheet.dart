@@ -176,6 +176,8 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                     GetSearchHistoryLogRequested(userId: widget.userId),
                   );
             } else if (state is LogMealSearchHistoryError) {
+              print("what");
+              print(state.message);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
