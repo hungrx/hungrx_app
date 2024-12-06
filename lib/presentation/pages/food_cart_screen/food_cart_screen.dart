@@ -10,12 +10,8 @@ class CartScreen extends StatelessWidget {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
         title:
-            const Text('Calorie Cart', style: TextStyle(color: Colors.white)),
+            const Text('Calorie Cart', style: TextStyle(color: Colors.white,fontSize: 30)),
       ),
       body: Stack(
         children: [

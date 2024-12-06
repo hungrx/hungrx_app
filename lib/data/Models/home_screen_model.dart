@@ -2,11 +2,11 @@ class HomeData {
   final String username;
   final String goalHeading;
   final String weight;
-  final int caloriesToReachGoal;    // Changed to int since API sends integer
-  final int dailyCalorieGoal;       // Changed to int since API sends integer
+  final int caloriesToReachGoal;
+  final int dailyCalorieGoal;
   final int daysToReachGoal;
-  final int remaining;              // Changed to int since API sends integer
-  final int consumed;               // Added new field from API response
+  final int remaining;
+  final int consumed;
 
   HomeData({
     required this.username,
@@ -18,6 +18,29 @@ class HomeData {
     required this.remaining,
     required this.consumed,
   });
+
+  // Add copyWith method
+  // HomeData copyWith({
+  //   String? username,
+  //   String? goalHeading,
+  //   String? weight,
+  //   int? caloriesToReachGoal,
+  //   int? dailyCalorieGoal,
+  //   int? daysToReachGoal,
+  //   int? remaining,
+  //   int? consumed,
+  // }) {
+  //   return HomeData(
+  //     username: username ?? this.username,
+  //     goalHeading: goalHeading ?? this.goalHeading,
+  //     weight: weight ?? this.weight,
+  //     caloriesToReachGoal: caloriesToReachGoal ?? this.caloriesToReachGoal,
+  //     dailyCalorieGoal: dailyCalorieGoal ?? this.dailyCalorieGoal,
+  //     daysToReachGoal: daysToReachGoal ?? this.daysToReachGoal,
+  //     remaining: remaining ?? this.remaining,
+  //     consumed: consumed ?? this.consumed,
+  //   );
+  // }
 
   factory HomeData.fromJson(Map<String, dynamic> json) {
     return HomeData(
@@ -32,7 +55,6 @@ class HomeData {
     );
   }
 
-  // Helper method to parse integers from various data types
   static int _parseInt(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value;
@@ -47,7 +69,6 @@ class HomeData {
     return 0;
   }
 
-  // Optional: Add a method to convert the object to JSON if needed
   Map<String, dynamic> toJson() {
     return {
       'username': username,
@@ -59,5 +80,4 @@ class HomeData {
       'remaining': remaining,
       'consumed': consumed,
     };
-  }
-}
+  }}

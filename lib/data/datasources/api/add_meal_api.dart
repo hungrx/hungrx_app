@@ -14,11 +14,10 @@ class AddMealApi {
       // Construct and validate the full URL
       const url = '$baseUrl/users/addConsumedFood';
       final uri = Uri.parse(url);
-      
+
       if (!uri.hasAuthority) {
         throw Exception('Invalid URL: $url');
       }
-
 
       final response = await http.post(
         Uri.parse('$baseUrl/users/addConsumedFood'),
@@ -41,4 +40,5 @@ class AddMealApi {
       }
       throw Exception('Network error: $e');
     }
-  }}
+  }
+}

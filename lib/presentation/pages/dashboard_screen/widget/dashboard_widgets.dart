@@ -52,9 +52,13 @@ class DashboardWidgets {
     );
   }
 
-  static Widget buildCalorieCounter(HomeData data,Stream<double>? calorieStream) {
+  static Widget buildCalorieCounter(
+      HomeData data, Stream<double>? calorieStream) {
     return Container(
-      padding: const EdgeInsets.only(left: 16, right: 16, ),
+      padding: const EdgeInsets.only(
+        left: 16,
+        right: 16,
+      ),
       decoration: BoxDecoration(
         color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(20),
@@ -67,7 +71,10 @@ class DashboardWidgets {
             children: [
               Text(
                 data.goalHeading,
-                style: const TextStyle(color: Colors.grey, fontSize: 18 ,fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800),
               ),
               Row(
                 children: [
@@ -81,7 +88,7 @@ class DashboardWidgets {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 0, left: 5,top: 10),
+                    padding: const EdgeInsets.only(bottom: 0, left: 5, top: 10),
                     child: Text(
                       ' Days',
                       style: GoogleFonts.stickNoBills(
@@ -95,33 +102,8 @@ class DashboardWidgets {
             ],
           ),
           AnimatedCalorieDisplay(
-          data: data,
-          calorieUpdateStream: calorieStream,
-        ),
-          // Row(
-          //   crossAxisAlignment: CrossAxisAlignment.end,
-          //   children: [
-          //     AnimatedFlipCounter(
-          //       value: data.caloriesToReachGoal,
-          //       wholeDigits: 6,
-          //       textStyle: GoogleFonts.stickNoBills(
-          //         color: Colors.white,
-          //         fontSize: 80,
-          //         fontWeight: FontWeight.bold,
-          //       ),
-          //     ),
-          //     Padding(
-          //       padding: const EdgeInsets.only(bottom: 22, left: 5),
-          //       child: Text(
-          //         'cal',
-          //         style: GoogleFonts.stickNoBills(
-          //           color: Colors.grey,
-          //           fontSize: 20,
-          //         ),
-          //       ),
-          //     ),
-          //   ],
-          // ),
+            initialData: data,
+          ),
         ],
       ),
     );
@@ -144,7 +126,10 @@ class DashboardWidgets {
               children: [
                 const Text(
                   'Daily Target',
-                  style: TextStyle(color: Colors.grey, fontSize: 16,fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800),
                 ),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -205,7 +190,10 @@ class DashboardWidgets {
                     children: [
                       const Text(
                         'Remaining',
-                        style: TextStyle(color: Colors.grey, fontSize: 16,fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800),
                       ),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -294,7 +282,10 @@ class DashboardWidgets {
                 children: [
                   const Text(
                     'Current Weight',
-                    style: TextStyle(color: Colors.grey, fontSize: 16,fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800),
                   ),
                   Text(
                     data.weight,

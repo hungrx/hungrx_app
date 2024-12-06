@@ -13,6 +13,7 @@ import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_me
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_state.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
+import 'package:hungrx_app/presentation/controller/home_data_notifier.dart';
 
 class MealDetailsBottomSheet extends StatefulWidget {
   final bool isHistoryScreen;
@@ -125,7 +126,11 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
       dishId: widget.productId,
       totalCalories: totalCalories,
     );
-
+    // ! for animating the calorie count
+    HomeDataNotifier.decreaseCalories(totalCalories);
+    // HomeDataNotifier.updateCalories(
+    //     HomeDataNotifier.caloriesNotifier.value + totalCalories
+    //   );
     context.read<AddMealBloc>().add(AddMealSubmitted(request));
 
     if (!widget.isHistoryScreen) {
@@ -145,7 +150,6 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
         BlocListener<AddMealBloc, AddMealState>(
           listener: (context, state) {
             if (state is AddMealSuccess) {
-              
               context.read<SearchHistoryLogBloc>().add(
                     GetSearchHistoryLogRequested(userId: widget.userId),
                   );
@@ -176,8 +180,6 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                     GetSearchHistoryLogRequested(userId: widget.userId),
                   );
             } else if (state is LogMealSearchHistoryError) {
-              print("what");
-              print(state.message);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
@@ -221,7 +223,6 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                             child: Text(
                               widget.mealName,
                               style: const TextStyle(
-                                
                                 overflow: TextOverflow.clip,
                                 color: Colors.white,
                                 fontSize: 24,

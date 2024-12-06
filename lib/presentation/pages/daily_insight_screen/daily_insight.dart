@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/core/widgets/header_section.dart';
+import 'package:hungrx_app/data/Models/daily_food_response.dart';
+import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_event.dart';
+import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_state.dart';
+import 'package:hungrx_app/presentation/pages/daily_insight_screen/widget/food_delete_dialog.dart';
+import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class DailyInsightScreen extends StatefulWidget {
@@ -13,11 +20,23 @@ class DailyInsightScreen extends StatefulWidget {
 class DailyInsightScreenState extends State<DailyInsightScreen> {
   late DateTime selectedDate;
   final List<String> weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  final userId = '674aa1079c1b9317a29df716'; // Replace with actual user ID
 
   @override
   void initState() {
     super.initState();
     selectedDate = DateTime.now();
+    _fetchDailyInsightData();
+  }
+
+  void _fetchDailyInsightData() {
+    final formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
+    context.read<DailyInsightBloc>().add(
+          GetDailyInsightData(
+            userId: userId,
+            date: formattedDate,
+          ),
+        );
   }
 
   @override
@@ -25,69 +44,201 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            _buildDateSelector(),
-            Expanded(
-              child: _buildMealList(),
-            ),
-            // Padding(
-            //   padding: const EdgeInsets.all(16.0),
-            //   child: _buildEatFoodButton(),
-            // ),
-          ],
+        child: BlocListener<DailyInsightBloc, DailyInsightState>(
+          listener: (context, state) {
+            if (state is DailyInsightError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+          child: Column(
+            children: [
+              _buildHeader(),
+              _buildDateSelector(),
+              Expanded(
+                child: _buildContent(),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return const HeaderSection(title: 'Daily Insight',);
-  }
-
-  Widget _buildDateSelector() {
-    return SizedBox(
-      height: 60,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 10,
-        itemBuilder: (context, index) {
-          final date = DateTime.now().add(Duration(days: index - 3));
-          final isSelected = date.day == selectedDate.day;
-          return GestureDetector(
-            onTap: () => setState(() => selectedDate = date),
-            child: Container(
-              width: 50,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.buttonColors : AppColors.tileColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    weekDays[date.weekday % 7],
-                    style: TextStyle(
-                        color: isSelected ? Colors.black : Colors.white,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${date.day}',
-                    style: TextStyle(
-                        color: isSelected ? Colors.black : Colors.white),
-                  ),
-                ],
-              ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.pop(),
+          ),
+          const SizedBox(
+            width: 10,
+          ),
+          const Text(
+            'Daily Insight',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCalorieProgress() {
+  Widget _buildDateSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      height: 80,
+      child: Row(
+        children: [
+          // Calendar picker button
+          IconButton(
+            onPressed: () => _showDatePicker(),
+            icon: const Icon(Icons.calendar_today, color: Colors.white),
+          ),
+          // Horizontal date list
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 10,
+              itemBuilder: (context, index) {
+                final date = DateTime.now().add(Duration(days: index - 3));
+                final isSelected = _isSameDay(date, selectedDate);
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => selectedDate = date);
+                    _fetchDailyInsightData();
+                  },
+                  child: Container(
+                    width: 50,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.buttonColors
+                          : AppColors.tileColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          weekDays[date.weekday % 7],
+                          style: TextStyle(
+                            color: isSelected ? Colors.black : Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '${date.day}',
+                          style: TextStyle(
+                            color: isSelected ? Colors.black : Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showDatePicker() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.buttonColors,
+              onPrimary: Colors.white,
+              surface: Colors.grey[900]!,
+              onSurface: Colors.white,
+            ),
+            dialogBackgroundColor: Colors.grey[800],
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && !_isSameDay(picked, selectedDate)) {
+      setState(() => selectedDate = picked);
+      _fetchDailyInsightData();
+    }
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  Widget _buildContent() {
+    return BlocBuilder<DailyInsightBloc, DailyInsightState>(
+      builder: (context, state) {
+        if (state is DailyInsightLoading) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+          );
+        }
+        if (state is DailyInsightLoaded) {
+          return _buildMealList(state.data);
+        }
+        if (state is DailyInsightError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  state.message,
+                  style: const TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _fetchDailyInsightData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.buttonColors,
+                  ),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildMealList(DailyFoodResponse data) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildCalorieProgress(data.dailySummary),
+        _buildMealSection('Breakfast', data.consumedFood.breakfast.foods, data),
+        _buildMealSection('Lunch', data.consumedFood.lunch.foods, data),
+        _buildMealSection('Dinner', data.consumedFood.dinner.foods, data),
+        _buildMealSection('Snacks', data.consumedFood.snacks.foods, data),
+      ],
+    );
+  }
+
+  Widget _buildCalorieProgress(DailySummary summary) {
+    final progress = summary.totalCalories / summary.dailyGoal;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -100,36 +251,49 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
           CircularPercentIndicator(
             radius: 80,
             lineWidth: 8,
-            percent: 0.28,
-            center: const Column(
+            percent: progress.clamp(0.0, 1.0),
+            center: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '590',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold),
+                  summary.totalCalories.toStringAsFixed(0),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                Text(
+                const Text(
                   'kcal',
                   style: TextStyle(color: Colors.grey),
                 ),
               ],
             ),
             progressColor: AppColors.buttonColors,
-            backgroundColor: Colors.grey[800]!,
+            backgroundColor: Colors.grey[900]!,
           ),
-          const SizedBox(width: 50),
+          const SizedBox(width: 24),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildCalorieInfo(Icons.flag, 'Daily Target', '2130 cal'),
+                _buildCalorieInfo(
+                  Icons.flag,
+                  'Daily Target',
+                  '${summary.dailyGoal.toStringAsFixed(0)} cal',
+                ),
                 const SizedBox(height: 8),
-                _buildCalorieInfo(Icons.restaurant, 'Total Now', '530 cal'),
+                _buildCalorieInfo(
+                  Icons.restaurant,
+                  'Total Now',
+                  '${summary.totalCalories.toStringAsFixed(0)} cal',
+                ),
                 const SizedBox(height: 8),
-                _buildCalorieInfo(Icons.balance, 'Remaining', '1630 cal'),
+                _buildCalorieInfo(
+                  Icons.balance,
+                  'Remaining',
+                  '${summary.remaining.toStringAsFixed(0)} cal',
+                ),
               ],
             ),
           ),
@@ -146,57 +310,70 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: const TextStyle(color: Colors.grey, fontSize: 14)),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildMealList() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildCalorieProgress(),
+  Widget _buildMealSection(
+      String title, List<FoodItem> foods, DailyFoodResponse data) {
+    if (foods.isEmpty) return const SizedBox();
 
-        _buildMealSection('Breakfast', [
-          _buildMealItem('Big Mac', '590 Cal.', 4.8),
-          _buildMealItem('Double Quarter Pounder with Cheese', '740 Cal.', 4.2),
-          _buildMealItem('Double Quarter Pounder with Cheese', '740 Cal.', 4.2),
-          _buildMealItem('Double Quarter Pounder with Cheese', '740 Cal.', 4.2),
-          _buildMealItem('Cheese Burger', '300 Cal.', 3.9),
-          _buildMealItem('Cheese Burger', '300 Cal.', 3.9),
-        ]),
-        _buildMealSection('Lunch', [
-          _buildMealItem('Big Mac', '590 Cal.', 4.8),
-        ]),
-      ],
-    );
-  }
-
-  Widget _buildMealSection(String title, List<Widget> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
           style: const TextStyle(
-              color: AppColors.fontColor, fontSize: 18, fontWeight: FontWeight.bold),
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 16),
-        ...items,
+        ...foods.map((food) => _buildMealItem(food, data,title)),
         const SizedBox(height: 16),
       ],
     );
   }
 
-  Widget _buildMealItem(String name, String calories, double rating) {
+  Widget _buildMealItem(FoodItem food, DailyFoodResponse data, String title) {
+    final formattedTime = DateFormat('hh:mm a').format(food.timestamp);
+    final servingText = food.servingInfo != null
+        ? '${food.servingInfo!.size} ${food.servingInfo!.unit}'
+        : '${food.servingSize} serving';
+
     return GestureDetector(
-      onLongPress: () => _showDeleteDialog(name),
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return FoodDetailsDialog(
+              mealTitle: title,
+              date: data.date,
+              consumedFood: data.consumedFood,
+              userId: userId,
+              food: food,
+              // onDelete: (foodItem) {
+              //   // Implement your delete logic here
+              //   _showDeleteConfirmation(foodItem.name);
+              // },
+            );
+          },
+        );
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
@@ -206,42 +383,85 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
+            if (food.image != null)
+              ClipRRect(
                 borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  food.image!,
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 40,
+                    height: 40,
+                    color: Colors.grey[900],
+                    child: const Icon(Icons.fastfood,
+                        color: AppColors.buttonColors),
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child:
+                    const Icon(Icons.fastfood, color: AppColors.buttonColors),
               ),
-              child: const Icon(Icons.fastfood, color: Colors.white),
-            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name,
-                      style: const TextStyle(
-                          color: AppColors.fontColor, fontWeight: FontWeight.bold)),
+                  Text(
+                    food.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.green, size: 16),
-                      const SizedBox(width: 4),
-                      Text(rating.toString(),
-                          style: const TextStyle(color: Colors.grey)),
+                      Text(
+                        servingText,
+                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        formattedTime,
+                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
-            Text(calories,
-                style: const TextStyle(
-                    color: AppColors.fontColor, fontWeight: FontWeight.bold)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${food.totalCalories.toStringAsFixed(1)} Cal',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (food.brandName != null)
+                  Text(
+                    food.brandName!,
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
+
   void _showDeleteDialog(String foodName) {
     showDialog(
       context: context,
@@ -250,7 +470,8 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
           backgroundColor: AppColors.tileColor,
           title: Text('Delete $foodName?',
               style: const TextStyle(color: Colors.white)),
-          content: Text('Are you sure you want to remove $foodName from your meal list?',
+          content: Text(
+              'Are you sure you want to remove $foodName from your meal list?',
               style: const TextStyle(color: Colors.grey)),
           actions: <Widget>[
             TextButton(
@@ -282,22 +503,5 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
         duration: const Duration(seconds: 2),
       ),
     );
-    // Here you would typically update your state to remove the item
-    // setState(() {
-    //   // Remove the item from your data source
-    // });
   }
-
-  // Widget _buildEatFoodButton() {
-  //   return AnimatedEatFoodButton(
-  //     onLogMeal: () {
-  //       Navigator.push(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const LogMealScreen()),
-  //       );
-  //       // Implement log meal functionality
-  //     },
-  //     onNearbyRestaurant: () {},
-  //   );
-  // }
 }

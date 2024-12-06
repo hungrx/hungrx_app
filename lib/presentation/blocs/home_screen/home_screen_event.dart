@@ -7,4 +7,10 @@ class InitializeHomeData extends HomeEvent {
   InitializeHomeData(this.homeData);
 }
 
+
 class RefreshHomeData extends HomeEvent {}
+
+// class UpdateCalories extends HomeEvent {
+//   final double calories;
+//   UpdateCalories(this.calories);
+// }

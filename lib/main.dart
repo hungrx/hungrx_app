@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/utils/size_utils.dart';
+import 'package:hungrx_app/data/datasources/api/daily_insight_datasource.dart';
+import 'package:hungrx_app/data/datasources/api/delete_consumed_food_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/eat_screen_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/eat_search_screen_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/food_search_api.dart';
@@ -16,6 +18,8 @@ import 'package:hungrx_app/data/datasources/api/user_profile_api_client.dart';
 import 'package:hungrx_app/data/datasources/api/weight_history_api.dart';
 import 'package:hungrx_app/data/datasources/api/weight_update_api.dart';
 import 'package:hungrx_app/data/repositories/connectivity_repository.dart';
+import 'package:hungrx_app/data/repositories/daily_insight_repository.dart';
+import 'package:hungrx_app/data/repositories/delete_consumed_food_repository.dart';
 import 'package:hungrx_app/data/repositories/eat_screen_repository.dart';
 import 'package:hungrx_app/data/repositories/eat_search_screen_repository.dart';
 import 'package:hungrx_app/data/repositories/facebook_auth_repository.dart';
@@ -32,6 +36,7 @@ import 'package:hungrx_app/data/repositories/weight_history_repository.dart';
 import 'package:hungrx_app/data/repositories/weight_update_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/domain/usecases/add_logmeal_search_history_usecase.dart';
+import 'package:hungrx_app/domain/usecases/delete_consumed_food_usecase.dart';
 import 'package:hungrx_app/domain/usecases/eat_screen_search_food_usecase.dart';
 import 'package:hungrx_app/domain/usecases/facebook_auth_usecase.dart';
 import 'package:hungrx_app/domain/usecases/get_eat_screen_usecase.dart';
@@ -48,6 +53,8 @@ import 'package:hungrx_app/presentation/blocs/add_meal_log_screen/add_meal_log_s
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_delete_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_bloc.dart';
@@ -159,6 +166,22 @@ class MyApp extends StatelessWidget {
             updateWeightUseCase,
             authService,
             // Add your repository/usecase here
+          ),
+        ),
+        BlocProvider<DeleteFoodBloc>(
+          create: (context) => DeleteFoodBloc(
+            DeleteConsumedFoodUseCase(
+              DeleteFoodRepository(
+                DeleteFoodApiService(),
+              ),
+            ),
+          ),
+        ),
+        BlocProvider<DailyInsightBloc>(
+          create: (context) => DailyInsightBloc(
+            DailyInsightRepository(
+              DailyInsightDataSource(),
+            ),
           ),
         ),
         BlocProvider<WeightHistoryBloc>(

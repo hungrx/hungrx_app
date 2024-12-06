@@ -267,16 +267,20 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        SizedBox(
+                          width: 280,
+                          child: Text(
+                            name,
+                            style: const TextStyle(
+                              overflow: TextOverflow.clip,
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         Text(
-                          '${calories.toInt()} calories',
+                          '${calories.toInt()} cal',
                           style: const TextStyle(
                             color: AppColors.buttonColors,
                             fontSize: 22,

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -58,6 +57,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           if (state is HomeLoaded) {
             return RefreshIndicator(
               onRefresh: () async {
+                // await HomeDataNotifier.fetchInitialData("674aa1079c1b9317a29df716");
                 context.read<HomeBloc>().add(RefreshHomeData());
               },
               child: SafeArea(

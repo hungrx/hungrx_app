@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
+// import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
@@ -24,5 +25,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         emit(HomeError(e.toString()));
       }
     });
+
+    //   on<UpdateCalories>((event, emit) {
+    //   if (state is HomeLoaded) {
+    //     final currentState = state as HomeLoaded;
+    //     final updatedData = currentState.homeData.copyWith(
+    //       caloriesToReachGoal: event.calories.toInt(),
+    //     );
+    //     emit(HomeLoaded(updatedData));
+    //   }
+    // });
   }
 }
