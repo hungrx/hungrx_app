@@ -98,6 +98,7 @@ class UserProfileFormBloc
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_id') ?? '';
       final userProfile = UserInfoProfileModel(
+
         age: int.tryParse(state.age!) ?? 0,
         userId: userId,
         name: state.name ?? '',
@@ -106,7 +107,8 @@ class UserProfileFormBloc
         heightInFeet: double.tryParse(state.heightFeet) ?? 0,
         heightInInches: double.tryParse(state.heightInches) ?? 0,
         isMetric: state.isMetric,
-        weight: double.tryParse(state.weight)?? 0,
+        weightInKg:state.isMetric? double.tryParse(state.weight)?? 0:0,
+        weightInLbs: !state.isMetric ?double.tryParse(state.weight)?? 0:0,
         mealsPerDay: state.mealsPerDay?.round() ?? 3,
         goal: _mapWeightGoalToString(state.weightGoal),
         targetWeight: double.parse(state.targetWeight ?? '0'),

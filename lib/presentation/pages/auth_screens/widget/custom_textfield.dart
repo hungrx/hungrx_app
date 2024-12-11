@@ -9,8 +9,10 @@ class CustomTextFormField extends StatefulWidget {
   final String? Function(String?)? validator;
   final String? labelText;
  final void Function(String)? onChanged;
+ final bool enabled;
 
   const CustomTextFormField({
+    this.enabled = true,
     super.key,
     this.hintText,
     this.controller,
@@ -36,6 +38,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
         borderRadius: BorderRadius.circular(25),
       ),
       child: TextFormField(
+        enabled: widget.enabled,
         onChanged: widget.onChanged,
         controller: widget.controller,
         obscureText: widget.isPassword ? _obscureText : false,

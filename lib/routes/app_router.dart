@@ -35,6 +35,7 @@ import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/use
 import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/food_search_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/edit_goal_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/presentation/pages/water_intake_screeen/water_intake.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_picker.dart';
@@ -88,6 +89,22 @@ class AppRouter {
             path: '/foodcart',
             name: RouteNames.foodcart,
             builder: (context, state) => const CartScreen(),
+          ),
+          GoRoute(
+            path: '/editGoalSettings',
+            name: RouteNames.editGoalSettings,
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>;
+              return GoalSettingsEditScreen(
+                goal: extra['goal'] as String,
+                targetWeight: extra['targetWeight'] as String,
+                isMetric: extra['isMetric'] as bool,
+                currentWeight: extra['currentWeight'] as int,
+                weightGainRate: extra['weightGainRate'] as double,
+                activityLevel: extra['activityLevel'] as String,
+                mealsPerDay: extra['mealsPerDay'] as int,
+              );
+            },
           ),
         ],
       ),
@@ -251,29 +268,34 @@ class AppRouter {
           return const PhoneNumberScreen();
         },
       ),
-GoRoute(
-  path: '/food/:id',
-  name: RouteNames.foodDetail,
-  builder: (BuildContext context, GoRouterState state) {
-    final Map<String, dynamic>? params = state.extra as Map<String, dynamic>?;
+      GoRoute(
+        path: '/food/:id',
+        name: RouteNames.foodDetail,
+        builder: (BuildContext context, GoRouterState state) {
+          final Map<String, dynamic>? params =
+              state.extra as Map<String, dynamic>?;
 
-    if (params == null) {
-      return const Scaffold(
-        body: Center(child: Text('Food details not found')),
-      );
-    }
+          if (params == null) {
+            return const Scaffold(
+              body: Center(child: Text('Food details not found')),
+            );
+          }
 
-    final bool isSearchScreen = params['isSearchScreen'] as bool? ?? false;
-    final searchFood = isSearchScreen ? params['searchFood'] as GetSearchHistoryLogItem? : null;
-    final foodItem = !isSearchScreen ? params['foodItem'] as FoodItemModel? : null;
+          final bool isSearchScreen =
+              params['isSearchScreen'] as bool? ?? false;
+          final searchFood = isSearchScreen
+              ? params['searchFood'] as GetSearchHistoryLogItem?
+              : null;
+          final foodItem =
+              !isSearchScreen ? params['foodItem'] as FoodItemModel? : null;
 
-    return FoodDetailScreen(
-      isSearchScreen: isSearchScreen,
-      searchFood: searchFood,
-      foodItem: foodItem,
-    );
-  },
-),
+          return FoodDetailScreen(
+            isSearchScreen: isSearchScreen,
+            searchFood: searchFood,
+            foodItem: foodItem,
+          );
+        },
+      ),
       GoRoute(
         path: '/otpVerify/:phoneNumber',
         name: RouteNames.otpVerify,

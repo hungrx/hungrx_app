@@ -8,7 +8,7 @@ class ApiConstants {
   static const String grocerySearch = '/users/searchGrocery';
   static const String homeScreen = '/users/home';
   static const String trackuser = '/users/trackuser';
-  static const String addName = '/users/addName';
+  static const String createProfile = '/users/createProfile';
   static const String checkUser = '/users/checkUser';
   static const String weightUpdate = '/users/updateWeight';
   static const String getWeightHistory = '/users/getWeightHistory';

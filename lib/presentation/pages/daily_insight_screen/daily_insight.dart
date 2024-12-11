@@ -343,7 +343,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        ...foods.map((food) => _buildMealItem(food, data,title)),
+        ...foods.map((food) => _buildMealItem(food, data, title)),
         const SizedBox(height: 16),
       ],
     );

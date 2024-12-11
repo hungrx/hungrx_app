@@ -8,7 +8,8 @@ class UserInfoProfileModel extends Equatable {
   final double heightInFeet;
   final double heightInInches;
   final bool isMetric;
-  final double weight;
+  final double weightInKg;
+  final double weightInLbs;
   final int mealsPerDay;
   final String goal;
   final double targetWeight;
@@ -17,6 +18,7 @@ class UserInfoProfileModel extends Equatable {
   final int age;
 
   const UserInfoProfileModel({
+    required this.weightInLbs,
     required this.age,
     required this.userId,
     required this.name,
@@ -25,7 +27,7 @@ class UserInfoProfileModel extends Equatable {
     required this.heightInFeet,
     required this.heightInInches,
     required this.isMetric,
-    required this.weight,
+    required this.weightInKg,
     required this.mealsPerDay,
     required this.goal,
     required this.targetWeight,
@@ -42,7 +44,8 @@ class UserInfoProfileModel extends Equatable {
         'heightInFeet': heightInFeet,
         'heightInInches': heightInInches,
         'isMetric': isMetric,
-        'weightInKg': weight,
+        'weightInKg': weightInKg,
+        'weightInLbs':weightInLbs,
         'mealsPerDay': mealsPerDay,
         'goal': goal,
         'targetWeight': targetWeight,
@@ -59,8 +62,9 @@ class UserInfoProfileModel extends Equatable {
         heightInCm,
         heightInFeet,
         heightInInches,
+        weightInLbs,
         isMetric,
-        weight,
+        weightInKg,
         mealsPerDay,
         goal,
         targetWeight,
