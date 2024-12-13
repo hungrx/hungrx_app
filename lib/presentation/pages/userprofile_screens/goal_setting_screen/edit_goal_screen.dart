@@ -10,6 +10,7 @@ import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_s
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_state.dart';
 
 class GoalSettingsEditScreen extends StatefulWidget {
+  final String userId;
   final String goal;
   final String targetWeight;
   final double weightGainRate;
@@ -26,7 +27,8 @@ class GoalSettingsEditScreen extends StatefulWidget {
       required this.currentWeight,
       required this.weightGainRate,
       required this.activityLevel,
-      required this.mealsPerDay});
+      required this.mealsPerDay,
+      required this.userId});
 
   @override
   State<GoalSettingsEditScreen> createState() => _GoalSettingsEditScreenState();

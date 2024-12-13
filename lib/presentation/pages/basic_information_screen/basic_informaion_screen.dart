@@ -9,6 +9,8 @@ import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_stat
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_state.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 
 class BasicInformationScreen extends StatefulWidget {
   const BasicInformationScreen({super.key});
@@ -18,7 +20,7 @@ class BasicInformationScreen extends StatefulWidget {
 }
 
 class BasicInformationScreenState extends State<BasicInformationScreen> {
-  static const String userId = "6756c8fc83e88396971c6dde";
+   String? userId;
   late bool isMetric = true;
   late TextEditingController nameController;
   late TextEditingController phoneController;
@@ -35,7 +37,17 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
   void initState() {
     super.initState();
     _initializeControllers();
-    _fetchUserBasicInfo();
+    
+    // Add post-frame callback to ensure context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userState = context.read<UserBloc>().state;
+      if (userState.userId != null) {
+        setState(() {
+          userId = userState.userId;
+        });
+        _fetchUserBasicInfo();
+      }
+    });
   }
 
   void _initializeControllers() {
@@ -50,8 +62,10 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
     heightInFeetController = TextEditingController();
   }
 
-  void _fetchUserBasicInfo() {
-    context.read<GetBasicInfoBloc>().add(GetBasicInfoRequested(userId));
+ void _fetchUserBasicInfo() {
+    if (userId != null) {
+      context.read<GetBasicInfoBloc>().add(GetBasicInfoRequested(userId??""));
+    }
   }
 
   void _updateControllers(UserBasicInfo info) {
@@ -75,8 +89,9 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
   }
 
   void _handleUpdateBasicInfo() {
+    if (userId == null) return;
     final request = UpdateBasicInfoRequest(
-      userId: userId,
+      userId: userId??"",
       name: nameController.text,
       email: emailController.text,
       gender: gender.toLowerCase(),
@@ -128,6 +143,16 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
+        BlocListener<UserBloc, UserState>(
+          listener: (context, state) {
+            if (state.userId != null && state.userId != userId) {
+              setState(() {
+                userId = state.userId;
+              });
+              _fetchUserBasicInfo();
+            }
+          },
+        ),
         BlocListener<GetBasicInfoBloc, GetBasicInfoState>(
           listener: (context, state) {
             if (state is GetBasicInfoSuccess) {
@@ -172,7 +197,7 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
             BlocBuilder<UpdateBasicInfoBloc, UpdateBasicInfoState>(
               builder: (context, state) {
                 return TextButton(
-                  onPressed: state is UpdateBasicInfoLoading
+                  onPressed:userId == null || state is UpdateBasicInfoLoading
                       ? null
                       : () {
                           if (_validateFields()) {
@@ -200,7 +225,7 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
         ),
         body: BlocBuilder<GetBasicInfoBloc, GetBasicInfoState>(
           builder: (context, state) {
-            if (state is GetBasicInfoLoading) {
+            if (userId == null ||state is GetBasicInfoLoading) {
               return const Center(child: CircularProgressIndicator());
             }
             return SingleChildScrollView(

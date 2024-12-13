@@ -90,12 +90,14 @@ class AppRouter {
             name: RouteNames.foodcart,
             builder: (context, state) => const CartScreen(),
           ),
+
           GoRoute(
             path: '/editGoalSettings',
             name: RouteNames.editGoalSettings,
             builder: (context, state) {
               final extra = state.extra as Map<String, dynamic>;
               return GoalSettingsEditScreen(
+                userId: extra['userId'] as String,
                 goal: extra['goal'] as String,
                 targetWeight: extra['targetWeight'] as String,
                 isMetric: extra['isMetric'] as bool,
@@ -312,11 +314,15 @@ class AppRouter {
           return TDEEResultScreen(tdeeResult: tdeeResult);
         },
       ),
+
       GoRoute(
         path: '/accountSettings',
         name: RouteNames.accountSettings,
         builder: (BuildContext context, GoRouterState state) {
-          return const AccountSettingsScreen(); // Replace with actual HomeScreen
+          final extra = state.extra as Map<String, dynamic>;
+          return AccountSettingsScreen(
+            userId: extra['userId'] as String,
+          ); // Replace with actual HomeScreen
         },
       ),
       GoRoute(

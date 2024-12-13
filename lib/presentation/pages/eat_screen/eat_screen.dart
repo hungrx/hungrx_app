@@ -21,33 +21,77 @@ class EatScreen extends StatefulWidget {
 }
 
 class _EatScreenState extends State<EatScreen> {
+  String? userId;
+
   @override
+  void initState() {
+    super.initState();
+    // Add post-frame callback to ensure context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Get the current UserBloc state
+      final userState = context.read<UserBloc>().state;
+      if (userState.userId != null) {
+        setState(() {
+          userId = userState.userId;
+        });
+        _loadEatScreenData(userState.userId!);
+      }
+    });
+  }
+
+  void _loadEatScreenData(String userId) {
+    context.read<EatScreenBloc>().add(GetEatScreenDataEvent(userId));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocListener<UserBloc, UserState>(
-      listener: (context, state) {
-        if (state is UserLoaded) {
-          final userId = state.userId;
-          if (userId != null) {
-            context.read<EatScreenBloc>().add(
-                  GetEatScreenDataEvent(userId),
-                );
-          }
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<UserBloc, UserState>(
+              listener: (context, state) {
+                if (state.userId != null && state.userId != userId) {
+                  setState(() {
+                    userId = state.userId;
+                  });
+                  _loadEatScreenData(state.userId!);
+                }
+              },
+            ),
+          ],
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: BlocBuilder<EatScreenBloc, EatScreenState>(
               builder: (context, state) {
+                if (userId == null) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  );
+                }
+
                 if (state is EatScreenLoading) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (state is EatScreenError) {
                   return Center(
-                      child: Text(state.message,
-                          style: const TextStyle(color: Colors.red)));
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          state.message,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => _loadEatScreenData(userId!),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
                 } else if (state is EatScreenLoaded) {
                   return SingleChildScrollView(
                     child: Column(

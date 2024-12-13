@@ -6,6 +6,9 @@ import 'package:hungrx_app/data/Models/daily_food_response.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_state.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_event.dart';
+import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/widget/food_delete_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
@@ -20,23 +23,32 @@ class DailyInsightScreen extends StatefulWidget {
 class DailyInsightScreenState extends State<DailyInsightScreen> {
   late DateTime selectedDate;
   final List<String> weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-  final userId = '674aa1079c1b9317a29df716'; // Replace with actual user ID
+  String? userId;
 
   @override
   void initState() {
     super.initState();
     selectedDate = DateTime.now();
-    _fetchDailyInsightData();
+    // Load user ID when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserId();
+    });
+  }
+
+  void _loadUserId() {
+    context.read<UserBloc>().add(LoadUserId());
   }
 
   void _fetchDailyInsightData() {
-    final formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
-    context.read<DailyInsightBloc>().add(
-          GetDailyInsightData(
-            userId: userId,
-            date: formattedDate,
-          ),
-        );
+    if (userId != null) {
+      final formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
+      context.read<DailyInsightBloc>().add(
+            GetDailyInsightData(
+              userId: userId!,
+              date: formattedDate,
+            ),
+          );
+    }
   }
 
   @override
@@ -44,22 +56,51 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: BlocListener<DailyInsightBloc, DailyInsightState>(
-          listener: (context, state) {
-            if (state is DailyInsightError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<UserBloc, UserState>(
+              // Remove listenWhen to ensure we catch all state changes
+              listener: (context, userState) {
+                print(userState.userId);
+                if (userState.userId != null && userState.userId != userId) {
+
+                  setState(() {
+                    userId = userState.userId;
+                  });
+                  _fetchDailyInsightData();
+                }
+              },
+            ),
+            BlocListener<DailyInsightBloc, DailyInsightState>(
+              listener: (context, state) {
+                if (state is DailyInsightError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message)),
+                  );
+                }
+              },
+            ),
+          ],
+          child: BlocBuilder<UserBloc, UserState>(
+            builder: (context, userState) {
+              if (userState.userId == null) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+                  ),
+                );
+              }
+              
+              return Column(
+                children: [
+                  _buildHeader(),
+                  _buildDateSelector(),
+                  Expanded(
+                    child: _buildContent(),
+                  ),
+                ],
               );
-            }
-          },
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildDateSelector(),
-              Expanded(
-                child: _buildContent(),
-              ),
-            ],
+            },
           ),
         ),
       ),
@@ -208,7 +249,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: _fetchDailyInsightData,
+                  onPressed: (){_fetchDailyInsightData();},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.buttonColors,
                   ),
@@ -364,7 +405,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
               mealTitle: title,
               date: data.date,
               consumedFood: data.consumedFood,
-              userId: userId,
+              userId: userId??"",
               food: food,
               // onDelete: (foodItem) {
               //   // Implement your delete logic here

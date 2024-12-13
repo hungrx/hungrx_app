@@ -117,9 +117,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      final reportBugApi = ReportBugApi();
-  final reportBugRepository = ReportBugRepository(reportBugApi);
-  final reportBugUseCase = ReportBugUseCase(reportBugRepository);
+    final reportBugApi = ReportBugApi();
+    final reportBugRepository = ReportBugRepository(reportBugApi);
+    final reportBugUseCase = ReportBugUseCase(reportBugRepository);
     final deleteAccountApi = DeleteAccountApi();
     final deleteAccountRepository =
         DeleteAccountRepository(api: deleteAccountApi);

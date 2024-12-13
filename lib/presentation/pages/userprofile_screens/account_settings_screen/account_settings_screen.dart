@@ -11,7 +11,8 @@ import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_state.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_textfield.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
-  const AccountSettingsScreen({super.key});
+  final String userId;
+  const AccountSettingsScreen({super.key, required this.userId});
 
   @override
   State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
@@ -80,7 +81,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       // Get user ID from your auth service or state management
       // final userId = await _authService.getCurrentUserId();
       context.read<DeleteAccountBloc>().add(
-            DeleteAccountRequested(userId: "6756c8fc83e88396971c6dde"),
+            DeleteAccountRequested(userId: widget.userId),
           );
     }
   }
@@ -93,13 +94,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     });
 
     try {
-      // Reset blocs before logging out
-      // if (mounted) {
-      //   context.read<HomeBloc>().add(const ResetHomeData());
-      //   context.read<StreakBloc>().add(const ResetStreakData());
-      // }
-
-      // Clear all authentication data
       await _authService.logout();
 
       if (mounted) {
@@ -181,6 +175,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Widget _buildExpansionTile(String title, List<Widget> children) {
+    print(widget.userId);
     return ExpansionTile(
       title: Text(title, style: const TextStyle(color: Colors.white)),
       backgroundColor: Colors.grey[900],
@@ -288,7 +283,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                         context.read<ReportBugBloc>().add(
                                               ReportBugSubmitted(
                                                 userId:
-                                                    "6756c8fc83e88396971c6dde", // Get from auth service
+                                                    widget.userId, // Get from auth service
                                                 report: reportController.text,
                                               ),
                                             );
@@ -308,7 +303,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                                 Colors.white),
                                       ),
                                     )
-                                  : const Text('Submit Report'),
+                                  : const Text('Submit Report',style: TextStyle(color: Colors.white),),
                             ),
                           ],
                         );
@@ -316,23 +311,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     ),
                   ],
                 ),
-                // _buildExpansionTile(
-                //   'Report a bug',
-                //   [
-                //     const CustomTextFormField(
-                //       hintText: 'Describe the bug',
-                //     ),
-                //     const SizedBox(height: 20),
-                //     ElevatedButton(
-                //       onPressed: () {
-                //         // Implement bug report logic
-                //       },
-                //       style: ElevatedButton.styleFrom(
-                //           backgroundColor: Colors.blue),
-                //       child: const Text('Submit Report'),
-                //     ),
-                //   ],
-                // ),
                 _buildExpansionTile(
                   'Delete Account',
                   [
@@ -361,7 +339,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                     ),
                                   ),
                                 )
-                              : const Text('Delete Account'),
+                              : const Text('Delete Account',style: TextStyle(color: Colors.white)),
                         );
                       },
                     ),
@@ -386,7 +364,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                     AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                          : const Text('Log Out'),
+                          : const Text('Log Out',style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),

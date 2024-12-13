@@ -11,7 +11,7 @@ import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_state.
 import 'package:hungrx_app/routes/route_names.dart';
 
 class GoalSettingsScreen extends StatelessWidget {
-  final String userId;
+  final String? userId;
 
   const GoalSettingsScreen({
     super.key,
@@ -27,7 +27,7 @@ class GoalSettingsScreen extends StatelessWidget {
             GoalSettingsApi(),
           ),
         ),
-      )..add(FetchGoalSettings(userId)),
+      )..add(FetchGoalSettings(userId??"")),
       child: Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
@@ -105,6 +105,7 @@ class GoalSettingsScreen extends StatelessWidget {
             context.pushNamed(
               RouteNames.editGoalSettings,
               extra: {
+                'userId': userId,
                 'goal': settings.goal,
                 'targetWeight': settings.targetWeight,
                 'isMetric': settings.isMetric,
