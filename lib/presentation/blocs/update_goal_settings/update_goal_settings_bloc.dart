@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/domain/usecases/update_goal_settings_usecase.dart';
+import 'package:hungrx_app/domain/usecases/profile_screen/update_goal_settings_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_state.dart';
 

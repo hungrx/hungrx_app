@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/add_meal_request.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/add_meal_request.dart';
 
 abstract class AddMealEvent {}
 

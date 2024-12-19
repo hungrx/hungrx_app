@@ -1,5 +1,5 @@
-import 'package:hungrx_app/data/Models/weight_history_model.dart';
-import 'package:hungrx_app/data/datasources/api/weight_history_api.dart';
+import 'package:hungrx_app/data/Models/weight_screen/weight_history_model.dart';
+import 'package:hungrx_app/data/datasources/api/weight_screen/weight_history_api.dart';
 
 class WeightHistoryRepository {
   final WeightHistoryApi _api;

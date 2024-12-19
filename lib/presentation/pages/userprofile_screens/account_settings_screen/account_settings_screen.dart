@@ -204,7 +204,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message)),
               );
-              context.go('/login');
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              // Navigate to login screen
+              GoRouter.of(context).go('/login');
+              // context.go('/login');
             } else if (state is DeleteAccountFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -282,8 +285,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                       if (reportController.text.isNotEmpty) {
                                         context.read<ReportBugBloc>().add(
                                               ReportBugSubmitted(
-                                                userId:
-                                                    widget.userId, // Get from auth service
+                                                userId: widget
+                                                    .userId, // Get from auth service
                                                 report: reportController.text,
                                               ),
                                             );
@@ -303,7 +306,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                                 Colors.white),
                                       ),
                                     )
-                                  : const Text('Submit Report',style: TextStyle(color: Colors.white),),
+                                  : const Text(
+                                      'Submit Report',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                             ),
                           ],
                         );
@@ -339,7 +345,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                     ),
                                   ),
                                 )
-                              : const Text('Delete Account',style: TextStyle(color: Colors.white)),
+                              : const Text('Delete Account',
+                                  style: TextStyle(color: Colors.white)),
                         );
                       },
                     ),
@@ -364,7 +371,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                     AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                          : const Text('Log Out',style: TextStyle(color: Colors.white)),
+                          : const Text('Log Out',
+                              style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/Models/daily_food_response.dart';
+import 'package:hungrx_app/data/Models/daily_insight_screen/daily_food_response.dart';
 import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_delete_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_delete_event.dart';
 import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_delete_state.dart';

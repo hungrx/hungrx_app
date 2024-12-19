@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/core/widgets/header_section.dart';
-import 'package:hungrx_app/data/Models/weight_history_model.dart';
+import 'package:hungrx_app/data/Models/weight_screen/weight_history_model.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_event.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_state.dart';

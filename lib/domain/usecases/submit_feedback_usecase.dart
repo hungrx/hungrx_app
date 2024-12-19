@@ -1,5 +1,5 @@
-import 'package:hungrx_app/data/Models/feedback_model.dart';
-import 'package:hungrx_app/data/repositories/feedback_repository.dart';
+import 'package:hungrx_app/data/Models/dashboad_screen/feedback_model.dart';
+import 'package:hungrx_app/data/repositories/dashboad_screen/feedback_repository.dart';
 
 class SubmitFeedbackUseCase {
   final FeedbackRepository _repository;

@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/weight_history_model.dart';
+import 'package:hungrx_app/data/Models/weight_screen/weight_history_model.dart';
 
 abstract class WeightHistoryState {}
 

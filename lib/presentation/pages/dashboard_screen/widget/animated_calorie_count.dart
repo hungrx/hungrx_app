@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animated_flip_counter/animated_flip_counter.dart';
-import 'package:hungrx_app/data/Models/home_screen_model.dart';
+import 'package:hungrx_app/data/Models/dashboad_screen/home_screen_model.dart';
 import 'package:hungrx_app/presentation/controller/home_data_notifier.dart';
 
 class AnimatedCalorieDisplay extends StatefulWidget {

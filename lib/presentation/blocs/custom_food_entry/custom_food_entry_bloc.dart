@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/domain/usecases/custom_food_entry_usecase.dart';
+import 'package:hungrx_app/domain/usecases/home_meals_screen/custom_food_entry_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/custom_food_entry/custom_food_entry_event.dart';
 import 'package:hungrx_app/presentation/blocs/custom_food_entry/custom_food_entry_state.dart';
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/Models/get_profile_details_model.dart';
+import 'package:hungrx_app/data/Models/profile_screen/get_profile_details_model.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_state.dart';
@@ -86,43 +86,29 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 }
               },
               builder: (context, state) {
-                if (userId == null ||
-                    (state is GetProfileDetailsLoading &&
-                        _cachedProfileDetails == null)) {
+                // Show skeleton loading if userId is null
+                if (userId == null) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (state is GetProfileDetailsFailure &&
-                    _cachedProfileDetails == null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Failed to load profile',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        ElevatedButton(
-                          onPressed: _fetchProfileDetails,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                final profileData = state is GetProfileDetailsSuccess
-                    ? state.profileDetails
-                    : _cachedProfileDetails;
-
                 return SingleChildScrollView(
-                  child: Column(
+                  child: Stack(
                     children: [
-                      _buildHeader(context, profileData),
-                      _buildUserStats(profileData),
-                      _buildPersonalDetails(context, userId),
-                      _buildAppSettings(),
-                      _buildInviteSection(),
+                      Column(
+                        children: [
+                          _buildHeader(context, _cachedProfileDetails),
+                          _buildUserStats(_cachedProfileDetails),
+                          _buildPersonalDetails(context, userId),
+                          _buildAppSettings(),
+                          _buildInviteSection(),
+                        ],
+                      ),
+                      // Show loading overlay only when fetching new data
+                      if (state is GetProfileDetailsLoading && _cachedProfileDetails == null)
+                        // _buildLoadingOverlay(),
+                      // Show error overlay only on initial load failure
+                      if (state is GetProfileDetailsFailure && _cachedProfileDetails == null)
+                        _buildErrorOverlay(),
                     ],
                   ),
                 );
@@ -133,6 +119,37 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
+  //   Widget _buildLoadingOverlay() {
+  //   return Container(
+  //     color: Colors.black.withOpacity(0.5),
+  //     child: const Center(
+  //       child: CircularProgressIndicator(),
+  //     ),
+  //   );
+  // }
+
+  Widget _buildErrorOverlay() {
+    return Container(
+      color: Colors.black.withOpacity(0.8),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Failed to load profile',
+              style: TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchProfileDetails,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildHeader(
       BuildContext context, GetProfileDetailsModel? profileData) {
@@ -161,9 +178,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Widget _buildUserStats(GetProfileDetailsModel? profileData) {
-    String numberStr = profileData?.tdee ?? "0.0";
-    double value = double.parse(numberStr);
-    String rounded2 = value.round().toString(); // "3"
+    String tdee = "0";
+    if (profileData?.tdee != null) {
+      try {
+        double value = double.parse(profileData!.tdee);
+        tdee = value.round().toString();
+      } catch (e) {
+        tdee = "0";
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -175,11 +198,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem('TDEE', '$rounded2 cal'),
-          _buildStatItem('Weight',
-              '${profileData?.weight ?? "0"} ${profileData?.isMetric ?? true ? "Kg" : "lbs"}'),
-          _buildStatItem('Goal',
-              '${profileData?.targetWeight ?? "0"} ${profileData?.isMetric ?? true ? "" : ""}'),
+          _buildStatItem('TDEE', '$tdee cal'),
+          _buildStatItem(
+            'Weight',
+            '${profileData?.weight ?? "0"} ${profileData?.isMetric ?? true ? "Kg" : "lbs"}',
+          ),
+          _buildStatItem(
+            'Goal',
+            '${profileData?.targetWeight ?? "0"} ${profileData?.isMetric ?? true ? "Kg" : "lbs"}',
+          ),
           _buildStatItem('BMI', profileData?.bmi ?? "0"),
         ],
       ),

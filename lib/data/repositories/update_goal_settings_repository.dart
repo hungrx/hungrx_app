@@ -1,5 +1,5 @@
-import 'package:hungrx_app/data/Models/update_goal_settings_model.dart';
-import 'package:hungrx_app/data/datasources/api/update_goal_settings_api.dart';
+import 'package:hungrx_app/data/Models/profile_screen/update_goal_settings_model.dart';
+import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_goal_settings_api.dart';
 
 class UpdateGoalSettingsRepository {
   final UpdateGoalSettingsApi _api;

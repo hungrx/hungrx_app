@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hungrx_app/data/Models/food_item_model.dart';
-import 'package:hungrx_app/data/Models/get_search_history_log_response.dart';
-import 'package:hungrx_app/data/Models/tdee_result_model.dart';
-import 'package:hungrx_app/data/datasources/api/feedback_api_service.dart';
-import 'package:hungrx_app/data/datasources/api/weight_update_api.dart';
-import 'package:hungrx_app/data/repositories/feedback_repository.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/food_item_model.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
+import 'package:hungrx_app/data/Models/profile_setting_screen/tdee_result_model.dart';
+import 'package:hungrx_app/data/datasources/api/dashboard_screen/feedback_api_service.dart';
+import 'package:hungrx_app/data/datasources/api/weight_screen/weight_update_api.dart';
+import 'package:hungrx_app/data/repositories/dashboad_screen/feedback_repository.dart';
 import 'package:hungrx_app/data/repositories/weight_update_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/domain/usecases/submit_feedback_usecase.dart';
-import 'package:hungrx_app/domain/usecases/update_weight_usecase.dart';
+import 'package:hungrx_app/domain/usecases/weight_screen/update_weight_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/email_login_bloc/login_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/feedback_bloc/feedback_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
@@ -34,6 +34,7 @@ import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/use
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/userr_info_one.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/food_search_screen.dart';
+import 'package:hungrx_app/presentation/pages/restaurant_screen/widgets/restaurant_search_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/edit_goal_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
@@ -44,10 +45,10 @@ import 'package:hungrx_app/routes/route_names.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/email_auth_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/splash_screen.dart';
 import 'package:hungrx_app/presentation/pages/onboarding_screen/onboarding_screen.dart';
-import 'package:hungrx_app/domain/usecases/sign_up_usecase.dart';
-import 'package:hungrx_app/domain/usecases/login_usecase.dart';
-import 'package:hungrx_app/data/repositories/email_sign_up_repository.dart';
-import 'package:hungrx_app/data/repositories/email_signin_repository.dart';
+import 'package:hungrx_app/domain/usecases/auth_screens/sign_up_usecase.dart';
+import 'package:hungrx_app/domain/usecases/auth_screens/login_usecase.dart';
+import 'package:hungrx_app/data/repositories/auth_screen/email_sign_up_repository.dart';
+import 'package:hungrx_app/data/repositories/auth_screen/email_signin_repository.dart';
 
 class AppRouter {
   static final GetIt getIt = GetIt.instance;
@@ -83,6 +84,11 @@ class AppRouter {
             path: '/profile',
             name: RouteNames.profile,
             builder: (context, state) => const UserProfileScreen(),
+          ),
+          GoRoute(
+            path: '/restarantSearch',
+            name: RouteNames.restarantSearch,
+            builder: (context, state) => const RestaurantSearchScreen(),
           ),
           // Cart route
           GoRoute(

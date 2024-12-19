@@ -1,5 +1,5 @@
-import 'package:hungrx_app/data/Models/meal_type.dart';
-import 'package:hungrx_app/data/datasources/api/meal_type_api.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/meal_type.dart';
+import 'package:hungrx_app/data/datasources/api/home_meals/meal_type_api.dart';
 
 class MealTypeRepository {
   final MealTypeApi api;

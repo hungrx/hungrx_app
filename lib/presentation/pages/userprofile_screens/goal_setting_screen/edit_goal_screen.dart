@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hungrx_app/data/Models/update_goal_settings_model.dart';
-import 'package:hungrx_app/data/datasources/api/update_goal_settings_api.dart';
+import 'package:hungrx_app/data/Models/profile_screen/update_goal_settings_model.dart';
+import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_goal_settings_api.dart';
 import 'package:hungrx_app/data/repositories/update_goal_settings_repository.dart';
-import 'package:hungrx_app/domain/usecases/update_goal_settings_usecase.dart';
+import 'package:hungrx_app/domain/usecases/profile_screen/update_goal_settings_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_state.dart';
@@ -364,8 +364,7 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
                 ? null
                 : () {
                     final settings = UpdateGoalSettingsModel(
-                      userId:
-                          "6756c8fc83e88396971c6dde", // Get this from your auth system
+                      userId: widget.userId,
                       goal: _goal,
                       targetWeight: _targetWeight,
                       weightGainRate: _weightGainRate,

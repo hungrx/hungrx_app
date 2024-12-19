@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/data/Models/get_search_history_log_response.dart';
-import 'package:hungrx_app/domain/usecases/get_search_history_log_usecase.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
+import 'package:hungrx_app/domain/usecases/eat_screen/get_search_history_log_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_state.dart';
 

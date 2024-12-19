@@ -1,5 +1,5 @@
-import 'package:hungrx_app/data/Models/streak_data_model.dart';
-import 'package:hungrx_app/data/datasources/api/streak_api_service.dart';
+import 'package:hungrx_app/data/Models/dashboad_screen/streak_data_model.dart';
+import 'package:hungrx_app/data/datasources/api/dashboard_screen/streak_api_service.dart';
 
 class StreakRepository {
   final StreakApiService _apiService;

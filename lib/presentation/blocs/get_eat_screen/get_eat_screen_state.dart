@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/eat_screen_model.dart';
+import 'package:hungrx_app/data/Models/eat_screen/eat_screen_model.dart';
 
 abstract class EatScreenState {}
 

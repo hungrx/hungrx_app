@@ -32,5 +32,6 @@ class RouteNames {
   static const String grocerySeach = 'grocerySeach';
   static const String foodDetail = 'foodDetail';
   static const String editGoalSettings = 'editGoalSettings';
+  static const String restarantSearch = 'restarantSearch';
 
 }

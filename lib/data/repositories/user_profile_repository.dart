@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/datasources/api/user_profile_api_service.dart';
+import 'package:hungrx_app/data/datasources/api/service_api/user_profile_api_service.dart';
 
 // for check user exist
 class UserProfileRepository {

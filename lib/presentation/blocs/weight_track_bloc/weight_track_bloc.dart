@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/data/datasources/api/weight_history_api.dart';
-import 'package:hungrx_app/domain/usecases/get_weight_history_usecase.dart';
+import 'package:hungrx_app/data/datasources/api/weight_screen/weight_history_api.dart';
+import 'package:hungrx_app/domain/usecases/weight_screen/get_weight_history_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_event.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_state.dart';
 

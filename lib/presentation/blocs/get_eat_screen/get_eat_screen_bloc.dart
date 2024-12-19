@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/domain/usecases/get_eat_screen_usecase.dart';
+import 'package:hungrx_app/domain/usecases/eat_screen/get_eat_screen_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_state.dart';
 

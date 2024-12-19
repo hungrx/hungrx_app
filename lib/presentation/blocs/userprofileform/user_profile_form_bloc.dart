@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/data/Models/user_profile_model.dart';
+import 'package:hungrx_app/data/Models/auth_screens/user_profile_model.dart';
 import 'package:hungrx_app/data/repositories/tdee_repository.dart';
 import 'package:hungrx_app/data/repositories/user_info_profile_repository.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_event.dart';

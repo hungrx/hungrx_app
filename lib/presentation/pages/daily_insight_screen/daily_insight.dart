@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/Models/daily_food_response.dart';
+import 'package:hungrx_app/data/Models/daily_insight_screen/daily_food_response.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_state.dart';
@@ -503,46 +503,46 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
     );
   }
 
-  void _showDeleteDialog(String foodName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: AppColors.tileColor,
-          title: Text('Delete $foodName?',
-              style: const TextStyle(color: Colors.white)),
-          content: Text(
-              'Are you sure you want to remove $foodName from your meal list?',
-              style: const TextStyle(color: Colors.grey)),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-              onPressed: () {
-                // Implement delete functionality here
-                // For now, we'll just close the dialog
-                Navigator.of(context).pop();
-                _showDeleteConfirmation(foodName);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void _showDeleteDialog(String foodName) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         backgroundColor: AppColors.tileColor,
+  //         title: Text('Delete $foodName?',
+  //             style: const TextStyle(color: Colors.white)),
+  //         content: Text(
+  //             'Are you sure you want to remove $foodName from your meal list?',
+  //             style: const TextStyle(color: Colors.grey)),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //           ),
+  //           TextButton(
+  //             child: const Text('Delete', style: TextStyle(color: Colors.red)),
+  //             onPressed: () {
+  //               // Implement delete functionality here
+  //               // For now, we'll just close the dialog
+  //               Navigator.of(context).pop();
+  //               _showDeleteConfirmation(foodName);
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
-  void _showDeleteConfirmation(String foodName) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$foodName has been deleted from your meal list.'),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
+  // void _showDeleteConfirmation(String foodName) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text('$foodName has been deleted from your meal list.'),
+  //       backgroundColor: Colors.red,
+  //       duration: const Duration(seconds: 2),
+  //     ),
+  //   );
+  // }
 }

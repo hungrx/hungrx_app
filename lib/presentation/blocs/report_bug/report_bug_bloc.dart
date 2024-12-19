@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/domain/usecases/report_bug_usecase.dart';
+import 'package:hungrx_app/domain/usecases/profile_screen/report_bug_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_event.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_state.dart';
 

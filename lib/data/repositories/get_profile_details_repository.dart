@@ -1,5 +1,5 @@
-import 'package:hungrx_app/data/Models/get_profile_details_model.dart';
-import 'package:hungrx_app/data/datasources/api/get_profile_details_api.dart';
+import 'package:hungrx_app/data/Models/profile_screen/get_profile_details_model.dart';
+import 'package:hungrx_app/data/datasources/api/profile_edit_screen/get_profile_details_api.dart';
 
 class GetProfileDetailsRepository {
   final GetProfileDetailsApi _api;
@@ -11,6 +11,7 @@ class GetProfileDetailsRepository {
       final data = await _api.getProfileDetails(userId);
       return GetProfileDetailsModel.fromJson(data);
     } catch (e) {
+      print(e);
       throw Exception('Repository error: $e');
     }
   }

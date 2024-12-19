@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/get_search_history_log_response.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
 
 abstract class SearchHistoryLogState {}
 

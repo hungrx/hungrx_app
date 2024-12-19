@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/Models/food_item_model.dart';
-import 'package:hungrx_app/data/Models/get_search_history_log_response.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/food_item_model.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/domain/usecases/get_streak_usecase.dart';
+import 'package:hungrx_app/domain/usecases/dashboad_screen/get_streak_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_event.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_state.dart';
 

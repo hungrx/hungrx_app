@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+// import 'package:go_router/go_router.dart';
+// import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_state.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/dashboard_widgets.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/streak_calendar.dart';
-import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/water_container.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:hungrx_app/routes/route_names.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+// import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/water_container.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:hungrx_app/routes/route_names.dart';
+// import 'package:lucide_icons/lucide_icons.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -76,8 +76,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 16),
                         _buildStreakCalendar(),
                         const SizedBox(height: 16),
-                        _buildDrinkButton(),
-                        const SizedBox(height: 16),
+                        // _buildDrinkButton(),
+                        // const SizedBox(height: 16),
                         DashboardWidgets.buildBottomButtons(
                             context, state.homeData),
                         // ... rest of your widgets
@@ -99,43 +99,43 @@ class DashboardScreenState extends State<DashboardScreen> {
     return const StreakCalendar();
   }
 
-  Widget _buildDrinkButton() {
-    return GestureDetector(
-      onTap: () {
-        context.pushNamed(RouteNames.waterIntake);
-      },
-      child: Container(
-        height: 100, // Add fixed height for better animation
-        // padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.tileColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: WaterContainer(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Water',
-                  style: GoogleFonts.stickNoBills(
-                    color: Colors.white,
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Icon(
-                  fill: 1,
-                  LucideIcons.glassWater,
-                  color: Color(0xFFB4D147),
-                  size: 35,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildDrinkButton() {
+  //   return GestureDetector(
+  //     onTap: () {
+  //       context.pushNamed(RouteNames.waterIntake);
+  //     },
+  //     child: Container(
+  //       height: 100, // Add fixed height for better animation
+  //       // padding: const EdgeInsets.all(20),
+  //       decoration: BoxDecoration(
+  //         color: AppColors.tileColor,
+  //         borderRadius: BorderRadius.circular(20),
+  //       ),
+  //       child: WaterContainer(
+  //         child: Padding(
+  //           padding: const EdgeInsets.all(20),
+  //           child: Row(
+  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //             children: [
+  //               Text(
+  //                 'Water',
+  //                 style: GoogleFonts.stickNoBills(
+  //                   color: Colors.white,
+  //                   fontSize: 40,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //               const Icon(
+  //                 fill: 1,
+  //                 LucideIcons.glassWater,
+  //                 color: Color(0xFFB4D147),
+  //                 size: 35,
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 }

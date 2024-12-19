@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/tdee_result_model.dart';
+import 'package:hungrx_app/data/Models/profile_setting_screen/tdee_result_model.dart';
 
 abstract class TDEEState {}
 

@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/home_screen_model.dart';
+import 'package:hungrx_app/data/Models/dashboad_screen/home_screen_model.dart';
 
 abstract class HomeState {}
 

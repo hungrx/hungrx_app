@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/domain/usecases/eat_screen_search_food_usecase.dart';
+import 'package:hungrx_app/domain/usecases/eat_screen/eat_screen_search_food_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_event.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_state.dart';
 import 'package:rxdart/rxdart.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
-import 'package:hungrx_app/domain/usecases/update_weight_usecase.dart';
+import 'package:hungrx_app/domain/usecases/weight_screen/update_weight_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_event.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_state.dart';
 

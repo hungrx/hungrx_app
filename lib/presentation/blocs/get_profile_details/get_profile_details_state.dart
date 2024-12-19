@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/get_profile_details_model.dart';
+import 'package:hungrx_app/data/Models/profile_screen/get_profile_details_model.dart';
 
 abstract class GetProfileDetailsState {}
 

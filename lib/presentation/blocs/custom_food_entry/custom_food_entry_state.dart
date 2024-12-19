@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/custom_food_entry_response.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/custom_food_entry_response.dart';
 
 abstract class CustomFoodEntryState {}
 

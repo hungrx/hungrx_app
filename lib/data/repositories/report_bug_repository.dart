@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/datasources/api/report_bug_api.dart';
+import 'package:hungrx_app/data/datasources/api/profile_edit_screen/report_bug_api.dart';
 
 class ReportBugRepository {
   final ReportBugApi _api;

@@ -1,5 +1,5 @@
-import 'package:hungrx_app/data/Models/logmeal_search_history_model.dart';
-import 'package:hungrx_app/data/datasources/api/logmeal_search_history_api.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/logmeal_search_history_model.dart';
+import 'package:hungrx_app/data/datasources/api/home_meals/logmeal_search_history_api.dart';
 
 class LogMealSearchHistoryRepository {
   final LogMealSearchHistoryApi _api;

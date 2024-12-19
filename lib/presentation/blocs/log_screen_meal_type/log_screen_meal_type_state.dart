@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/meal_type.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/meal_type.dart';
 
 abstract class MealTypeState {}
 

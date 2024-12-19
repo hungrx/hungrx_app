@@ -1,6 +1,6 @@
-import 'package:hungrx_app/data/Models/weight_response_model.dart';
-import 'package:hungrx_app/data/Models/weight_update_model.dart';
-import 'package:hungrx_app/data/datasources/api/weight_update_api.dart';
+import 'package:hungrx_app/data/Models/weight_screen/weight_response_model.dart';
+import 'package:hungrx_app/data/Models/weight_screen/weight_update_model.dart';
+import 'package:hungrx_app/data/datasources/api/weight_screen/weight_update_api.dart';
 
 class WeightUpdateRepository {
   final WeightUpdateApiService _apiService;

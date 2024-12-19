@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/data/Models/delete_consumed_food_request.dart';
-import 'package:hungrx_app/domain/usecases/delete_consumed_food_usecase.dart';
+import 'package:hungrx_app/data/Models/daily_insight_screen/delete_consumed_food_request.dart';
+import 'package:hungrx_app/domain/usecases/daily_insight_screen/delete_consumed_food_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_delete_event.dart';
 import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_delete_state.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/errors/google_auth_error.dart';
-import '../../../domain/usecases/google_auth_usecase.dart';
+import '../../../domain/usecases/auth_screens/google_auth_usecase.dart';
 import 'google_auth_event.dart';
 import 'google_auth_state.dart';
 

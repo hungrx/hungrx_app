@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/usecases/facebook_auth_usecase.dart';
+import '../../../domain/usecases/auth_screens/facebook_auth_usecase.dart';
 import 'facebook_auth_event.dart';
 import 'facebook_auth_state.dart';
 

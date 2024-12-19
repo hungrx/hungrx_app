@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hungrx_app/data/Models/eat_screen_model.dart';
+import 'package:hungrx_app/data/Models/eat_screen/eat_screen_model.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_state.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
@@ -22,13 +22,12 @@ class EatScreen extends StatefulWidget {
 
 class _EatScreenState extends State<EatScreen> {
   String? userId;
+  EatScreenData? _cachedData;
 
   @override
   void initState() {
     super.initState();
-    // Add post-frame callback to ensure context is available
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Get the current UserBloc state
       final userState = context.read<UserBloc>().state;
       if (userState.userId != null) {
         setState(() {
@@ -61,56 +60,73 @@ class _EatScreenState extends State<EatScreen> {
               },
             ),
           ],
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: BlocBuilder<EatScreenBloc, EatScreenState>(
-              builder: (context, state) {
-                if (userId == null) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  );
-                }
+          child: RefreshIndicator(
+            onRefresh: () async {
+              if (userId != null) {
+                _loadEatScreenData(userId!);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: BlocConsumer<EatScreenBloc, EatScreenState>(
+                listener: (context, state) {
+                  if (state is EatScreenLoaded) {
+                    _cachedData = state.data.data;
+                  } else if (state is EatScreenError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        action: SnackBarAction(
+                          label: 'Retry',
+                          onPressed: () {
+                            if (userId != null) {
+                              _loadEatScreenData(userId!);
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                },
+                builder: (context, state) {
+                  // Show loading indicator only if userId is null
+                  if (userId == null) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    );
+                  }
 
-                if (state is EatScreenLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is EatScreenError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          state.message,
-                          style: const TextStyle(color: Colors.red),
+                  return Stack(
+                    children: [
+                      SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(_cachedData),
+                            const SizedBox(height: 20),
+                            _buildSearchBar(context),
+                            const SizedBox(height: 20),
+                            _buildCalorieBudget(
+                                _cachedData?.dailyCalorieGoal ?? '0'),
+                            const SizedBox(height: 20),
+                            _buildOptionsGrid(),
+                            _buildEnjoyCalories(),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => _loadEatScreenData(userId!),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
+                      ),
+                      // Show loading overlay only during initial load
+                      if (state is EatScreenLoading && _cachedData == null)
+
+                        // _buildLoadingOverlay(),{}
+                        // Show error overlay only during initial load failure
+                        if (state is EatScreenError && _cachedData == null)
+                          _buildErrorOverlay("An error occurred")
+                    ],
                   );
-                } else if (state is EatScreenLoaded) {
-                  return SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(state.data.data),
-                        const SizedBox(height: 20),
-                        _buildSearchBar(context),
-                        const SizedBox(height: 20),
-                        _buildCalorieBudget(state.data.data.dailyCalorieGoal),
-                        const SizedBox(height: 20),
-                        _buildOptionsGrid(),
-                        _buildEnjoyCalories(),
-                      ],
-                    ),
-                  );
-                }
-                return const SizedBox();
-              },
+                },
+              ),
             ),
           ),
         ),
@@ -118,21 +134,63 @@ class _EatScreenState extends State<EatScreen> {
     );
   }
 
-  Widget _buildHeader(EatScreenData data) {
+  // Widget _buildLoadingOverlay() {
+  //   return Container(
+  //     color: Colors.black.withOpacity(0.5),
+  //     child: const Center(
+  //       child: CircularProgressIndicator(
+  //         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  Widget _buildErrorOverlay(String message) {
+    return Container(
+      color: Colors.black.withOpacity(0.8),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                if (userId != null) {
+                  _loadEatScreenData(userId!);
+                }
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(EatScreenData? data) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Hi, ${data.name}',
+          'Hi, ${data?.name ?? 'User'}',
           style: const TextStyle(
             color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
-        CircleAvatar(
+        const CircleAvatar(
           radius: 25,
-          backgroundImage: NetworkImage(data.profilePhoto),
+          backgroundImage: AssetImage('assets/images/dp.png') as ImageProvider,
+          
+          // data?.profilePhoto != null
+          //     ? NetworkImage(data!.profilePhoto!)
+          //     : const AssetImage('assets/images/dp.png') as ImageProvider,
         ),
       ],
     );
@@ -199,6 +257,7 @@ class _EatScreenState extends State<EatScreen> {
 
   Widget _buildOptionsGrid() {
     return Row(
+      
       children: [
         Expanded(
             child: _buildOptionCard(

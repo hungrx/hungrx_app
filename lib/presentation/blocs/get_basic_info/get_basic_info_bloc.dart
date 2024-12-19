@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/domain/usecases/get_basic_info_usecase.dart';
+import 'package:hungrx_app/domain/usecases/profile_screen/get_basic_info_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_state.dart';
 

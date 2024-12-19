@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/otp_verify_bloc/auth_event.dart';
 import 'package:hungrx_app/presentation/blocs/otp_verify_bloc/auth_state.dart';
-import '../../../domain/usecases/otp_usecase.dart';
+import '../../../domain/usecases/auth_screens/otp_usecase.dart';
 
 class OtpAuthBloc extends Bloc<OtpAuthEvent, OtpAuthState> {
   final OtpUseCase otpUseCase;

@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/pages/calorie_calculation_screen/calculation_tracking.dart';
 
-class RestaurantMenuScreen extends StatelessWidget {
+class RestaurantMenuScreen extends StatefulWidget {
   const RestaurantMenuScreen({super.key});
+
+  @override
+  State<RestaurantMenuScreen> createState() => _RestaurantMenuScreenState();
+}
+
+class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
+  bool _isSearchVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +22,36 @@ class RestaurantMenuScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        title: _isSearchVisible
+            ? TextField(
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Find the foods under your daily kcal...',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () {
+                      setState(() {
+                        _isSearchVisible = false;
+                      });
+                    },
+                  ),
+                ),
+                autofocus: true,
+              )
+            : null,
+        actions: [
+          if (!_isSearchVisible)
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _isSearchVisible = true;
+                });
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -23,7 +60,6 @@ class RestaurantMenuScreen extends StatelessWidget {
               child: Column(
                 children: [
                   _buildRestaurantInfoCard(),
-                  _buildSearchBar(),
                   _buildMenuList(context),
                 ],
               ),
@@ -39,7 +75,8 @@ class RestaurantMenuScreen extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           color: Colors.grey[900],
-          borderRadius: const BorderRadius.all(Radius.circular(16))),
+          // borderRadius: const BorderRadius.all(Radius.circular(16))
+          ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,7 +85,7 @@ class RestaurantMenuScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "McDonald's® (FiDi (160 Broadway))",
+                "McDonald's",
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -106,28 +143,9 @@ class RestaurantMenuScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.only(top: 16, left: 0, right: 0, bottom: 16),
-      // padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: const TextField(
-        style: TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          prefixIcon: Icon(Icons.search, color: Colors.grey),
-          hintText: 'Find the foods under your daily kcal...',
-          hintStyle: TextStyle(color: Colors.grey),
-          border: InputBorder.none,
-        ),
-      ),
-    );
-  }
-
   Widget _buildMenuList(BuildContext context) {
     return ListView(
+
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
@@ -179,12 +197,10 @@ class RestaurantMenuScreen extends StatelessWidget {
       double rating, BuildContext context) {
     return ListTile(
       onTap: () {
-      
         Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) {
-
                 return const SizedBox();
               },
             ));

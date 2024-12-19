@@ -1,5 +1,5 @@
-import 'package:hungrx_app/data/Models/user_profile_model.dart';
-import 'package:hungrx_app/data/datasources/api/user_profile_api_client.dart';
+import 'package:hungrx_app/data/Models/auth_screens/user_profile_model.dart';
+import 'package:hungrx_app/data/datasources/api/profile_setting_screens/user_profile_api_client.dart';
 
 
 

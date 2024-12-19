@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/food_item_model.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/food_item_model.dart';
 
 abstract class SearchState {}
 

@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/update_basic_info_request.dart';
+import 'package:hungrx_app/data/Models/profile_screen/update_basic_info_request.dart';
 
 abstract class UpdateBasicInfoState {}
 

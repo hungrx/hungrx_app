@@ -28,6 +28,12 @@ class SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeApp();
+    // _checkConnectivityAndNavigate();
+  }
+  Future<void> _initializeApp() async {
+    // Initialize auth service first
+    await _authService.initialize();
     _checkConnectivityAndNavigate();
   }
 
@@ -49,7 +55,7 @@ class SplashScreenState extends State<SplashScreen> {
         final userId = await _authService.getUserId();
         if (userId != null) {
           // Check profile completion
-          print(userId);
+          print("user id is ${userId}");
           final bool isProfileComplete =
               await _authService.checkProfileCompletion(userId);
 

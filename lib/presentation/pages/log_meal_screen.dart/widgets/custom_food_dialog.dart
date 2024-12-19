@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/datasources/api/custom_food_entry_api.dart';
-import 'package:hungrx_app/data/repositories/custom_food_entry_repository.dart';
-import 'package:hungrx_app/domain/usecases/custom_food_entry_usecase.dart';
+import 'package:hungrx_app/data/datasources/api/home_meals/custom_food_entry_api.dart';
+import 'package:hungrx_app/data/repositories/home_meals_screen/custom_food_entry_repository.dart';
+import 'package:hungrx_app/domain/usecases/home_meals_screen/custom_food_entry_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/custom_food_entry/custom_food_entry_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/custom_food_entry/custom_food_entry_event.dart';
 import 'package:hungrx_app/presentation/blocs/custom_food_entry/custom_food_entry_state.dart';

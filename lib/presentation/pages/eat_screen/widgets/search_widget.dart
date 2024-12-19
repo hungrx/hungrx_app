@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hungrx_app/data/Models/eat_screen_search_models.dart';
-import 'package:hungrx_app/data/datasources/api/eat_search_screen_api_service.dart';
-import 'package:hungrx_app/data/repositories/eat_search_screen_repository.dart';
-import 'package:hungrx_app/domain/usecases/eat_screen_search_food_usecase.dart';
+import 'package:hungrx_app/data/Models/eat_screen/eat_screen_search_models.dart';
+import 'package:hungrx_app/data/datasources/api/eat_screen/eat_search_screen_api_service.dart';
+import 'package:hungrx_app/data/repositories/eat_screen/eat_search_screen_repository.dart';
+import 'package:hungrx_app/domain/usecases/eat_screen/eat_screen_search_food_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_event.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_state.dart';

@@ -1,8 +1,8 @@
 // lib/core/di/injection_container.dart
 
 import 'package:get_it/get_it.dart';
-import 'package:hungrx_app/data/datasources/api/tdee_api_service.dart';
-import 'package:hungrx_app/data/datasources/api/user_profile_api_client.dart';
+import 'package:hungrx_app/data/datasources/api/profile_setting_screens/tdee_api_service.dart';
+import 'package:hungrx_app/data/datasources/api/profile_setting_screens/user_profile_api_client.dart';
 import 'package:hungrx_app/data/repositories/tdee_repository.dart';
 import 'package:hungrx_app/data/repositories/user_info_profile_repository.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';

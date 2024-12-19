@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/daily_food_response.dart';
+import 'package:hungrx_app/data/Models/daily_insight_screen/daily_food_response.dart';
 
 abstract class DailyInsightState {}
 

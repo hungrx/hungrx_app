@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:hungrx_app/data/models/otp_model.dart';
+import 'package:hungrx_app/data/Models/auth_screens/otp_model.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpRepository {

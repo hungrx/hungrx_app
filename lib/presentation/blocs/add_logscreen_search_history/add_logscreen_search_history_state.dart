@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/logmeal_search_history_model.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/logmeal_search_history_model.dart';
 
 abstract class LogMealSearchHistoryState {}
 

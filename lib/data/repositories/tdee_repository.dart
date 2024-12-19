@@ -1,6 +1,6 @@
 import 'package:hungrx_app/core/utils/api_exception.dart';
-import 'package:hungrx_app/data/Models/tdee_result_model.dart';
-import 'package:hungrx_app/data/datasources/api/tdee_api_service.dart';
+import 'package:hungrx_app/data/Models/profile_setting_screen/tdee_result_model.dart';
+import 'package:hungrx_app/data/datasources/api/profile_setting_screens/tdee_api_service.dart';
 
 class TDEERepository {
   final TDEEApiService _apiService;

@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/usecases/sign_up_usecase.dart';
+import '../../../domain/usecases/auth_screens/sign_up_usecase.dart';
 import 'signup_event.dart';
 import 'signup_state.dart';
 
