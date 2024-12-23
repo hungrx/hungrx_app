@@ -26,8 +26,7 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
     ActivityLevel.lightlyActive: "Light exercise 1-3 days/week",
     ActivityLevel.moderatelyActive: "Moderate exercise 3-5 days/week",
     ActivityLevel.veryActive: "Hard exercise 6-7 days/week",
-    ActivityLevel.extraActive:
-        "Very hard exercise & physical job or 2x training",
+    ActivityLevel.extraActive: "Very hard exercise & physical job or 2x training",
   };
 
   late ConfettiController _confettiController;
@@ -36,8 +35,7 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
   @override
   void initState() {
     super.initState();
-    _confettiController =
-        ConfettiController(duration: const Duration(seconds: 5));
+    _confettiController = ConfettiController(duration: const Duration(seconds: 5));
     _dialogAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -51,8 +49,10 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
     super.dispose();
   }
 
-  void _showCelebrationDialog(
-      BuildContext context, TDEEResultModel tdeeResult) {
+  void _showCelebrationDialog(BuildContext context, TDEEResultModel tdeeResult) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 360;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -65,24 +65,34 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
           child: AlertDialog(
             backgroundColor: Colors.transparent,
             content: Container(
-              padding: const EdgeInsets.all(20),
+              width: size.width * 0.8,
+              padding: EdgeInsets.all(size.width * 0.05),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Column(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 50),
-                  SizedBox(height: 20),
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: isSmallScreen ? 40 : 50,
+                  ),
+                  SizedBox(height: size.height * 0.02),
                   Text(
                     "All Set!",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 20 : 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: size.height * 0.01),
                   Text(
                     "Your profile is complete.",
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 14 : 16,
+                    ),
                   ),
                 ],
               ),
@@ -96,18 +106,16 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
     _dialogAnimationController.forward();
 
     Future.delayed(const Duration(seconds: 3), () {
-      Navigator.of(context).pop(); // Close dialog
-      // ignore: use_build_context_synchronously
-      context.pushNamed(
-        RouteNames.tdeeResults,
-        extra: tdeeResult,
-      );
+      Navigator.of(context).pop();
+      context.pushNamed(RouteNames.tdeeResults, extra: tdeeResult);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 360;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -130,7 +138,10 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                 bottom: size.height * 0.01,
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.05,
+                      vertical: size.height * 0.02,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -138,21 +149,30 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                           currentStep: 6,
                           totalSteps: 6,
                         ),
-                        const SizedBox(height: 40),
-                        const Text(
+                        
+                        SizedBox(height: size.height * 0.04),
+                        
+                        Text(
                           'Help us calculate your TDEE',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 24,
+                            fontSize: isSmallScreen ? 20 : 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 30),
-                        const Text(
+                        
+                        SizedBox(height: size.height * 0.03),
+                        
+                        Text(
                           "What's your Activity Level?",
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: isSmallScreen ? 14 : 16,
+                          ),
                         ),
-                        const SizedBox(height: 20),
+                        
+                        SizedBox(height: size.height * 0.02),
+                        
                         Expanded(
                           child: SingleChildScrollView(
                             child: Column(
@@ -160,14 +180,19 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                                 return Column(
                                   children: [
                                     _buildActivityButton(
-                                        context, activity, state.activityLevel),
-                                    const SizedBox(height: 10),
+                                      context,
+                                      activity,
+                                      state.activityLevel,
+                                      size,
+                                    ),
+                                    SizedBox(height: size.height * 0.01),
                                   ],
                                 );
                               }).toList(),
                             ),
                           ),
                         ),
+                        
                         NavigationButtons(
                           buttonText: "Finish",
                           onNextPressed: state.isLoading
@@ -180,8 +205,8 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                          content: Text(
-                                              'Please select an activity level')),
+                                        content: Text('Please select an activity level'),
+                                      ),
                                     );
                                   }
                                 },
@@ -213,26 +238,27 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
               ],
             ),
           ),
-          // Loading overlay based on BLoC state
+          // Loading overlay
           BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
             builder: (context, state) {
               if (state.isLoading) {
                 return Container(
                   color: Colors.black.withOpacity(0.5),
-                  child: const Center(
+                  child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(
+                        const CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.buttonColors),
+                            AppColors.buttonColors,
+                          ),
                         ),
-                        SizedBox(height: 20),
+                        SizedBox(height: size.height * 0.02),
                         Text(
                           'Calculating your TDEE...',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: isSmallScreen ? 14 : 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -249,22 +275,30 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
     );
   }
 
-  Widget _buildActivityButton(BuildContext context, ActivityLevel activity,
-      ActivityLevel? selectedActivity) {
-    bool isSelected = selectedActivity == activity;
+  Widget _buildActivityButton(
+    BuildContext context,
+    ActivityLevel activity,
+    ActivityLevel? selectedActivity,
+    Size size,
+  ) {
+    final isSmallScreen = size.width < 360;
+    final isSelected = selectedActivity == activity;
+
     return BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
       builder: (context, state) {
         return GestureDetector(
           onTap: state.isLoading
               ? null
               : () {
-                  context
-                      .read<UserProfileFormBloc>()
+                  context.read<UserProfileFormBloc>()
                       .add(ActivityLevelChanged(activity));
                 },
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+            padding: EdgeInsets.symmetric(
+              vertical: size.height * 0.018,
+              horizontal: size.width * 0.05,
+            ),
             decoration: BoxDecoration(
               color: Colors.grey[900],
               borderRadius: BorderRadius.circular(30),
@@ -280,16 +314,16 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                   activity.toString().split('.').last,
                   style: TextStyle(
                     color: isSelected ? AppColors.buttonColors : Colors.white,
-                    fontSize: 16,
+                    fontSize: isSmallScreen ? 14 : 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: size.height * 0.004),
                 Text(
                   activityDescriptions[activity]!,
                   style: TextStyle(
                     color: Colors.grey[500],
-                    fontSize: 12,
+                    fontSize: isSmallScreen ? 11 : 12,
                   ),
                 ),
               ],

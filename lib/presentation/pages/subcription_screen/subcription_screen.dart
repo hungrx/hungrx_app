@@ -7,10 +7,21 @@ class SubscriptionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        primary: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Subscription Screen'),
+        titleTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          // fontWeight: FontWeight.bold,
+        ),
+        backgroundColor: AppColors.primaryColor,
+      ),
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.only(left: 16, right: 16,),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,7 +36,7 @@ class SubscriptionScreen extends StatelessWidget {
                     // ),
                   ],
                 ),
-                const SizedBox(height: 20),
+               
                 
                 // Title Section
                 const Text(

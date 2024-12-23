@@ -37,15 +37,6 @@ Future<bool> isLoggedIn() async {
     if (userId == null || userId.isEmpty) {
       return false;
     }
-
-    // Optional: Verify with backend that the user account still exists
-    // final isValid = await _userProfileApiService.checkUserProfile(userId);
-    // if (!isValid) {
-    //   // If user doesn't exist on backend, clear local data
-    //   await logout();
-    //   return false;
-    // }
-
     return true;
   } catch (e) {
     // On any error, assume user is not logged in
@@ -104,35 +95,3 @@ Future<void> logout() async {
     }
   }
 }
-
-  // Future<bool> isLoggedIn() async {
-  //   final prefs = await SharedPreferences.getInstance();
-    
-  //   // Check if this is a fresh install
-  //   final bool isExistingInstall = prefs.getBool(INSTALL_KEY) ?? false;
-  //   if (!isExistingInstall) {
-  //     // This is a fresh install - clear any existing data
-  //     await prefs.clear();
-  //     // Mark as installed
-  //     await prefs.setBool(INSTALL_KEY, true);
-  //     return false;
-  //   }
-
-  //   final userId = prefs.getString(USER_ID_KEY);
-  //   return userId != null && userId.isNotEmpty;
-  // }
-  // Future<bool> isLoggedIn() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final userId = prefs.getString('user_id');
-
-  //   if (userId != null && userId.isNotEmpty) {
-  //     // Check if the user is logged in with any method
-  //     if (await _emailSignInRepository.isLoggedIn() ||
-  //         await _googleAuthRepository.isLoggedIn() ||
-  //         await _otpRepository.isLoggedIn()) {
-  //       return true;
-  //     }
-  //   }
-
-  //   return false;
-  // }

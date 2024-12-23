@@ -20,7 +20,9 @@ import 'package:hungrx_app/data/datasources/api/dashboard_screen/streak_api_serv
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/tdee_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_basic_info_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/user_profile_api_client.dart';
+import 'package:hungrx_app/data/datasources/api/restaurant_screen/nearby_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/search_restaurant_api.dart';
+import 'package:hungrx_app/data/datasources/api/restaurant_screen/suggested_restaurants_api.dart';
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_history_api.dart';
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_update_api.dart';
 import 'package:hungrx_app/data/repositories/connectivity_repository.dart';
@@ -38,7 +40,9 @@ import 'package:hungrx_app/data/repositories/logmeal_search_history_repository.d
 import 'package:hungrx_app/data/repositories/meal_type_repository.dart';
 import 'package:hungrx_app/data/repositories/otp_repository.dart';
 import 'package:hungrx_app/data/repositories/report_bug_repository.dart';
+import 'package:hungrx_app/data/repositories/restaurant_screen/nearby_restaurant_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_screen/search_restaurant_repository.dart';
+import 'package:hungrx_app/data/repositories/restaurant_screen/suggested_restaurants_repository.dart';
 import 'package:hungrx_app/data/repositories/search_history_log_repository.dart';
 import 'package:hungrx_app/data/repositories/streak_repository.dart';
 import 'package:hungrx_app/data/repositories/tdee_repository.dart';
@@ -57,6 +61,7 @@ import 'package:hungrx_app/domain/usecases/eat_screen/get_eat_screen_usecase.dar
 import 'package:hungrx_app/domain/usecases/home_meals_screen/get_meal_types_usecase.dart';
 import 'package:hungrx_app/domain/usecases/eat_screen/get_search_history_log_usecase.dart';
 import 'package:hungrx_app/domain/usecases/dashboad_screen/get_streak_usecase.dart';
+import 'package:hungrx_app/domain/usecases/restaurant_screen/get_suggested_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_screen/search_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/weight_screen/get_weight_history_usecase.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/google_auth_usecase.dart';
@@ -82,6 +87,7 @@ import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart'
 import 'package:hungrx_app/presentation/blocs/internet_connection/internet_connection_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_event.dart';
+import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/otp_verify_bloc/auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/result_bloc/result_bloc.dart';
@@ -89,6 +95,7 @@ import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_
 import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_event.dart';
@@ -121,6 +128,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final suggestedRestaurantsApi = SuggestedRestaurantsApi();
+  final suggestedRestaurantsRepository = SuggestedRestaurantsRepository(suggestedRestaurantsApi);
+  final getSuggestedRestaurantsUseCase = GetSuggestedRestaurantsUseCase(suggestedRestaurantsRepository);
     final reportBugApi = ReportBugApi();
     final reportBugRepository = ReportBugRepository(reportBugApi);
     final reportBugUseCase = ReportBugUseCase(reportBugRepository);
@@ -191,6 +201,13 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
+        BlocProvider(
+          create: (context) => NearbyRestaurantBloc(
+            NearbyRestaurantRepository(
+              NearbyRestaurantApi(),
+            ),
+          ),
+        ),
 
         BlocProvider(create: (context) => UserBloc()..add(LoadUserId())),
         BlocProvider<SignUpBloc>(
@@ -202,6 +219,10 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (context) => ReportBugBloc(reportBugUseCase),
+        ),
+
+        BlocProvider<SuggestedRestaurantsBloc>(
+          create: (context) => SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase),
         ),
 
         BlocProvider(
@@ -270,7 +291,7 @@ class MyApp extends StatelessWidget {
           create: (context) => EatScreenBloc(getEatScreenUseCase),
         ),
         BlocProvider<StreakBloc>(
-          create: (context) => StreakBloc(getStreakUseCase),
+          create: (context) => StreakBloc(getStreakUseCase, authService),
         ),
 
         BlocProvider<ConnectivityBloc>(

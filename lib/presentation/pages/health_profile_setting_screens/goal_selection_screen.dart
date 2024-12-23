@@ -11,8 +11,6 @@ import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/wid
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/prograss_indicator.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 
-
-
 class GoalSelectionScreen extends StatefulWidget {
   const GoalSelectionScreen({super.key});
 
@@ -21,7 +19,14 @@ class GoalSelectionScreen extends StatefulWidget {
 }
 
 class GoalSelectionScreenState extends State<GoalSelectionScreen> {
-  TextEditingController weightController = TextEditingController();
+  final TextEditingController weightController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    weightController.dispose();
+    super.dispose();
+  }
 
   double calculateBMI(double height, double weight, bool isMetric) {
     if (isMetric) {
@@ -41,7 +46,6 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
       maxWeight = ((24.9 * (height * height)) / 703).roundToDouble();
     }
     
-    // Adjust for gender
     if (gender.toLowerCase() == 'male') {
       minWeight += 3;
       maxWeight += 3;
@@ -50,141 +54,239 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
     return '${minWeight.toStringAsFixed(1)}-${maxWeight.toStringAsFixed(1)} ${isMetric ? 'kg' : 'lbs'}';
   }
 
+  void _handleNextButton(BuildContext context, UserProfileFormState state) {
+    if (_formKey.currentState?.validate() ?? false) {
+      if (state.weightGoal != null) {
+        if ((state.weightGoal == WeightGoal.lose || 
+             state.weightGoal == WeightGoal.gain) && 
+             weightController.text.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please enter your goal weight')),
+          );
+        } else {
+          context.pushNamed(
+            RouteNames.goalPace,
+            extra: context.read<UserProfileFormBloc>(),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a goal')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
-        builder: (context, state) {
-          double? height;
-          double? weight;
-          double? bmi;
-          String idealWeightRange = '';
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 360;
+    final viewInsets = MediaQuery.of(context).viewInsets;
+    final isKeyboardVisible = viewInsets.bottom > 0;
 
-          try {
-            if (state.isMetric) {
-              height = double.tryParse(state.heightInCm) ?? 0;
-            } else {
-              double feet = double.tryParse(state.heightFeet) ?? 0;
-              double inches = double.tryParse(state.heightInches) ?? 0;
-              height = (feet * 12) + inches;
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        resizeToAvoidBottomInset: false,
+        body: BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
+          builder: (context, state) {
+            double? height;
+            double? weight;
+            double? bmi;
+            String idealWeightRange = '';
+
+            try {
+              if (state.isMetric) {
+                height = double.tryParse(state.heightInCm) ?? 0;
+              } else {
+                double feet = double.tryParse(state.heightFeet) ?? 0;
+                double inches = double.tryParse(state.heightInches) ?? 0;
+                height = (feet * 12) + inches;
+              }
+
+              weight = double.tryParse(state.weight) ?? 0;
+
+              if (height > 0 && weight > 0) {
+                bmi = calculateBMI(height, weight, state.isMetric);
+                idealWeightRange = getIdealWeightRange(
+                  height, 
+                  state.isMetric, 
+                  state.gender ?? 'male'
+                );
+              }
+            } catch (e) {
+              debugPrint('Error calculating BMI: $e');
             }
 
-            weight = double.tryParse(state.weight) ?? 0;
-
-            if (height > 0 && weight > 0) {
-              bmi = calculateBMI(height, weight, state.isMetric);
-              idealWeightRange = getIdealWeightRange(height, state.isMetric, state.gender ?? 'male');
-            }
-          } catch (e) {
-            throw('Error calculating BMI: $e');
-          }
-          return GradientContainer(
-            top: size.height * 0.06,
-            left: size.height * 0.01,
-            right: size.height * 0.01,
-            bottom: size.height * 0.01,
-            child: SafeArea(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SteppedProgressBar(
-                              currentStep: 4,
-                              totalSteps: 6,
+            return GradientContainer(
+              top: size.height * 0.06,
+              left: size.height * 0.01,
+              right: size.height * 0.01,
+              bottom: size.height * 0.01,
+              child: SafeArea(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.05,
+                              vertical: size.height * 0.02,
                             ),
-                            const SizedBox(height: 40),
-                            const Text(
-                              'Every step towards your goal is progress.',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SteppedProgressBar(
+                                  currentStep: 4,
+                                  totalSteps: 6,
+                                ),
+                                
+                                SizedBox(height: size.height * 0.04),
+                                
+                                Text(
+                                  'Every step towards your goal is progress.',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: isSmallScreen ? 20 : 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                
+                                SizedBox(height: size.height * 0.03),
+                                
+                                Text(
+                                  "What's your Goal ?",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: isSmallScreen ? 14 : 16,
+                                  ),
+                                ),
+                                
+                                SizedBox(height: size.height * 0.01),
+                                
+                                _buildGoalButton(
+                                  context, 
+                                  WeightGoal.lose, 
+                                  'Lose Weight',
+                                  size,
+                                ),
+                                SizedBox(height: size.height * 0.01),
+                                _buildGoalButton(
+                                  context, 
+                                  WeightGoal.maintain, 
+                                  'Maintain Weight',
+                                  size,
+                                ),
+                                SizedBox(height: size.height * 0.01),
+                                _buildGoalButton(
+                                  context, 
+                                  WeightGoal.gain, 
+                                  'Gain Weight',
+                                  size,
+                                ),
+                                
+                                SizedBox(height: size.height * 0.02),
+                                
+                                if (state.weightGoal == WeightGoal.lose || 
+                                    state.weightGoal == WeightGoal.gain)
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "What's is your target weight?",
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: isSmallScreen ? 14 : 16,
+                                        ),
+                                      ),
+                                      SizedBox(height: size.height * 0.01),
+                                      
+                                      if (bmi != null)
+                                        Text(
+                                          'Based on your BMI of ${bmi.toStringAsFixed(1)}',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: isSmallScreen ? 11 : 12,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      
+                                      Text(
+                                        'Your ideal weight range is $idealWeightRange',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: isSmallScreen ? 11 : 12,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                      
+                                      SizedBox(height: size.height * 0.01),
+                                      
+                                      CustomTextFormField(
+                                        keyboardType: TextInputType.number,
+                                        hintText: 'Input the goal weight (${state.isMetric ? 'kg' : 'lbs'})',
+                                        controller: weightController,
+                                        onChanged: (value) {
+                                          context.read<UserProfileFormBloc>()
+                                              .add(TargetWeightChanged(value));
+                                        },
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter your goal weight';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  
+                                // Extra space for keyboard
+                                SizedBox(
+                                  height: isKeyboardVisible 
+                                      ? size.height * 0.15 
+                                      : size.height * 0.02,
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 30),
-                            const Text(
-                              "What's your Goal ?",
-                              style: TextStyle(color: Colors.grey, fontSize: 16),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildGoalButton(context, WeightGoal.lose, 'Lose Weight'),
-                            const SizedBox(height: 10),
-                            _buildGoalButton(context, WeightGoal.maintain, 'Maintain Weight'),
-                            const SizedBox(height: 10),
-                            _buildGoalButton(context, WeightGoal.gain, 'Gain Weight'),
-                            const SizedBox(height: 20),
-                            if (state.weightGoal == WeightGoal.lose || state.weightGoal == WeightGoal.gain)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "What's is your target weight?",
-                                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Based on your BMI of ${bmi!.toStringAsFixed(1)}',
-                                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
-                                  ),
-                                  Text(
-                                    'Your ideal weight range is $idealWeightRange',
-                                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  CustomTextFormField(
-                                    keyboardType: TextInputType.number,
-                                    hintText: 'Input the goal weight (${state.isMetric ? 'kg' : 'lbs'})',
-                                    controller: weightController,
-                                    onChanged: (value) {
-                                      context.read<UserProfileFormBloc>().add(TargetWeightChanged(value));
-                                    },
-                                  ),
-                                ],
-                              ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                      
+                      // Navigation Buttons
+                      Padding(
+                        padding: EdgeInsets.only(
+                          left: size.width * 0.05,
+                          right: size.width * 0.05,
+                          bottom: isKeyboardVisible 
+                              ? viewInsets.bottom 
+                              : size.height * 0.02,
+                        ),
+                        child: NavigationButtons(
+                          onNextPressed: () => _handleNextButton(context, state),
+                        ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: NavigationButtons(
-                      onNextPressed: () {
-                        if (state.weightGoal != null) {
-                          if ((state.weightGoal == WeightGoal.lose || state.weightGoal == WeightGoal.gain) && weightController.text.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please enter your goal weight')),
-                            );
-                          } else {
-                            context.pushNamed(
-                              RouteNames.goalPace,
-                              extra: context.read<UserProfileFormBloc>(),
-                            );
-                          }
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please select a goal')),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildGoalButton(BuildContext context, WeightGoal goal, String label) {
+  Widget _buildGoalButton(
+    BuildContext context, 
+    WeightGoal goal, 
+    String label,
+    Size size,
+  ) {
+    final isSmallScreen = size.width < 360;
+    
     return BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
       builder: (context, state) {
         return GestureDetector(
@@ -196,12 +298,16 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
           },
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 15),
+            padding: EdgeInsets.symmetric(
+              vertical: size.height * 0.018,
+            ),
             decoration: BoxDecoration(
               color: Colors.grey[900],
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
-                color: state.weightGoal == goal ? AppColors.buttonColors : Colors.grey[700]!,
+                color: state.weightGoal == goal 
+                    ? AppColors.buttonColors 
+                    : Colors.grey[700]!,
                 width: 1,
               ),
             ),
@@ -209,7 +315,10 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: state.weightGoal == goal ? AppColors.buttonColors : Colors.white,
+                  color: state.weightGoal == goal 
+                      ? AppColors.buttonColors 
+                      : Colors.white,
+                  fontSize: isSmallScreen ? 14 : 16,
                 ),
               ),
             ),

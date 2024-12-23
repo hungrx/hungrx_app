@@ -153,7 +153,7 @@ class _RestaurantSearchViewState extends State<RestaurantSearchView> {
               return RestaurantItem(
                 name: restaurant.name,
                 imageUrl: restaurant.logo,
-                rating: 0.0,
+                rating: '0.0',
                 address: 'unknow',
                 distance: 'unknow',
                 ontap: () => context.push('/restaurant/${restaurant.id}'),

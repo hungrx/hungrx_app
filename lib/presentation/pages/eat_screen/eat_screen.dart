@@ -184,14 +184,14 @@ class _EatScreenState extends State<EatScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const CircleAvatar(
-          radius: 25,
-          backgroundImage: AssetImage('assets/images/dp.png') as ImageProvider,
+        // const CircleAvatar(
+        //   radius: 25,
+        //   backgroundImage: AssetImage('assets/images/dp.png') as ImageProvider,
           
-          // data?.profilePhoto != null
-          //     ? NetworkImage(data!.profilePhoto!)
-          //     : const AssetImage('assets/images/dp.png') as ImageProvider,
-        ),
+        //   // data?.profilePhoto != null
+        //   //     ? NetworkImage(data!.profilePhoto!)
+        //   //     : const AssetImage('assets/images/dp.png') as ImageProvider,
+        // ),
       ],
     );
   }

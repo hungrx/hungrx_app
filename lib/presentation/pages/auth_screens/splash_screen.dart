@@ -67,7 +67,7 @@ class SplashScreenState extends State<SplashScreen> {
 
           // Update streaks
           if (mounted) {
-            context.read<StreakBloc>().add(FetchStreakData(userId));
+            context.read<StreakBloc>().add(FetchStreakData());
           }
           // print(isProfileComplete);
           route = isProfileComplete ? '/home' : '/user-info-one';

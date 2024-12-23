@@ -15,7 +15,9 @@ class GoalPaceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 360;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
@@ -27,7 +29,10 @@ class GoalPaceScreen extends StatelessWidget {
             bottom: size.height * 0.01,
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: size.width * 0.05,
+                  vertical: size.height * 0.02,
+                ),
                 child: Column(
                   children: [
                     Expanded(
@@ -39,66 +44,103 @@ class GoalPaceScreen extends StatelessWidget {
                               currentStep: 5,
                               totalSteps: 6,
                             ),
-                            const SizedBox(height: 40),
+                            
+                            SizedBox(height: size.height * 0.04),
+                            
+                            // Title
                             Text(
                               _getTitle(state.weightGoal),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 28,
+                                fontSize: isSmallScreen ? 24 : 28,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            
+                            SizedBox(height: size.height * 0.02),
+                            
+                            // Suggestion Text
                             Text(
                               _getSuggestion(state.weightPace ?? 2.0),
                               style: TextStyle(
-                                  color: Colors.grey[400], fontSize: 14),
+                                color: Colors.grey[400],
+                                fontSize: isSmallScreen ? 12 : 14,
+                              ),
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 60),
+                            
+                            SizedBox(height: size.height * 0.06),
+                            
+                            // Pace Display
                             Center(
                               child: Text(
                                 _getPaceText(
-                                    state.weightGoal, state.weightPace ?? 2.0),
-                                style: const TextStyle(
+                                  state.weightGoal,
+                                  state.weightPace ?? 2.0,
+                                ),
+                                style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 48,
+                                  fontSize: isSmallScreen ? 42 : 48,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                            const Center(
+                            
+                            Center(
                               child: Text(
                                 'per week',
-                                style:
-                                    TextStyle(color: Colors.grey, fontSize: 16),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: isSmallScreen ? 14 : 16,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 10),
-                            Slider(
-                              value: state.weightPace ?? 2.0,
-                              min: 1,
-                              max: 4,
-                              divisions: 3,
-                              activeColor: AppColors.buttonColors,
-                              inactiveColor: Colors.grey[800],
-                              onChanged: (value) {
-                                context
-                                    .read<UserProfileFormBloc>()
-                                    .add(WeightPaceChanged(value));
-                              },
+                            
+                            SizedBox(height: size.height * 0.01),
+                            
+                            // Slider
+                            SizedBox(
+                              height: size.height * 0.05,
+                              child: Slider(
+                                value: state.weightPace ?? 2.0,
+                                min: 1,
+                                max: 4,
+                                divisions: 3,
+                                activeColor: AppColors.buttonColors,
+                                inactiveColor: Colors.grey[800],
+                                onChanged: (value) {
+                                  context
+                                      .read<UserProfileFormBloc>()
+                                      .add(WeightPaceChanged(value));
+                                },
+                              ),
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: _getPaceLabels(state.weightGoal),
+                            
+                            // Pace Labels
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: size.width * 0.02,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: _getPaceLabels(
+                                  state.weightGoal,
+                                  isSmallScreen,
+                                ),
+                              ),
                             ),
-                           const SizedBox(height: 50),
+                            
+                            SizedBox(height: size.height * 0.05),
+                            
+                            // Estimated Time Container
                             Center(
                               child: Container(
-                                padding: const EdgeInsets.all(15),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: size.width * 0.04,
+                                  vertical: size.height * 0.02,
+                                ),
                                 decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10)),
+                                  borderRadius: BorderRadius.circular(10),
                                   color: state.weightGoal == WeightGoal.maintain
                                       ? Colors.transparent
                                       : const Color.fromARGB(255, 49, 54, 43),
@@ -107,22 +149,25 @@ class GoalPaceScreen extends StatelessWidget {
                                   _getEstimatedTimeToGoal(
                                     state.weightGoal,
                                     state.weightPace ?? 2.0,
-                                    double.tryParse(state.weight)??0,
-                                    double.tryParse(
-                                            state.targetWeight ?? '0') ??
-                                        0,
+                                    double.tryParse(state.weight) ?? 0,
+                                    double.tryParse(state.targetWeight ?? '0') ?? 0,
                                   ),
-                                  style: const TextStyle(
-                                      color: Colors.grey, fontSize: 16),
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: isSmallScreen ? 14 : 16,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 30),
+                            
+                            SizedBox(height: size.height * 0.03),
                           ],
                         ),
                       ),
                     ),
+                    
+                    // Navigation Buttons
                     NavigationButtons(
                       onNextPressed: () {
                         context.pushNamed(RouteNames.dailyactivity);
@@ -155,20 +200,30 @@ class GoalPaceScreen extends StatelessWidget {
     if (goal == WeightGoal.maintain) {
       return '0 Kg';
     }
-    double pace = (paceValue - 1) * 0.25 + 0.25; // 0.25, 0.5, 0.75, or 1 kg
+    double pace = (paceValue - 1) * 0.25 + 0.25;
     return '${pace.toStringAsFixed(2)} Kg';
   }
 
-  List<Widget> _getPaceLabels(WeightGoal? goal) {
+  List<Widget> _getPaceLabels(WeightGoal? goal, bool isSmallScreen) {
     if (goal == WeightGoal.maintain) {
-      return [const Text('Maintain', style: TextStyle(color: Colors.grey))];
+      return [
+        Text(
+          'Maintain',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: isSmallScreen ? 12 : 14,
+          ),
+        )
+      ];
     }
-    return ['Mild', 'Moderate', 'Fast', 'Very Fast']
-        .map((e) => Text(
-              e,
-              style: const TextStyle(color: Colors.grey),
-            ))
-        .toList();
+    
+    return ['Mild', 'Moderate', 'Fast', 'Very Fast'].map((e) => Text(
+      e,
+      style: TextStyle(
+        color: Colors.grey,
+        fontSize: isSmallScreen ? 12 : 14,
+      ),
+    )).toList();
   }
 
   String _getSuggestion(double paceValue) {
@@ -186,8 +241,12 @@ class GoalPaceScreen extends StatelessWidget {
     }
   }
 
-  String _getEstimatedTimeToGoal(WeightGoal? goal, double paceValue,
-      double currentWeight, double goalWeight) {
+  String _getEstimatedTimeToGoal(
+    WeightGoal? goal,
+    double paceValue,
+    double currentWeight,
+    double goalWeight,
+  ) {
     if (goal == WeightGoal.maintain) {
       return "";
     }

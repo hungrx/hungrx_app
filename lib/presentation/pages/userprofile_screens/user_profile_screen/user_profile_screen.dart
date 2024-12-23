@@ -10,7 +10,9 @@ import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_informaion_screen.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/subcription_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/about_screen/about_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/goal_settings_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/help_support.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -104,11 +106,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ],
                       ),
                       // Show loading overlay only when fetching new data
-                      if (state is GetProfileDetailsLoading && _cachedProfileDetails == null)
+                      if (state is GetProfileDetailsLoading &&
+                          _cachedProfileDetails == null)
                         // _buildLoadingOverlay(),
-                      // Show error overlay only on initial load failure
-                      if (state is GetProfileDetailsFailure && _cachedProfileDetails == null)
-                        _buildErrorOverlay(),
+                        // Show error overlay only on initial load failure
+                        if (state is GetProfileDetailsFailure &&
+                            _cachedProfileDetails == null)
+                          _buildErrorOverlay(),
                     ],
                   ),
                 );
@@ -149,7 +153,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
-
 
   Widget _buildHeader(
       BuildContext context, GetProfileDetailsModel? profileData) {
@@ -259,17 +262,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     )),
           );
         }),
-        _buildDetailItem(
-            Icons.pie_chart_outline, 'Statistics', 'Current status...', () {
-    Navigator.push(
+        _buildDetailItem(Icons.payment, 'Subscription', 'Monthly plans...', () {
+          Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => const SubscriptionScreen(
-                      
-                    )),
+            MaterialPageRoute(builder: (context) => const SubscriptionScreen()),
           );
-
-            }),
+        }),
       ],
     );
   }
@@ -293,9 +291,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           });
         }),
         _buildDetailItem(Icons.info_outline, 'About',
-            'About us, Privacy Policy, app version', () {}),
+            'About us, Privacy Policy, app version', () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PoliciesScreen()),
+          );
+        }),
         _buildDetailItem(Icons.help_outline, 'Help & Support',
-            'Help, feedbacks, troubleshoot', () {}),
+            'Help, feedbacks, social media', () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
+          );
+        }),
       ],
     );
   }

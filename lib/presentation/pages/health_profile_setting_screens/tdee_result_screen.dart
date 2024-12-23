@@ -69,7 +69,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
         // ignore: use_build_context_synchronously
         context.read<HomeBloc>().add(InitializeHomeData(homeData));
         // ignore: use_build_context_synchronously
-        context.read<StreakBloc>().add(FetchStreakData(userId));
+        context.read<StreakBloc>().add(FetchStreakData());
       }
 
       // Using context.go instead of GoRouter.of(context).go() for more concise code

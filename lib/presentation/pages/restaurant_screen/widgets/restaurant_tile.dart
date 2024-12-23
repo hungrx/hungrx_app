@@ -1,112 +1,122 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/restaurent_menu_screen.dart';
-import 'package:image_network/image_network.dart';
+
 
 class RestaurantItem extends StatelessWidget {
+  final VoidCallback ontap;
   final String name;
   final String imageUrl;
-  final double rating;
+  final String rating;
   final String address;
   final String distance;
-  final void Function()? ontap;
 
-  const RestaurantItem(
-      {super.key,
-      required this.name,
-      required this.imageUrl,
-      required this.rating,
-      required this.address,
-      required this.distance,
-      required this.ontap});
+  const RestaurantItem({
+    super.key,
+    required this.ontap,
+    required this.name,
+    required this.imageUrl,
+    required this.rating,
+    required this.address,
+    required this.distance,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const RestaurantMenuScreen()),
-        );
-      },
+    return GestureDetector(
+      onTap: ontap,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: ImageNetwork(
-                image: imageUrl,
-                width: 80,
-                height: 80,
-                duration: 1000,
-                curve: Curves.easeIn,
-                onPointer: true,
-                debugPrint: false,
-                fullScreen: false,
-                fitWeb: BoxFitWeb.cover,
-                borderRadius: BorderRadius.circular(8),
-                onLoading: Container(
-                  width: 80,
-                  height: 80,
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
-                  ),
-                ),
-                onError: Container(
-                  width: 80,
-                  height: 80,
-                  color: Colors.grey[200],
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.restaurant,
-                        size: 24,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'No image',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
+              ),
+              child: Container(
+                width: 100,
+                height: 100,
+                color: Colors.grey[800], // Background color
+                child: const Icon(
+                  Icons.restaurant,
+                  size: 50, // Adjust the size of the icon
+                  color: Colors.white, // Icon color
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.location_pin,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                rating.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      address,
                       style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.green, size: 16),
-                      const SizedBox(width: 4),
-                      Text(rating.toString(),
-                          style: const TextStyle(color: Colors.green)),
-                    ],
-                  ),
-                  Text(address,
-                      style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                  Text(distance,
-                      style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    // Text(
+                    //   distance,
+                    //   style: const TextStyle(
+                    //     color: Colors.grey,
+                    //     fontSize: 14,
+                    //   ),
+                    // ),
+                  ],
+                ),
               ),
             ),
           ],

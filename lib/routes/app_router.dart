@@ -34,6 +34,7 @@ import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/use
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/userr_info_one.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/food_search_screen.dart';
+import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/restaurent_menu_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/widgets/restaurant_search_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/edit_goal_screen.dart';
@@ -349,7 +350,7 @@ class AppRouter {
         path: '/menu',
         name: RouteNames.menu,
         builder: (BuildContext context, GoRouterState state) {
-          return const Placeholder(); // Replace with actual MenuScreen
+          return const RestaurantMenuScreen(); // Replace with actual MenuScreen
         },
       ),
 

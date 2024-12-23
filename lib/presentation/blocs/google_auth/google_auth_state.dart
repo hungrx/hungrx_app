@@ -12,6 +12,7 @@ class GoogleAuthSuccess extends GoogleAuthState {
   User user;
 
   GoogleAuthSuccess(this.user);
+    List<Object> get props => [user];
 }
 
 class GoogleAuthFailure extends GoogleAuthState {

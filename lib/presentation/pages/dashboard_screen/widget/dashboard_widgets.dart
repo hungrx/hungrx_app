@@ -8,12 +8,22 @@ import 'package:hungrx_app/data/Models/dashboad_screen/home_screen_model.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/animated_calorie_count.dart';
-import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class DashboardWidgets {
+  // Responsive sizes based on screen width
+  static double getFontSize(BuildContext context, double factor) {
+    return MediaQuery.of(context).size.width * factor;
+  }
+
+  static double getPadding(BuildContext context, double factor) {
+    return MediaQuery.of(context).size.width * factor;
+  }
+
   static Widget buildHeader(HomeData data, BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 360;
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -23,100 +33,101 @@ class DashboardWidgets {
             ResponsiveTextWidget(
               text: 'Hi, ${data.username}',
               fontWeight: FontWeight.bold,
-              sizeFactor: 0.06,
+              sizeFactor: isSmallScreen ? 0.05 : 0.06,
               color: Colors.white,
             ),
             ResponsiveTextWidget(
               text: _getGreeting(),
               fontWeight: FontWeight.bold,
-              sizeFactor: 0.035,
+              sizeFactor: isSmallScreen ? 0.03 : 0.035,
               color: AppColors.fontColor,
             ),
           ],
-        ),
-        InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const UserProfileScreen()),
-            );
-          },
-          child: const CircleAvatar(
-            radius: 25,
-            backgroundImage: AssetImage('assets/images/dp.png'),
-            // backgroundImage: NetworkImage(data.profilePhoto),
-          ),
         ),
       ],
     );
   }
 
-  static Widget buildCalorieCounter(
-      HomeData data, Stream<double>? calorieStream) {
-    return Container(
-      padding: const EdgeInsets.only(
-        left: 16,
-        right: 16,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.tileColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  static Widget buildCalorieCounter(HomeData data, Stream<double>? calorieStream) {
+    return Builder(
+      builder: (context) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isSmallScreen = screenWidth < 360;
+        
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: getPadding(context, 0.04),
+            vertical: getPadding(context, 0.02),
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.tileColor,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                data.goalHeading,
-                style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800),
-              ),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  AnimatedFlipCounter(
-                    thousandSeparator: ',',
-                    value: data.daysToReachGoal,
-                    textStyle: GoogleFonts.stickNoBills(
-                      color: Colors.white,
-                      fontSize: 34,
-                      fontWeight: FontWeight.bold,
+                  Text(
+                    data.goalHeading,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: getFontSize(context, 0.045),
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 0, left: 5, top: 10),
-                    child: Text(
-                      ' Days',
-                      style: GoogleFonts.stickNoBills(
-                        color: Colors.grey,
-                        fontSize: 16,
+                  Row(
+                    children: [
+                      AnimatedFlipCounter(
+                        thousandSeparator: ',',
+                        value: data.daysToReachGoal,
+                        textStyle: GoogleFonts.stickNoBills(
+                          color: Colors.white,
+                          fontSize: getFontSize(context, isSmallScreen ? 0.08 : 0.085),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  )
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: 0,
+                          left: getPadding(context, 0.01),
+                          top: getPadding(context, 0.025),
+                        ),
+                        child: Text(
+                          ' Days',
+                          style: GoogleFonts.stickNoBills(
+                            color: Colors.grey,
+                            fontSize: getFontSize(context, 0.04),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
                 ],
               ),
+              AnimatedCalorieDisplay(initialData: data),
             ],
           ),
-          AnimatedCalorieDisplay(
-            initialData: data,
-          ),
-        ],
-      ),
+        );
+      }
     );
   }
 
-  static Widget buildDailyTargetAndRemaining(
-      HomeData data, BuildContext context) {
+  static Widget buildDailyTargetAndRemaining(HomeData data, BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+    final horizontalPadding = getPadding(context, 0.04);
+    final verticalPadding = getPadding(context, 0.02);
+
     return Row(
       children: [
         Expanded(
           child: Container(
-            padding:
-                const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: verticalPadding,
+            ),
             decoration: BoxDecoration(
               color: AppColors.tileColor,
               borderRadius: BorderRadius.circular(20),
@@ -124,12 +135,13 @@ class DashboardWidgets {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Daily Target',
                   style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800),
+                    color: Colors.grey,
+                    fontSize: getFontSize(context, 0.04),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -138,17 +150,20 @@ class DashboardWidgets {
                       data.dailyCalorieGoal.toStringAsFixed(0),
                       style: GoogleFonts.stickNoBills(
                         color: Colors.white,
-                        fontSize: 40,
+                        fontSize: getFontSize(context, isSmallScreen ? 0.09 : 0.1),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 12, left: 5),
+                      padding: EdgeInsets.only(
+                        bottom: getPadding(context, 0.03),
+                        left: getPadding(context, 0.01),
+                      ),
                       child: Text(
                         'cal',
                         style: GoogleFonts.stickNoBills(
                           color: Colors.grey,
-                          fontSize: 14,
+                          fontSize: getFontSize(context, 0.035),
                         ),
                       ),
                     ),
@@ -158,17 +173,18 @@ class DashboardWidgets {
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        SizedBox(width: getPadding(context, 0.04)),
         Expanded(
           child: GestureDetector(
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) => const DailyInsightScreen()),
+              MaterialPageRoute(builder: (context) => const DailyInsightScreen()),
             ),
             child: Container(
-              padding: const EdgeInsets.only(
-                  left: 16, right: 16, top: 16, bottom: 8),
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: verticalPadding,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.tileColor,
                 borderRadius: BorderRadius.circular(20),
@@ -178,8 +194,8 @@ class DashboardWidgets {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CircularPercentIndicator(
-                    radius: 22,
-                    lineWidth: 4,
+                    radius: isSmallScreen ? 18 : 22,
+                    lineWidth: isSmallScreen ? 3 : 4,
                     percent: data.remaining / data.dailyCalorieGoal,
                     progressColor: Colors.grey[800]!,
                     backgroundColor: Colors.green,
@@ -188,12 +204,13 @@ class DashboardWidgets {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Remaining',
                         style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800),
+                          color: Colors.grey,
+                          fontSize: getFontSize(context, 0.04),
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -202,17 +219,20 @@ class DashboardWidgets {
                             data.remaining.toStringAsFixed(0),
                             style: GoogleFonts.stickNoBills(
                               color: Colors.white,
-                              fontSize: 39,
+                              fontSize: getFontSize(context, isSmallScreen ? 0.09 : 0.1),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 12, left: 5),
+                            padding: EdgeInsets.only(
+                              bottom: getPadding(context, 0.03),
+                              left: getPadding(context, 0.01),
+                            ),
                             child: Text(
                               'cal',
                               style: GoogleFonts.stickNoBills(
                                 color: Colors.grey,
-                                fontSize: 14,
+                                fontSize: getFontSize(context, 0.035),
                               ),
                             ),
                           ),
@@ -230,20 +250,23 @@ class DashboardWidgets {
   }
 
   static Widget buildBottomButtons(BuildContext context, HomeData data) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+    final horizontalPadding = getPadding(context, 0.04);
+    final verticalPadding = getPadding(context, 0.02);
+
     return Row(
       children: [
         Expanded(
           child: GestureDetector(
             onTap: () {
-              // showDialog(
-              //   context: context,
-              //   builder: (context) => const FeedbackDialog(),
-              // );
               context.pushNamed(RouteNames.feedback);
             },
             child: Container(
-              padding: const EdgeInsets.only(
-                  left: 16, right: 16, top: 22, bottom: 22),
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: verticalPadding * 2.1,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.tileColor,
                 borderRadius: BorderRadius.circular(20),
@@ -253,7 +276,7 @@ class DashboardWidgets {
                   'Feedbacks',
                   style: GoogleFonts.stickNoBills(
                     color: Colors.white,
-                    fontSize: 30,
+                    fontSize: getFontSize(context, isSmallScreen ? 0.07 : 0.075),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -261,7 +284,7 @@ class DashboardWidgets {
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        SizedBox(width: getPadding(context, 0.04)),
         Expanded(
           child: GestureDetector(
             onTap: () async {
@@ -272,7 +295,10 @@ class DashboardWidgets {
               }
             },
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: verticalPadding,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.tileColor,
                 borderRadius: BorderRadius.circular(20),
@@ -280,18 +306,19 @@ class DashboardWidgets {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Current Weight',
                     style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800),
+                      color: Colors.grey,
+                      fontSize: getFontSize(context, 0.04),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   Text(
                     data.weight,
                     style: GoogleFonts.stickNoBills(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: getFontSize(context, isSmallScreen ? 0.06 : 0.065),
                       fontWeight: FontWeight.bold,
                     ),
                   ),

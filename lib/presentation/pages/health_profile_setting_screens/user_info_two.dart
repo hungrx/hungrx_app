@@ -20,7 +20,8 @@ class UserInfoScreenTwo extends StatefulWidget {
 }
 
 class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
-  TextEditingController ageController = TextEditingController();
+  final TextEditingController ageController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -31,96 +32,174 @@ class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
   }
 
   @override
+  void dispose() {
+    ageController.dispose();
+    super.dispose();
+  }
+
+  void _handleNextButton(BuildContext context) {
+    if (_formKey.currentState?.validate() ?? false) {
+      final bloc = context.read<UserProfileFormBloc>();
+      final state = bloc.state;
+
+      if (state.gender == null || state.gender!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a gender')),
+        );
+      } else if (ageController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter your age')),
+        );
+      } else {
+        bloc.add(AgeChanged(ageController.text));
+        context.pushNamed(
+          RouteNames.userInfoThree,
+          extra: bloc,
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: GradientContainer(
-        top: size.height * 0.06,
-        left: size.height * 0.01,
-        right: size.height * 0.01,
-        bottom: size.height * 0.01,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SteppedProgressBar(
-                          currentStep: 2,
-                          totalSteps: 6,
-                        ),
-                        const SizedBox(height: 40),
-                        const HeaderTextDataScreen(
-                          data: 'Tell Us About Yourself',
-                        ),
-                        const SizedBox(height: 30),
-                        const Text(
-                          "Please select which sex we should use to\ncalculate your calorie needs.",
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
-                        ),
-                        const SizedBox(height: 20),
-                        BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
-                          builder: (context, state) {
-                            return _buildGenderSelector(context, state.gender);
-                          },
-                        ),
-                        const SizedBox(height: 50),
-                        const Text(
-                          "What's your Age?",
-                          style: TextStyle(color: Colors.grey, fontSize: 18),
-                        ),
-                        const SizedBox(height: 10),
-                        BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
-                            builder: (context, state) {
-                          return CustomTextFormField(
-                              controller: ageController,
-                              onChanged: (value) {
-                                context
-                                    .read<UserProfileFormBloc>()
-                                    .add(AgeChanged(value));
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 360;
+    final viewInsets = MediaQuery.of(context).viewInsets;
+    final isKeyboardVisible = viewInsets.bottom > 0;
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        resizeToAvoidBottomInset: false,
+        body: GradientContainer(
+          top: size.height * 0.06,
+          left: size.height * 0.01,
+          right: size.height * 0.01,
+          bottom: size.height * 0.01,
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.05,
+                vertical: size.height * 0.02,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Progress Bar
+                            const SteppedProgressBar(
+                              currentStep: 2,
+                              totalSteps: 6,
+                            ),
+
+                            SizedBox(height: size.height * 0.04),
+
+                            // Header
+                            const HeaderTextDataScreen(
+                              data: 'Tell Us About Yourself',
+                            ),
+
+                            SizedBox(height: size.height * 0.03),
+
+                            // Gender Selection Text
+                            Text(
+                              "Please select which sex we should use to\ncalculate your calorie needs.",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: isSmallScreen ? 14 : 16,
+                              ),
+                            ),
+
+                            SizedBox(height: size.height * 0.02),
+
+                            // Gender Selector
+                            BlocBuilder<UserProfileFormBloc,
+                                UserProfileFormState>(
+                              builder: (context, state) {
+                                return _buildGenderSelector(
+                                    context, state.gender, size);
                               },
-                              keyboardType: TextInputType.phone,
-                              hintText: 'Enter Your Age');
-                        }),
-                        const SizedBox(height: 10),
-                        const Text(
-                          "Your age determines how much you should consume(age in year)",
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                            ),
+
+                            SizedBox(height: size.height * 0.05),
+
+                            // Age Section
+                            Text(
+                              "What's your Age?",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: isSmallScreen ? 16 : 18,
+                              ),
+                            ),
+
+                            SizedBox(height: size.height * 0.01),
+
+                            // Age Input
+                            BlocBuilder<UserProfileFormBloc,
+                                UserProfileFormState>(
+                              builder: (context, state) {
+                                return CustomTextFormField(
+                                  controller: ageController,
+                                  onChanged: (value) {
+                                    context
+                                        .read<UserProfileFormBloc>()
+                                        .add(AgeChanged(value));
+                                  },
+                                  keyboardType: TextInputType.phone,
+                                  hintText: 'Enter Your Age',
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your age';
+                                    }
+                                    if (int.tryParse(value) == null) {
+                                      return 'Please enter a valid age (no dog years allowed! 🐕)';
+                                    }
+                                    final age = int.parse(value);
+                                    if (age < 18) {
+                                      return 'Sorry kiddo! Come back in ${18 - age} years when you\'re done with your homework 📚';
+                                    }
+                                    if (age > 120) {
+                                      return 'Unless you\'re a vampire 🧛, please enter a realistic age!';
+                                    }
+                                    return null;
+                                  },
+                                );
+                              },
+                            ),
+
+                            SizedBox(height: size.height * 0.01),
+
+                            // Age Info Text
+                            Text(
+                              "Your age determines how much you should consume(age in year)",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: isSmallScreen ? 14 : 16,
+                              ),
+                            ),
+                          ],
                         ),
-                        // const Spacer(),
-                        
-                      ],
-                    ),
-                  ),
-                ),
-                NavigationButtons(
-                        onNextPressed: () {
-                          final bloc = context.read<UserProfileFormBloc>();
-                          final state = bloc.state;
-                          
-                          if (state.gender == null || state.gender!.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please select a gender')),
-                            );
-                          } else if (ageController.text.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please enter your age')),
-                            );
-                          } else {
-                            bloc.add(AgeChanged(ageController.text));
-                            context.pushNamed(
-                              RouteNames.userInfoThree,
-                              extra: bloc,
-                            );
-                          }
-                        },
                       ),
-              ],
+                    ),
+
+                    // Navigation Buttons
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: isKeyboardVisible ? viewInsets.bottom : 0,
+                      ),
+                      child: NavigationButtons(
+                        onNextPressed: () => _handleNextButton(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -128,8 +207,12 @@ class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
     );
   }
 
-  Widget _buildGenderSelector(BuildContext context, String? selectedGender) {
+  Widget _buildGenderSelector(
+      BuildContext context, String? selectedGender, Size size) {
+    // final isSmallScreen = size.width < 360;
+
     return Container(
+      height: size.height * 0.07,
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(30),
@@ -137,22 +220,32 @@ class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
       ),
       child: Row(
         children: [
-          _buildGenderOption(context, 'Male', Icons.male, selectedGender),
-          _buildGenderOption(context, 'Female', Icons.female, selectedGender),
+          _buildGenderOption(context, 'Male', Icons.male, selectedGender, size),
+          _buildGenderOption(
+              context, 'Female', Icons.female, selectedGender, size),
         ],
       ),
     );
   }
 
-  Widget _buildGenderOption(BuildContext context, String gender, IconData icon,
-      String? selectedGender) {
-    bool isSelected = selectedGender == gender;
+  Widget _buildGenderOption(
+    BuildContext context,
+    String gender,
+    IconData icon,
+    String? selectedGender,
+    Size size,
+  ) {
+    final isSmallScreen = size.width < 360;
+    final isSelected = selectedGender == gender;
+
     return Expanded(
       child: GestureDetector(
         onTap: () =>
             context.read<UserProfileFormBloc>().add(GenderChanged(gender)),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 15),
+          padding: EdgeInsets.symmetric(
+            vertical: size.height * 0.015,
+          ),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.buttonColors : Colors.transparent,
             borderRadius: BorderRadius.circular(30),
@@ -163,17 +256,16 @@ class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
             children: [
               Icon(
                 icon,
-                size: 30,
+                size: isSmallScreen ? 24 : 30,
                 color: isSelected ? Colors.black : Colors.white,
               ),
-              const SizedBox(
-                width: 5,
-              ),
+              SizedBox(width: size.width * 0.01),
               Text(
                 gender,
                 style: TextStyle(
                   color: isSelected ? Colors.black : Colors.white,
                   fontWeight: FontWeight.bold,
+                  fontSize: isSmallScreen ? 14 : 16,
                 ),
               ),
             ],

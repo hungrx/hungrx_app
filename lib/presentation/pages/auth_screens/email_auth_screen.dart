@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_event.dart';
 import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_state.dart';
@@ -200,6 +201,22 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
     );
   }
 
+  void _handleAuthError(BuildContext context, String error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Dismiss',
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -220,44 +237,159 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
             }
           },
         ),
+        // BlocListener<LoginBloc, LoginState>(
+        //   listener: (context, state) {
+        //     if (state is LoginSuccess) {
+        //       ScaffoldMessenger.of(context).showSnackBar(
+        //         const SnackBar(content: Text('Login successful!')),
+        //       );
+        //       context.pushNamed(RouteNames.home);
+        //     } else if (state is LoginFailure) {
+        //       ScaffoldMessenger.of(context).showSnackBar(
+        //         SnackBar(content: Text(state.error)),
+        //       );
+        //     }
+        //   },
+        // ),
+
         BlocListener<LoginBloc, LoginState>(
-          listener: (context, state) {
-            if (state is LoginSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Login successful!')),
-              );
-              context.pushNamed(RouteNames.home);
+          listener: (context, state) async {
+            if (!mounted) return; // Initial mounted check
+
+            if (state is LoginLoading) {
+              _showLoadingOverlay(context);
+            } else if (state is LoginSuccess) {
+              _hideLoadingOverlay(context);
+
+              // Store context in local variable for safety
+              final currentContext = context;
+
+              if (!mounted) return;
+
+              final authService = AuthService();
+              try {
+                final isProfileComplete =
+                    await authService.checkProfileCompletion(state.token);
+                if (!mounted) return;
+
+                if (isProfileComplete) {
+                  // Existing user - navigate to home
+                  if (mounted) {
+                    GoRouter.of(currentContext).go('/home');
+                    ScaffoldMessenger.of(currentContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Welcome back!'),
+                        duration: Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } else {
+                  // New user - navigate to profile completion
+                  if (mounted) {
+                    GoRouter.of(currentContext).go('/user-info-one');
+                    ScaffoldMessenger.of(currentContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please complete your profile'),
+                        duration: Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(currentContext).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'Error checking profile status. Please try again.'),
+                      duration: Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
             } else if (state is LoginFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.error)),
-              );
+              _hideLoadingOverlay(context);
+              if (mounted) {
+                _handleAuthError(context, state.error);
+              }
             }
           },
         ),
 
 // In EmailAuthScreen
         BlocListener<GoogleAuthBloc, GoogleAuthState>(
-          listener: (context, state) {
+          listener: (context, state) async {
+            if (!mounted) return; // Add mounted check at the start
+
             if (state is GoogleAuthLoading) {
               _showLoadingOverlay(context);
             } else if (state is GoogleAuthSuccess) {
               _hideLoadingOverlay(context);
-              context.pushNamed(
-                RouteNames.userInfoOne,
-                // extra: state.user,
-              );
+
+              // Store context in local variable
+              final currentContext = context;
+
+              if (!mounted) return;
+
+              final authService = AuthService();
+              final userId = await authService.getUserId();
+
+              if (!mounted) return;
+
+              if (userId != null) {
+                try {
+                  final isProfileComplete =
+                      await authService.checkProfileCompletion(userId);
+                  if (!mounted) return;
+
+                  if (isProfileComplete) {
+                    // Existing user - navigate to home
+                    if (mounted) {
+                      GoRouter.of(currentContext).go('/home');
+                    }
+                  } else {
+                    // New user - navigate to user info screen
+                    if (mounted) {
+                      GoRouter.of(currentContext).go('/user-info-one');
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(currentContext).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Error checking profile status. Please try again.'),
+                        duration: Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    _handleGoogleAuthError(
+                        currentContext, 'Error during profile check: $e');
+                  }
+                }
+              } else {
+                if (mounted) {
+                  _handleGoogleAuthError(
+                      currentContext, 'Failed to get user ID');
+                }
+              }
             } else if (state is GoogleAuthCancelled) {
               _hideLoadingOverlay(context);
-              // Optionally show a subtle message
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Sign in cancelled'),
-                  duration: Duration(seconds: 2),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Sign in cancelled'),
+                    duration: Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             } else if (state is GoogleAuthFailure) {
-              _handleGoogleAuthError(context, state.error);
+              if (mounted) {
+                _handleGoogleAuthError(context, state.error);
+              }
             }
           },
         ),
@@ -303,8 +435,9 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
                       HeaderText(
                         mainHeading:
                             _isSignUp ? "Create Account" : "Welcome back,",
-                        subHeading:
-                            _isSignUp ? "Let's get started" : "Glad You're here",
+                        subHeading: _isSignUp
+                            ? "Let's get started"
+                            : "Glad You're here",
                       ),
                       SizedBox(height: size.height * (_isSignUp ? 0.04 : 0.07)),
                       CustomTextFormField(
@@ -346,8 +479,10 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
                       BlocBuilder<LoginBloc, LoginState>(
                         builder: (context, state) {
                           return CustomButton(
-                            data: _isSignUp ? "Agree & SignUp" : "Agree & Login",
-                            onPressed: state is LoginLoading ? null : _submitForm,
+                            data:
+                                _isSignUp ? "Agree & SignUp" : "Agree & Login",
+                            onPressed:
+                                state is LoginLoading ? null : _submitForm,
                           );
                         },
                       ),
@@ -373,9 +508,9 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
                               ),
                               const SizedBox(width: 20),
                               SocialLoginBotton(
-                                iconPath: 'assets/icons/facebook.png',
-                                label: 'Facebook',
-                                size: 60,
+                                iconPath: 'assets/icons/apple.png',
+                                label: 'Apple',
+                                size: 30,
                                 onPressed: () {
                                   context
                                       .read<FacebookAuthBloc>()

@@ -26,8 +26,8 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
     with SingleTickerProviderStateMixin {
   final TextEditingController _nameController = TextEditingController();
   late AnimationController _controller;
-
   late Animation<double> _opacityAnimation;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -47,95 +47,139 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
   @override
   void dispose() {
     _controller.dispose();
+    _nameController.dispose();
     super.dispose();
+  }
+
+  void _handleNextButton(BuildContext context) {
+    if (_nameController.text.isNotEmpty) {
+      final bloc = context.read<UserProfileFormBloc>();
+      bloc.add(NameChanged(_nameController.text));
+      context.pushNamed(
+        RouteNames.userInfoTwo,
+        extra: bloc,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your name')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final tdeeApiService = TDEEApiService();
-final tdeeRepository = TDEERepository(tdeeApiService);
+    final tdeeRepository = TDEERepository(tdeeApiService);
     final userProfileApiClient = UserProfileApiClient();
     final userProfileRepository = UserProfileRepository(userProfileApiClient);
-    Size size = MediaQuery.of(context).size;
+    
+    // Get screen size and padding
+    final size = MediaQuery.of(context).size;
+    final viewInsets = MediaQuery.of(context).viewInsets;
+    final isKeyboardVisible = viewInsets.bottom > 0;
+
     return BlocProvider(
-      create: (context) => UserProfileFormBloc(
-              userProfileRepository,
-            tdeeRepository),
-      child: Scaffold(
-        // resizeToAvoidBottomInset: false,
-        body: GradientContainer(
-          top: size.height * 0.06,
-          left: size.height * 0.01,
-          right: size.height * 0.01,
-          bottom: size.height * 0.01,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SteppedProgressBar(
-                    currentStep: 1,
-                    totalSteps: 6,
+      create: (context) => UserProfileFormBloc(userProfileRepository, tdeeRepository),
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: GradientContainer(
+            top: size.height * 0.06,
+            left: size.height * 0.01,
+            right: size.height * 0.01,
+            bottom: size.height * 0.01,
+            child: SafeArea(
+              child: Form(
+                key: _formKey,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.05,
+                    vertical: size.height * 0.02,
                   ),
-                  const SizedBox(height: 40),
-                  FadeTransition(
-                    opacity: _opacityAnimation,
-                    child: const HeaderTextDataScreen(
-                      data: 'Hey there! \nTell Us About Yourself',
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  FadeTransition(
-                    opacity: _opacityAnimation,
-                    child: const Text(
-                      "What's your Name ?",
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  FadeTransition(
-                    opacity: _opacityAnimation,
-                    child:
-                        BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
-                            builder: (context, state) {
-                      return CustomTextFormField(
-                          onChanged: (value) {
-                            context
-                                .read<UserProfileFormBloc>()
-                                .add(NameChanged(value));
-                          },
-                          controller: _nameController,
-                          hintText: 'Enter Your Name');
-                    }),
-                  ),
-                  const SizedBox(height: 20),
-                  const Spacer(),
-                  FadeTransition(
-                    opacity: _opacityAnimation,
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: CustomNextButton(
-                        onPressed: () {
-                          if (_nameController.text.isNotEmpty) {
-                            final bloc = context.read<UserProfileFormBloc>();
-                            bloc.add(NameChanged(_nameController.text));
-                            context.pushNamed(
-                              RouteNames.userInfoTwo,
-                              extra: bloc,
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Please enter your age')),
-                            );
-                          }
-                        },
-                        height: 50,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Progress Bar
+                      const SteppedProgressBar(
+                        currentStep: 1,
+                        totalSteps: 6,
                       ),
-                    ),
+                      
+                      SizedBox(height: size.height * 0.04),
+                      
+                      // Header
+                      FadeTransition(
+                        opacity: _opacityAnimation,
+                        child: const HeaderTextDataScreen(
+                          data: 'Hey there! \nTell Us About Yourself',
+                        ),
+                      ),
+                      
+                      SizedBox(height: size.height * 0.03),
+                      
+                      // Question Text
+                      FadeTransition(
+                        opacity: _opacityAnimation,
+                        child: Text(
+                          "What's your Name ?",
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: size.width * 0.04,
+                          ),
+                        ),
+                      ),
+                      
+                      SizedBox(height: size.height * 0.01),
+                      
+                      // Text Field
+                      FadeTransition(
+                        opacity: _opacityAnimation,
+                        child: BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
+                          builder: (context, state) {
+                            return CustomTextFormField(
+                              onChanged: (value) {
+                                context.read<UserProfileFormBloc>().add(NameChanged(value));
+                              },
+                              controller: _nameController,
+                              hintText: 'Enter Your Name',
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your name';
+                                }
+                                return null;
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      
+                      // Flexible space that adjusts based on keyboard visibility
+                      Expanded(
+                        child: !isKeyboardVisible
+                            ? const SizedBox()
+                            : SizedBox(height: viewInsets.bottom),
+                      ),
+                      
+                      // Next Button
+                      FadeTransition(
+                        opacity: _opacityAnimation,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            bottom: isKeyboardVisible ? viewInsets.bottom + 16 : 16,
+                          ),
+                          child: Align(
+                            alignment: Alignment.bottomRight,
+                            child: CustomNextButton(
+                              onPressed: () => _handleNextButton(context),
+                              height: size.height * 0.06,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
