@@ -11,8 +11,7 @@ import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_state.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_textfield.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
-  final String userId;
-  const AccountSettingsScreen({super.key, required this.userId});
+  const AccountSettingsScreen({super.key,});
 
   @override
   State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
@@ -81,7 +80,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       // Get user ID from your auth service or state management
       // final userId = await _authService.getCurrentUserId();
       context.read<DeleteAccountBloc>().add(
-            DeleteAccountRequested(userId: widget.userId),
+            DeleteAccountRequested(),
           );
     }
   }
@@ -175,7 +174,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Widget _buildExpansionTile(String title, List<Widget> children) {
-    print(widget.userId);
     return ExpansionTile(
       title: Text(title, style: const TextStyle(color: Colors.white)),
       backgroundColor: Colors.grey[900],
@@ -253,14 +251,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'Account',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
             ),
             SliverList(
@@ -284,9 +274,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   : () {
                                       if (reportController.text.isNotEmpty) {
                                         context.read<ReportBugBloc>().add(
-                                              ReportBugSubmitted(
-                                                userId: widget
-                                                    .userId, // Get from auth service
+                                              ReportBugSubmitted( // Get from auth service
                                                 report: reportController.text,
                                               ),
                                             );

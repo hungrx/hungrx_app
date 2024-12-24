@@ -1,6 +1,6 @@
 abstract class GoalSettingsEvent {}
 
 class FetchGoalSettings extends GoalSettingsEvent {
-  final String userId;
-  FetchGoalSettings(this.userId);
+  // Removed userId parameter since it will be fetched from AuthService
+  FetchGoalSettings();
 }

@@ -1,12 +1,18 @@
 import 'package:bloc/bloc.dart';
 import 'package:hungrx_app/data/repositories/get_profile_details_repository.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_state.dart';
 
 class GetProfileDetailsBloc extends Bloc<GetProfileDetailsEvent, GetProfileDetailsState> {
   final GetProfileDetailsRepository repository;
+  final AuthService _authService;
 
-  GetProfileDetailsBloc({required this.repository}) : super(GetProfileDetailsInitial()) {
+  GetProfileDetailsBloc({
+    required this.repository,
+    required AuthService authService,
+  }) : _authService = authService,
+       super(GetProfileDetailsInitial()) {
     on<FetchProfileDetails>(_onFetchProfileDetails);
   }
 
@@ -16,7 +22,13 @@ class GetProfileDetailsBloc extends Bloc<GetProfileDetailsEvent, GetProfileDetai
   ) async {
     emit(GetProfileDetailsLoading());
     try {
-      final profileDetails = await repository.getProfileDetails(event.userId);
+      final userId = await _authService.getUserId();
+      if (userId == null) {
+        emit(GetProfileDetailsFailure('User not logged in'));
+        return;
+      }
+
+      final profileDetails = await repository.getProfileDetails(userId);
       emit(GetProfileDetailsSuccess(profileDetails));
     } catch (e) {
       emit(GetProfileDetailsFailure(e.toString()));

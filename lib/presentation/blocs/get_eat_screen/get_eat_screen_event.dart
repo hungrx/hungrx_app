@@ -1,6 +1,6 @@
 abstract class EatScreenEvent {}
 
 class GetEatScreenDataEvent extends EatScreenEvent {
-  final String userId;
-  GetEatScreenDataEvent(this.userId);
+  // Removed userId parameter since it will be fetched from AuthService
+  GetEatScreenDataEvent();
 }

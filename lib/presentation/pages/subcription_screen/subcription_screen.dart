@@ -21,7 +21,7 @@ class SubscriptionScreen extends StatelessWidget {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16,),
+          padding: const EdgeInsets.only(left: 16, right: 16,top: 50),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,15 +30,8 @@ class SubscriptionScreen extends StatelessWidget {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // IconButton(
-                    //   icon: const Icon(Icons.close, color: Colors.white),
-                    //   onPressed: () => Navigator.pop(context),
-                    // ),
                   ],
                 ),
-               
-                
-                // Title Section
                 const Text(
                   'Say hello to\nyour best self.',
                   style: TextStyle(

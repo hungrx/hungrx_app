@@ -7,7 +7,6 @@ import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_i
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_state.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_event.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/widget/food_delete_dialog.dart';
 import 'package:intl/intl.dart';
@@ -30,25 +29,17 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
     super.initState();
     selectedDate = DateTime.now();
     // Load user ID when screen initializes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadUserId();
-    });
-  }
+    _fetchDailyInsightData();
 
-  void _loadUserId() {
-    context.read<UserBloc>().add(LoadUserId());
   }
 
   void _fetchDailyInsightData() {
-    if (userId != null) {
-      final formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
-      context.read<DailyInsightBloc>().add(
-            GetDailyInsightData(
-              userId: userId!,
-              date: formattedDate,
-            ),
-          );
-    }
+    final formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
+    context.read<DailyInsightBloc>().add(
+          GetDailyInsightData(
+            date: formattedDate,
+          ),
+        );
   }
 
   @override
@@ -58,19 +49,6 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
       body: SafeArea(
         child: MultiBlocListener(
           listeners: [
-            BlocListener<UserBloc, UserState>(
-              // Remove listenWhen to ensure we catch all state changes
-              listener: (context, userState) {
-                print(userState.userId);
-                if (userState.userId != null && userState.userId != userId) {
-
-                  setState(() {
-                    userId = userState.userId;
-                  });
-                  _fetchDailyInsightData();
-                }
-              },
-            ),
             BlocListener<DailyInsightBloc, DailyInsightState>(
               listener: (context, state) {
                 if (state is DailyInsightError) {
@@ -86,11 +64,12 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
               if (userState.userId == null) {
                 return const Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
                   ),
                 );
               }
-              
+
               return Column(
                 children: [
                   _buildHeader(),
@@ -249,7 +228,9 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: (){_fetchDailyInsightData();},
+                  onPressed: () {
+                    _fetchDailyInsightData();
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.buttonColors,
                   ),
@@ -405,7 +386,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
               mealTitle: title,
               date: data.date,
               consumedFood: data.consumedFood,
-              userId: userId??"",
+              userId: userId ?? "",
               food: food,
               // onDelete: (foodItem) {
               //   // Implement your delete logic here
@@ -502,47 +483,4 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
       ),
     );
   }
-
-  // void _showDeleteDialog(String foodName) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         backgroundColor: AppColors.tileColor,
-  //         title: Text('Delete $foodName?',
-  //             style: const TextStyle(color: Colors.white)),
-  //         content: Text(
-  //             'Are you sure you want to remove $foodName from your meal list?',
-  //             style: const TextStyle(color: Colors.grey)),
-  //         actions: <Widget>[
-  //           TextButton(
-  //             child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //           ),
-  //           TextButton(
-  //             child: const Text('Delete', style: TextStyle(color: Colors.red)),
-  //             onPressed: () {
-  //               // Implement delete functionality here
-  //               // For now, we'll just close the dialog
-  //               Navigator.of(context).pop();
-  //               _showDeleteConfirmation(foodName);
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
-  // void _showDeleteConfirmation(String foodName) {
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(
-  //       content: Text('$foodName has been deleted from your meal list.'),
-  //       backgroundColor: Colors.red,
-  //       duration: const Duration(seconds: 2),
-  //     ),
-  //   );
-  // }
 }

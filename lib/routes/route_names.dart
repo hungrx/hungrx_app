@@ -33,5 +33,12 @@ class RouteNames {
   static const String foodDetail = 'foodDetail';
   static const String editGoalSettings = 'editGoalSettings';
   static const String restarantSearch = 'restarantSearch';
+  static const String logMealScreen = 'logMealScreen';
+  static const String dailyInsightScreen = 'dailyInsightScreen';
+  static const String basicInformationScreen = 'basicInformationScreen';
+  static const String goalSettingsScreen = 'goalSettingsScreen';
+  static const String subscriptionScreen = 'subscriptionScreen';
+  static const String helpSupportScreen = 'helpSupportScreen';
+  static const String policiesScreen = 'policiesScreen';
 
 }

@@ -15,6 +15,7 @@ import 'package:hungrx_app/data/datasources/api/eat_screen/get_search_history_lo
 import 'package:hungrx_app/data/datasources/api/home_meals/logmeal_search_history_api.dart';
 import 'package:hungrx_app/data/datasources/api/home_meals/meal_type_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/get_profile_details_api.dart';
+import 'package:hungrx_app/data/datasources/api/profile_edit_screen/goal_settings_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/report_bug_api.dart';
 import 'package:hungrx_app/data/datasources/api/dashboard_screen/streak_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/tdee_api_service.dart';
@@ -27,6 +28,7 @@ import 'package:hungrx_app/data/datasources/api/weight_screen/weight_history_api
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_update_api.dart';
 import 'package:hungrx_app/data/repositories/connectivity_repository.dart';
 import 'package:hungrx_app/data/repositories/daily_insight_screen/daily_insight_repository.dart';
+import 'package:hungrx_app/data/repositories/goal_settings_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/delete_account_repository.dart';
 import 'package:hungrx_app/data/repositories/daily_insight_screen/delete_consumed_food_repository.dart';
 import 'package:hungrx_app/data/repositories/eat_screen/eat_screen_repository.dart';
@@ -61,6 +63,7 @@ import 'package:hungrx_app/domain/usecases/eat_screen/get_eat_screen_usecase.dar
 import 'package:hungrx_app/domain/usecases/home_meals_screen/get_meal_types_usecase.dart';
 import 'package:hungrx_app/domain/usecases/eat_screen/get_search_history_log_usecase.dart';
 import 'package:hungrx_app/domain/usecases/dashboad_screen/get_streak_usecase.dart';
+import 'package:hungrx_app/domain/usecases/profile_setting_screen/get_goal_settings_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_screen/get_suggested_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_screen/search_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/weight_screen/get_weight_history_usecase.dart';
@@ -81,6 +84,8 @@ import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_bloc
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
@@ -129,8 +134,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final suggestedRestaurantsApi = SuggestedRestaurantsApi();
-  final suggestedRestaurantsRepository = SuggestedRestaurantsRepository(suggestedRestaurantsApi);
-  final getSuggestedRestaurantsUseCase = GetSuggestedRestaurantsUseCase(suggestedRestaurantsRepository);
+    final suggestedRestaurantsRepository =
+        SuggestedRestaurantsRepository(suggestedRestaurantsApi);
+    final getSuggestedRestaurantsUseCase =
+        GetSuggestedRestaurantsUseCase(suggestedRestaurantsRepository);
     final reportBugApi = ReportBugApi();
     final reportBugRepository = ReportBugRepository(reportBugApi);
     final reportBugUseCase = ReportBugUseCase(reportBugRepository);
@@ -184,6 +191,7 @@ class MyApp extends StatelessWidget {
             repository: GetProfileDetailsRepository(
               GetProfileDetailsApi(),
             ),
+            authService: authService,
           ),
         ),
         BlocProvider<DeleteAccountBloc>(
@@ -218,11 +226,12 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider(
-          create: (context) => ReportBugBloc(reportBugUseCase),
+          create: (context) => ReportBugBloc(reportBugUseCase,authService,),
         ),
 
         BlocProvider<SuggestedRestaurantsBloc>(
-          create: (context) => SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase),
+          create: (context) =>
+              SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase),
         ),
 
         BlocProvider(
@@ -272,11 +281,23 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<DailyInsightBloc>(
           create: (context) => DailyInsightBloc(
-            DailyInsightRepository(
-              DailyInsightDataSource(),
-            ),
-          ),
+              DailyInsightRepository(
+                DailyInsightDataSource(),
+              ),
+              authService),
         ),
+
+        BlocProvider(
+          create: (context) => GoalSettingsBloc(
+            GetGoalSettingsUseCase(
+              GoalSettingsRepository(
+                GoalSettingsApi(),
+              ),
+            ),
+            authService,
+          )..add(FetchGoalSettings()),
+        ),
+
         BlocProvider<WeightHistoryBloc>(
           create: (context) => WeightHistoryBloc(getWeightHistoryUseCase
               // Add your repository/usecase here
@@ -288,7 +309,7 @@ class MyApp extends StatelessWidget {
           )..add(FetchMealTypes()),
         ),
         BlocProvider<EatScreenBloc>(
-          create: (context) => EatScreenBloc(getEatScreenUseCase),
+          create: (context) => EatScreenBloc(getEatScreenUseCase, authService),
         ),
         BlocProvider<StreakBloc>(
           create: (context) => StreakBloc(getStreakUseCase, authService),

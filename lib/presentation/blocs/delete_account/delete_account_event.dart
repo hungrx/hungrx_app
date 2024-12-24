@@ -1,7 +1,6 @@
 abstract class DeleteAccountEvent {}
 
 class DeleteAccountRequested extends DeleteAccountEvent {
-  final String userId;
-
-  DeleteAccountRequested({required this.userId});
+  // Removed userId parameter since it will be fetched from AuthService
+  DeleteAccountRequested();
 }

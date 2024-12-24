@@ -6,13 +6,6 @@ import 'package:hungrx_app/data/Models/profile_screen/get_profile_details_model.
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_state.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
-import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_informaion_screen.dart';
-import 'package:hungrx_app/presentation/pages/subcription_screen/subcription_screen.dart';
-import 'package:hungrx_app/presentation/pages/userprofile_screens/about_screen/about_screen.dart';
-import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/goal_settings_screen.dart';
-import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/help_support.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -24,31 +17,19 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
-  late GetProfileDetailsBloc _bloc;
+  // late GetProfileDetailsBloc _bloc;
   GetProfileDetailsModel? _cachedProfileDetails;
   String? userId;
 
   @override
   void initState() {
     super.initState();
-    _bloc = context.read<GetProfileDetailsBloc>();
 
-    // Add post-frame callback to ensure context is available
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userState = context.read<UserBloc>().state;
-      if (userState.userId != null) {
-        setState(() {
-          userId = userState.userId;
-        });
-        _fetchProfileDetails();
-      }
-    });
+    _fetchProfileDetails();
   }
 
   void _fetchProfileDetails() {
-    if (userId != null) {
-      _bloc.add(FetchProfileDetails(userId: userId!));
-    }
+    context.read<GetProfileDetailsBloc>().add(FetchProfileDetails());
   }
 
   @override
@@ -56,68 +37,54 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: MultiBlocListener(
-          listeners: [
-            BlocListener<UserBloc, UserState>(
-              listener: (context, state) {
-                if (state.userId != null && state.userId != userId) {
-                  setState(() {
-                    userId = state.userId;
-                  });
-                  _fetchProfileDetails();
-                }
-              },
-            ),
-          ],
-          child: RefreshIndicator(
-            onRefresh: () async => _fetchProfileDetails(),
-            child: BlocConsumer<GetProfileDetailsBloc, GetProfileDetailsState>(
-              listener: (context, state) {
-                if (state is GetProfileDetailsFailure) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.error),
-                      action: SnackBarAction(
-                        label: 'Retry',
-                        onPressed: _fetchProfileDetails,
-                      ),
+        child: RefreshIndicator(
+          onRefresh: () async => _fetchProfileDetails(),
+          child: BlocConsumer<GetProfileDetailsBloc, GetProfileDetailsState>(
+            listener: (context, state) {
+              if (state is GetProfileDetailsFailure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.error),
+                    action: SnackBarAction(
+                      label: 'Retry',
+                      onPressed: _fetchProfileDetails,
                     ),
-                  );
-                } else if (state is GetProfileDetailsSuccess) {
-                  _cachedProfileDetails = state.profileDetails;
-                }
-              },
-              builder: (context, state) {
-                // Show skeleton loading if userId is null
-                if (userId == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                return SingleChildScrollView(
-                  child: Stack(
-                    children: [
-                      Column(
-                        children: [
-                          _buildHeader(context, _cachedProfileDetails),
-                          _buildUserStats(_cachedProfileDetails),
-                          _buildPersonalDetails(context, userId),
-                          _buildAppSettings(),
-                          _buildInviteSection(),
-                        ],
-                      ),
-                      // Show loading overlay only when fetching new data
-                      if (state is GetProfileDetailsLoading &&
-                          _cachedProfileDetails == null)
-                        // _buildLoadingOverlay(),
-                        // Show error overlay only on initial load failure
-                        if (state is GetProfileDetailsFailure &&
-                            _cachedProfileDetails == null)
-                          _buildErrorOverlay(),
-                    ],
                   ),
                 );
-              },
-            ),
+              } else if (state is GetProfileDetailsSuccess) {
+                _cachedProfileDetails = state.profileDetails;
+              }
+            },
+            builder: (context, state) {
+              // Show skeleton loading if userId is null
+              // if (userId == null) {
+              //   return const Center(child: CircularProgressIndicator());
+              // }
+
+              return SingleChildScrollView(
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        _buildHeader(context, _cachedProfileDetails),
+                        _buildUserStats(_cachedProfileDetails),
+                        _buildPersonalDetails(context, userId),
+                        _buildAppSettings(),
+                        _buildInviteSection(),
+                      ],
+                    ),
+                    // Show loading overlay only when fetching new data
+                    if (state is GetProfileDetailsLoading &&
+                        _cachedProfileDetails == null)
+                      // _buildLoadingOverlay(),
+                      // Show error overlay only on initial load failure
+                      if (state is GetProfileDetailsFailure &&
+                          _cachedProfileDetails == null)
+                        _buildErrorOverlay(),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -245,28 +212,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           'Basic Information',
           'Height, weight, age, gender...',
           () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const BasicInformationScreen()),
-            );
+            context.pushNamed(RouteNames.basicInformationScreen);
           },
         ),
         _buildDetailItem(Icons.flag_outlined, 'Primary Goal', 'Gain weight...',
             () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => GoalSettingsScreen(
-                      userId: userId,
-                    )),
-          );
+          context.pushNamed(RouteNames.goalSettingsScreen, extra: {
+            'userId': userId,
+          });
         }),
         _buildDetailItem(Icons.payment, 'Subscription', 'Monthly plans...', () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const SubscriptionScreen()),
-          );
+          context.pushNamed(RouteNames.subscriptionScreen);
         }),
       ],
     );
@@ -292,17 +248,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         }),
         _buildDetailItem(Icons.info_outline, 'About',
             'About us, Privacy Policy, app version', () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const PoliciesScreen()),
-          );
+          context.pushNamed(RouteNames.policiesScreen);
         }),
         _buildDetailItem(Icons.help_outline, 'Help & Support',
             'Help, feedbacks, social media', () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
-          );
+          context.pushNamed(RouteNames.helpSupportScreen);
         }),
       ],
     );

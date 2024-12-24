@@ -7,10 +7,6 @@ import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_searc
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_state.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
-import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
-import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 
 class EatScreen extends StatefulWidget {
@@ -27,19 +23,11 @@ class _EatScreenState extends State<EatScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userState = context.read<UserBloc>().state;
-      if (userState.userId != null) {
-        setState(() {
-          userId = userState.userId;
-        });
-        _loadEatScreenData(userState.userId!);
-      }
-    });
+    _loadEatScreenData();
   }
 
-  void _loadEatScreenData(String userId) {
-    context.read<EatScreenBloc>().add(GetEatScreenDataEvent(userId));
+  void _loadEatScreenData() {
+    context.read<EatScreenBloc>().add(GetEatScreenDataEvent());
   }
 
   @override
@@ -47,103 +35,78 @@ class _EatScreenState extends State<EatScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: MultiBlocListener(
-          listeners: [
-            BlocListener<UserBloc, UserState>(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            if (userId != null) {
+              _loadEatScreenData();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: BlocConsumer<EatScreenBloc, EatScreenState>(
               listener: (context, state) {
-                if (state.userId != null && state.userId != userId) {
-                  setState(() {
-                    userId = state.userId;
-                  });
-                  _loadEatScreenData(state.userId!);
+                if (state is EatScreenLoaded) {
+                  _cachedData = state.data.data;
+                } else if (state is EatScreenError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      action: SnackBarAction(
+                        label: 'Retry',
+                        onPressed: () {
+                          if (userId != null) {
+                            _loadEatScreenData();
+                          }
+                        },
+                      ),
+                    ),
+                  );
                 }
               },
-            ),
-          ],
-          child: RefreshIndicator(
-            onRefresh: () async {
-              if (userId != null) {
-                _loadEatScreenData(userId!);
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: BlocConsumer<EatScreenBloc, EatScreenState>(
-                listener: (context, state) {
-                  if (state is EatScreenLoaded) {
-                    _cachedData = state.data.data;
-                  } else if (state is EatScreenError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.message),
-                        action: SnackBarAction(
-                          label: 'Retry',
-                          onPressed: () {
-                            if (userId != null) {
-                              _loadEatScreenData(userId!);
-                            }
-                          },
-                        ),
+              builder: (context, state) {
+                // Show loading indicator only if userId is null
+                // if (userId == null) {
+                //   return const Center(
+                //     child: CircularProgressIndicator(
+                //       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                //     ),
+                //   );
+                // }
+        
+                return Stack(
+                  children: [
+                    SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(_cachedData),
+                          const SizedBox(height: 20),
+                          _buildSearchBar(context),
+                          const SizedBox(height: 20),
+                          _buildCalorieBudget(
+                              _cachedData?.dailyCalorieGoal ?? '0'),
+                          const SizedBox(height: 20),
+                          _buildOptionsGrid(),
+                          _buildEnjoyCalories(),
+                        ],
                       ),
-                    );
-                  }
-                },
-                builder: (context, state) {
-                  // Show loading indicator only if userId is null
-                  if (userId == null) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    );
-                  }
-
-                  return Stack(
-                    children: [
-                      SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeader(_cachedData),
-                            const SizedBox(height: 20),
-                            _buildSearchBar(context),
-                            const SizedBox(height: 20),
-                            _buildCalorieBudget(
-                                _cachedData?.dailyCalorieGoal ?? '0'),
-                            const SizedBox(height: 20),
-                            _buildOptionsGrid(),
-                            _buildEnjoyCalories(),
-                          ],
-                        ),
-                      ),
-                      // Show loading overlay only during initial load
-                      if (state is EatScreenLoading && _cachedData == null)
-
-                        // _buildLoadingOverlay(),{}
-                        // Show error overlay only during initial load failure
-                        if (state is EatScreenError && _cachedData == null)
-                          _buildErrorOverlay("An error occurred")
-                    ],
-                  );
-                },
-              ),
+                    ),
+                    // Show loading overlay only during initial load
+                    if (state is EatScreenLoading && _cachedData == null)
+        
+                      // _buildLoadingOverlay(),{}
+                      // Show error overlay only during initial load failure
+                      if (state is EatScreenError && _cachedData == null)
+                        _buildErrorOverlay("An error occurred")
+                  ],
+                );
+              },
             ),
           ),
         ),
       ),
     );
   }
-
-  // Widget _buildLoadingOverlay() {
-  //   return Container(
-  //     color: Colors.black.withOpacity(0.5),
-  //     child: const Center(
-  //       child: CircularProgressIndicator(
-  //         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildErrorOverlay(String message) {
     return Container(
@@ -161,7 +124,7 @@ class _EatScreenState extends State<EatScreen> {
             ElevatedButton(
               onPressed: () {
                 if (userId != null) {
-                  _loadEatScreenData(userId!);
+                  _loadEatScreenData();
                 }
               },
               child: const Text('Retry'),
@@ -187,7 +150,7 @@ class _EatScreenState extends State<EatScreen> {
         // const CircleAvatar(
         //   radius: 25,
         //   backgroundImage: AssetImage('assets/images/dp.png') as ImageProvider,
-          
+
         //   // data?.profilePhoto != null
         //   //     ? NetworkImage(data!.profilePhoto!)
         //   //     : const AssetImage('assets/images/dp.png') as ImageProvider,
@@ -257,7 +220,6 @@ class _EatScreenState extends State<EatScreen> {
 
   Widget _buildOptionsGrid() {
     return Row(
-      
       children: [
         Expanded(
             child: _buildOptionCard(
@@ -265,10 +227,11 @@ class _EatScreenState extends State<EatScreen> {
           'Discover Nearby Restaurant Menus That Fit Your Calorie Budget',
           'assets/images/burger.png',
           () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const RestaurantScreen()),
-            );
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(builder: (context) => const RestaurantScreen()),
+            // );
+            context.pushNamed(RouteNames.restaurants);
           },
         )),
         const SizedBox(width: 16),
@@ -278,10 +241,7 @@ class _EatScreenState extends State<EatScreen> {
           'Log what you eat from home or grocery stores for better calorie management.',
           'assets/images/piza.png',
           () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const LogMealScreen()),
-            );
+            context.pushNamed(RouteNames.logMealScreen);
           },
         )),
       ],

@@ -4,13 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/data/Models/profile_screen/update_goal_settings_model.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_goal_settings_api.dart';
 import 'package:hungrx_app/data/repositories/update_goal_settings_repository.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/domain/usecases/profile_screen/update_goal_settings_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_state.dart';
 
 class GoalSettingsEditScreen extends StatefulWidget {
-  final String userId;
   final String goal;
   final String targetWeight;
   final double weightGainRate;
@@ -20,7 +20,8 @@ class GoalSettingsEditScreen extends StatefulWidget {
   final int currentWeight;
 
   const GoalSettingsEditScreen(
-      {super.key,
+      {
+        super.key,
       required this.goal,
       required this.targetWeight,
       required this.isMetric,
@@ -28,7 +29,7 @@ class GoalSettingsEditScreen extends StatefulWidget {
       required this.weightGainRate,
       required this.activityLevel,
       required this.mealsPerDay,
-      required this.userId});
+     });
 
   @override
   State<GoalSettingsEditScreen> createState() => _GoalSettingsEditScreenState();
@@ -41,6 +42,8 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
   late String _activityLevel;
   late int _mealsPerDay;
   late UpdateGoalSettingsBloc _bloc;
+   final AuthService _authService = AuthService();
+  String? _userId;
 
   @override
   void initState() {
@@ -57,7 +60,14 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
         ),
       ),
     );
+    _initializeUserId();
   }
+  Future<void> _initializeUserId() async {
+    final userId = await _authService.getUserId();
+    setState(() {
+      _userId = userId;
+    });
+  } 
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +80,7 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
               const SnackBar(
                   content: Text('Goal settings updated successfully')),
             );
-            context.pop(state.settings);
+             Navigator.pop(context, state.settings); 
           } else if (state is UpdateGoalSettingsFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.error)),
@@ -364,7 +374,7 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
                 ? null
                 : () {
                     final settings = UpdateGoalSettingsModel(
-                      userId: widget.userId,
+                      userId: _userId??"",
                       goal: _goal,
                       targetWeight: _targetWeight,
                       weightGainRate: _weightGainRate,

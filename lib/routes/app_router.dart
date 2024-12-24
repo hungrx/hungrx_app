@@ -20,6 +20,8 @@ import 'package:hungrx_app/presentation/layout/root_layout.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
+import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_informaion_screen.dart';
+import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/feedbacks_widget.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/widgets/search_widget.dart';
@@ -33,11 +35,17 @@ import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/use
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/user_info_two.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/userr_info_one.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/dashboard_screen.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/log_meal_screen.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/food_search_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/restaurent_menu_screen.dart';
+import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/widgets/restaurant_search_screen.dart';
+import 'package:hungrx_app/presentation/pages/subcription_screen/subcription_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/about_screen/about_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/edit_goal_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/goal_settings_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/help_support.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/presentation/pages/water_intake_screeen/water_intake.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_picker.dart';
@@ -100,11 +108,9 @@ class AppRouter {
 
           GoRoute(
             path: '/editGoalSettings',
-            name: RouteNames.editGoalSettings,
             builder: (context, state) {
               final extra = state.extra as Map<String, dynamic>;
               return GoalSettingsEditScreen(
-                userId: extra['userId'] as String,
                 goal: extra['goal'] as String,
                 targetWeight: extra['targetWeight'] as String,
                 isMetric: extra['isMetric'] as bool,
@@ -326,24 +332,63 @@ class AppRouter {
         path: '/accountSettings',
         name: RouteNames.accountSettings,
         builder: (BuildContext context, GoRouterState state) {
-          final extra = state.extra as Map<String, dynamic>;
-          return AccountSettingsScreen(
-            userId: extra['userId'] as String,
-          ); // Replace with actual HomeScreen
+          return const AccountSettingsScreen(); // Replace with actual HomeScreen
         },
       ),
       GoRoute(
         path: '/restaurants',
         name: RouteNames.restaurants,
         builder: (BuildContext context, GoRouterState state) {
-          return const Placeholder(); // Replace with actual RestaurantsScreen
+          return const RestaurantScreen(); // Replace with actual RestaurantsScreen
         },
       ),
       GoRoute(
-        path: '/restaurant-details',
-        name: RouteNames.restaurantDetails,
+        path: '/logMealScreen',
+        name: RouteNames.logMealScreen,
         builder: (BuildContext context, GoRouterState state) {
-          return const Placeholder(); // Replace with actual RestaurantDetailsScreen
+          return const LogMealScreen(); // Replace with actual RestaurantsScreen
+        },
+      ),
+      GoRoute(
+        path: '/dailyInsightScreen',
+        name: RouteNames.dailyInsightScreen,
+        builder: (BuildContext context, GoRouterState state) {
+          return const DailyInsightScreen(); // Replace with actual RestaurantsScreen
+        },
+      ),
+      GoRoute(
+        path: '/basicInformationScreen',
+        name: RouteNames.basicInformationScreen,
+        builder: (BuildContext context, GoRouterState state) {
+          return const BasicInformationScreen(); // Replace with actual RestaurantsScreen
+        },
+      ),
+      GoRoute(
+        path: '/goalSettingsScreen',
+        name: RouteNames.goalSettingsScreen,
+        builder: (BuildContext context, GoRouterState state) {
+          return const GoalSettingsScreen(); // Replace with actual RestaurantsScreen
+        },
+      ),
+      GoRoute(
+        path: '/subscriptionScreen',
+        name: RouteNames.subscriptionScreen,
+        builder: (BuildContext context, GoRouterState state) {
+          return const SubscriptionScreen(); // Replace with actual RestaurantDetailsScreen
+        },
+      ),
+      GoRoute(
+        path: '/helpSupportScreen',
+        name: RouteNames.helpSupportScreen,
+        builder: (BuildContext context, GoRouterState state) {
+          return const HelpSupportScreen(); // Replace with actual RestaurantDetailsScreen
+        },
+      ),
+      GoRoute(
+        path: '/policiesScreen',
+        name: RouteNames.policiesScreen,
+        builder: (BuildContext context, GoRouterState state) {
+          return const PoliciesScreen(); // Replace with actual RestaurantDetailsScreen
         },
       ),
       GoRoute(

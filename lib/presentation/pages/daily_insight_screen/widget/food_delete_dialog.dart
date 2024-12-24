@@ -36,7 +36,7 @@ class FoodDetailsDialog extends StatelessWidget {
               Navigator.of(context).pop();
               context.read<DailyInsightBloc>().add(
                     GetDailyInsightData(
-                      userId: userId,
+                      
                       date: date,
                     ),
                   );

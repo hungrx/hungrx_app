@@ -25,7 +25,13 @@ class DeleteAccountBloc extends Bloc<DeleteAccountEvent, DeleteAccountState> {
     emit(DeleteAccountLoading());
 
     try {
-      final response = await _deleteAccountUseCase.execute(event.userId);
+      final userId = await _authService.getUserId();
+      if (userId == null) {
+        emit(DeleteAccountFailure(error: 'User not logged in'));
+        return;
+      }
+
+      final response = await _deleteAccountUseCase.execute(userId);
       if (response.status == true) {
         // Use AuthService's logout method which properly clears all data
         await _authService.logout();

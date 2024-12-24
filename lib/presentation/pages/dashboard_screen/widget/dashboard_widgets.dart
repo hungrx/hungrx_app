@@ -6,7 +6,6 @@ import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/core/widgets/responsive_text.dart';
 import 'package:hungrx_app/data/Models/dashboad_screen/home_screen_model.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
-import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/animated_calorie_count.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -23,7 +22,7 @@ class DashboardWidgets {
 
   static Widget buildHeader(HomeData data, BuildContext context) {
     final isSmallScreen = MediaQuery.of(context).size.width < 360;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -48,73 +47,74 @@ class DashboardWidgets {
     );
   }
 
-  static Widget buildCalorieCounter(HomeData data, Stream<double>? calorieStream) {
-    return Builder(
-      builder: (context) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        final isSmallScreen = screenWidth < 360;
-        
-        return Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: getPadding(context, 0.04),
-            vertical: getPadding(context, 0.02),
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.tileColor,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    data.goalHeading,
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: getFontSize(context, 0.045),
-                      fontWeight: FontWeight.w800,
-                    ),
+  static Widget buildCalorieCounter(
+      HomeData data, Stream<double>? calorieStream) {
+    return Builder(builder: (context) {
+      final screenWidth = MediaQuery.of(context).size.width;
+      final isSmallScreen = screenWidth < 360;
+
+      return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: getPadding(context, 0.04),
+          vertical: getPadding(context, 0.02),
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.tileColor,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  data.goalHeading,
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: getFontSize(context, 0.045),
+                    fontWeight: FontWeight.w800,
                   ),
-                  Row(
-                    children: [
-                      AnimatedFlipCounter(
-                        thousandSeparator: ',',
-                        value: data.daysToReachGoal,
-                        textStyle: GoogleFonts.stickNoBills(
-                          color: Colors.white,
-                          fontSize: getFontSize(context, isSmallScreen ? 0.08 : 0.085),
-                          fontWeight: FontWeight.bold,
+                ),
+                Row(
+                  children: [
+                    AnimatedFlipCounter(
+                      thousandSeparator: ',',
+                      value: data.daysToReachGoal,
+                      textStyle: GoogleFonts.stickNoBills(
+                        color: Colors.white,
+                        fontSize:
+                            getFontSize(context, isSmallScreen ? 0.08 : 0.085),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: 0,
+                        left: getPadding(context, 0.01),
+                        top: getPadding(context, 0.025),
+                      ),
+                      child: Text(
+                        ' Days',
+                        style: GoogleFonts.stickNoBills(
+                          color: Colors.grey,
+                          fontSize: getFontSize(context, 0.04),
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom: 0,
-                          left: getPadding(context, 0.01),
-                          top: getPadding(context, 0.025),
-                        ),
-                        child: Text(
-                          ' Days',
-                          style: GoogleFonts.stickNoBills(
-                            color: Colors.grey,
-                            fontSize: getFontSize(context, 0.04),
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                ],
-              ),
-              AnimatedCalorieDisplay(initialData: data),
-            ],
-          ),
-        );
-      }
-    );
+                    )
+                  ],
+                ),
+              ],
+            ),
+            AnimatedCalorieDisplay(initialData: data),
+          ],
+        ),
+      );
+    });
   }
 
-  static Widget buildDailyTargetAndRemaining(HomeData data, BuildContext context) {
+  static Widget buildDailyTargetAndRemaining(
+      HomeData data, BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 360;
     final horizontalPadding = getPadding(context, 0.04);
@@ -150,7 +150,8 @@ class DashboardWidgets {
                       data.dailyCalorieGoal.toStringAsFixed(0),
                       style: GoogleFonts.stickNoBills(
                         color: Colors.white,
-                        fontSize: getFontSize(context, isSmallScreen ? 0.09 : 0.1),
+                        fontSize:
+                            getFontSize(context, isSmallScreen ? 0.09 : 0.1),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -176,10 +177,9 @@ class DashboardWidgets {
         SizedBox(width: getPadding(context, 0.04)),
         Expanded(
           child: GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const DailyInsightScreen()),
-            ),
+            onTap: () {
+              context.pushNamed(RouteNames.dailyInsightScreen);
+            },
             child: Container(
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
@@ -219,7 +219,8 @@ class DashboardWidgets {
                             data.remaining.toStringAsFixed(0),
                             style: GoogleFonts.stickNoBills(
                               color: Colors.white,
-                              fontSize: getFontSize(context, isSmallScreen ? 0.09 : 0.1),
+                              fontSize: getFontSize(
+                                  context, isSmallScreen ? 0.09 : 0.1),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -276,7 +277,8 @@ class DashboardWidgets {
                   'Feedbacks',
                   style: GoogleFonts.stickNoBills(
                     color: Colors.white,
-                    fontSize: getFontSize(context, isSmallScreen ? 0.07 : 0.075),
+                    fontSize:
+                        getFontSize(context, isSmallScreen ? 0.07 : 0.075),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -318,7 +320,8 @@ class DashboardWidgets {
                     data.weight,
                     style: GoogleFonts.stickNoBills(
                       color: Colors.white,
-                      fontSize: getFontSize(context, isSmallScreen ? 0.06 : 0.065),
+                      fontSize:
+                          getFontSize(context, isSmallScreen ? 0.06 : 0.065),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
