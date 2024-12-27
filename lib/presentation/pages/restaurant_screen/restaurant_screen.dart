@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_event.dart';
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_state.dart';
@@ -8,6 +9,7 @@ import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_re
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_event.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_state.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/widgets/restaurant_tile.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 
 class RestaurantScreen extends StatefulWidget {
   const RestaurantScreen({super.key});
@@ -17,6 +19,7 @@ class RestaurantScreen extends StatefulWidget {
 }
 
 class _RestaurantScreenState extends State<RestaurantScreen> {
+  bool showNearbyRestaurants = false;
   @override
   void initState() {
     super.initState();
@@ -24,15 +27,14 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
   }
 
   void _initializeData() {
-    // Initialize nearby restaurants data
-    context.read<NearbyRestaurantBloc>().add(FetchNearbyRestaurants());
-     context.read<SuggestedRestaurantsBloc>().add(FetchSuggestedRestaurants());
+    context.read<SuggestedRestaurantsBloc>().add(FetchSuggestedRestaurants());
   }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
@@ -50,7 +52,9 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildSearchBar(),
-                      _buildNearbyRestaurantsSection(),
+                      _buildNearbyRestaurantsButton(),
+                      if (showNearbyRestaurants)
+                        _buildNearbyRestaurantsSection(),
                       _buildSuggestedRestaurantsSection(),
                     ],
                   ),
@@ -66,16 +70,16 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
   Widget _buildHeader() {
     return Row(
       children: [
-             IconButton(
-            onPressed: () {
-              context.pop();
-            },
-            icon: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-              size: 24,
-            ),
+        IconButton(
+          onPressed: () {
+            context.pop();
+          },
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+            size: 24,
           ),
+        ),
         const Text(
           'Restaurants',
           style: TextStyle(
@@ -92,7 +96,9 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: GestureDetector(
-        onTap: () => context.push('/restarantSearch'),
+        onTap: () {
+          context.pushNamed(RouteNames.restarantSearch);
+        },
         child: Container(
           decoration: BoxDecoration(
             color: Colors.grey[900],
@@ -115,17 +121,48 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
+  Widget _buildNearbyRestaurantsButton() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          setState(() {
+            showNearbyRestaurants = true;
+          });
+          context.read<NearbyRestaurantBloc>().add(FetchNearbyRestaurants());
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.buttonColors,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        icon: const Icon(Icons.location_on, color: Colors.black),
+        label: const Text(
+          'Find Nearby Restaurants',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildNearbyRestaurantsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
           child: Text(
             'Nearby Restaurants',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -135,8 +172,11 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
             if (state is NearbyRestaurantLoading) {
               return const Center(
                 child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: CircularProgressIndicator(),
+                  padding: EdgeInsets.all(24.0),
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+                  ),
                 ),
               );
             } else if (state is NearbyRestaurantError) {
@@ -145,14 +185,16 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               if (state.restaurants.isEmpty) {
                 return _buildEmptyState('No nearby restaurants found');
               }
-              return ListView.builder(
+              return ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: state.restaurants.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final restaurant = state.restaurants[index];
                   return RestaurantItem(
-                    ontap: () => _onRestaurantTap(),
+                    ontap: () => _onRestaurantTap(restaurant.id),
                     name: restaurant.name,
                     imageUrl: 'https://via.placeholder.com/150',
                     rating:
@@ -164,66 +206,93 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                 },
               );
             }
+            return const SizedBox.shrink();
+          },
+        ),
+      ],
+    );
+  }
+
+  // Widget _buildInitialState() {
+  //   return const Center(
+  //     child: Padding(
+  //       padding: EdgeInsets.all(24.0),
+  //       child: Column(
+  //         mainAxisAlignment: MainAxisAlignment.center,
+  //         children: [
+  //           Icon(
+  //             Icons.location_searching,
+  //             color: Colors.grey,
+  //             size: 48,
+  //           ),
+  //           SizedBox(height: 16),
+  //           Text(
+  //             'Tap the button above to find restaurants near you',
+  //             style: TextStyle(
+  //               color: Colors.grey,
+  //               fontSize: 16,
+  //             ),
+  //             textAlign: TextAlign.center,
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+  Widget _buildSuggestedRestaurantsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          child: Text(
+            'Suggested For You',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        BlocBuilder<SuggestedRestaurantsBloc, SuggestedRestaurantsState>(
+          builder: (context, state) {
+            if (state is SuggestedRestaurantsLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (state is SuggestedRestaurantsError) {
+              return _buildErrorState(state.message);
+            } else if (state is SuggestedRestaurantsLoaded) {
+              if (state.restaurants.isEmpty) {
+                return _buildEmptyState('No suggested restaurants available');
+              }
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: state.restaurants.length,
+                itemBuilder: (context, index) {
+                  final restaurant = state.restaurants[index];
+                  return RestaurantItem(
+                    ontap: () {
+                      _onRestaurantTap(restaurant.id);
+                    },
+                    name: restaurant.name,
+                    imageUrl: 'https://via.placeholder.com/150',
+                    rating: "",
+                    address: restaurant.address ?? 'Address not available',
+                    distance: restaurant.distance != null
+                        ? '${(restaurant.distance! / 1000).toStringAsFixed(1)} km'
+                        : 'Distance not available',
+                  );
+                },
+              );
+            }
             return const SizedBox();
           },
         ),
       ],
     );
   }
-Widget _buildSuggestedRestaurantsSection() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-        child: Text(
-          'Suggested For You',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      BlocBuilder<SuggestedRestaurantsBloc, SuggestedRestaurantsState>(
-        builder: (context, state) {
-          if (state is SuggestedRestaurantsLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (state is SuggestedRestaurantsError) {
-            return _buildErrorState(state.message);
-          } else if (state is SuggestedRestaurantsLoaded) {
-            if (state.restaurants.isEmpty) {
-              return _buildEmptyState('No suggested restaurants available');
-            }
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: state.restaurants.length,
-              itemBuilder: (context, index) {
-                final restaurant = state.restaurants[index];
-                return RestaurantItem(
-                  ontap: () {
-                    _onRestaurantTap();
-                  },
-                  name: restaurant.name,
-                  imageUrl: 'https://via.placeholder.com/150',
-                  rating: "N/A",
-                  address: restaurant.address ?? 'Address not available',
-                  distance: restaurant.distance != null 
-                    ? '${(restaurant.distance! / 1000).toStringAsFixed(1)} km'
-                    : 'Distance not available',
-                );
-              },
-            );
-          }
-          return const SizedBox();
-        },
-      ),
-    ],
-  );
-}
 
   Widget _buildErrorState(String message) {
     return Center(
@@ -232,25 +301,10 @@ Widget _buildSuggestedRestaurantsSection() {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // const Icon(
-            //   Icons.error_outline,
-            //   color: Colors.red,
-            //   size: 48,
-            // ),
-            // const SizedBox(height: 16),
             Text(
               message,
               style: const TextStyle(color: Colors.white),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _initializeData,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Retry'),
             ),
           ],
         ),
@@ -282,10 +336,7 @@ Widget _buildSuggestedRestaurantsSection() {
     );
   }
 
-  void _onRestaurantTap() {
-    context.push('/menu');
+  void _onRestaurantTap(String? restaurantId) {
+    context.pushNamed(RouteNames.menu, extra: restaurantId);
   }
 }
-
-// lib/presentation/pages/restaurant/widgets/restaurant_item.dart
-

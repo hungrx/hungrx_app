@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
 
 class RestaurantItem extends StatelessWidget {
@@ -43,7 +44,7 @@ class RestaurantItem extends StatelessWidget {
                 child: const Icon(
                   Icons.restaurant,
                   size: 50, // Adjust the size of the icon
-                  color: Colors.white, // Icon color
+                  color: AppColors.buttonColors, // Icon color
                 ),
               ),
             ),
@@ -74,21 +75,21 @@ class RestaurantItem extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green,
+                            color: AppColors.buttonColors,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             children: [
                               const Icon(
                                 Icons.location_pin,
-                                color: Colors.white,
+                                color: Colors.black,
                                 size: 16,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 rating.toString(),
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

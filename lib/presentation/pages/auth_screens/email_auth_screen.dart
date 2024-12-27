@@ -278,7 +278,7 @@ class EmailAuthScreenState extends State<EmailAuthScreen> {
                     GoRouter.of(currentContext).go('/home');
                     ScaffoldMessenger.of(currentContext).showSnackBar(
                       const SnackBar(
-                        content: Text('Welcome back!'),
+                        content: Text('Welcome!'),
                         duration: Duration(seconds: 2),
                         behavior: SnackBarBehavior.floating,
                       ),

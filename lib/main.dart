@@ -21,6 +21,7 @@ import 'package:hungrx_app/data/datasources/api/dashboard_screen/streak_api_serv
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/tdee_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_basic_info_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/user_profile_api_client.dart';
+import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/restaurant_menu_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/nearby_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/search_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/suggested_restaurants_api.dart';
@@ -42,6 +43,7 @@ import 'package:hungrx_app/data/repositories/logmeal_search_history_repository.d
 import 'package:hungrx_app/data/repositories/meal_type_repository.dart';
 import 'package:hungrx_app/data/repositories/otp_repository.dart';
 import 'package:hungrx_app/data/repositories/report_bug_repository.dart';
+import 'package:hungrx_app/data/repositories/restaurant_menu_screen/restaurant_menu_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_screen/nearby_restaurant_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_screen/search_restaurant_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_screen/suggested_restaurants_repository.dart';
@@ -80,6 +82,7 @@ import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_bloc
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_delete_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
@@ -95,6 +98,7 @@ import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_me
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/otp_verify_bloc/auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/result_bloc/result_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_bloc.dart';
@@ -194,10 +198,21 @@ class MyApp extends StatelessWidget {
             authService: authService,
           ),
         ),
+        // !  cart bloc in food menu
+        BlocProvider<CartBloc>(
+          create: (context) => CartBloc(),
+        ),
         BlocProvider<DeleteAccountBloc>(
           create: (context) => DeleteAccountBloc(
             authService: authService,
             deleteAccountUseCase: deleteAccountUseCase,
+          ),
+        ),
+
+        BlocProvider<RestaurantMenuBloc>(
+          create: (context) => RestaurantMenuBloc(
+            repository: RestaurantMenuRepository(RestaurantMenuApi()),
+            authService: authService,
           ),
         ),
         BlocProvider<RestaurantSearchBloc>(
@@ -226,7 +241,10 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider(
-          create: (context) => ReportBugBloc(reportBugUseCase,authService,),
+          create: (context) => ReportBugBloc(
+            reportBugUseCase,
+            authService,
+          ),
         ),
 
         BlocProvider<SuggestedRestaurantsBloc>(

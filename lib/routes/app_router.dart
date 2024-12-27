@@ -94,11 +94,7 @@ class AppRouter {
             name: RouteNames.profile,
             builder: (context, state) => const UserProfileScreen(),
           ),
-          GoRoute(
-            path: '/restarantSearch',
-            name: RouteNames.restarantSearch,
-            builder: (context, state) => const RestaurantSearchScreen(),
-          ),
+
           // Cart route
           GoRoute(
             path: '/foodcart',
@@ -168,6 +164,11 @@ class AppRouter {
             child: const FeedbackDialog(),
           );
         },
+      ),
+      GoRoute(
+        path: '/restaurant-search',
+        name: RouteNames.restarantSearch,
+        builder: (context, state) => const RestaurantSearchScreen(),
       ),
       GoRoute(
         path: '/weight-tracking',
@@ -395,7 +396,10 @@ class AppRouter {
         path: '/menu',
         name: RouteNames.menu,
         builder: (BuildContext context, GoRouterState state) {
-          return const RestaurantMenuScreen(); // Replace with actual MenuScreen
+          final String? restaurantId = state.extra as String?;
+          return RestaurantMenuScreen(
+            restaurantId: restaurantId,
+          ); // Replace with actual MenuScreen
         },
       ),
 
