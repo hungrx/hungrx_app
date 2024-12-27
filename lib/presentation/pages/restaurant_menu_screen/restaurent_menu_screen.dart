@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/restaurant_menu_screen/restaurant_menu_response.dart';
-import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_state.dart';
+import 'package:hungrx_app/presentation/blocs/add_food_kart/food_kart_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/add_food_kart/food_kart_state.dart';
 import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_event.dart';
 import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_state.dart';
@@ -12,6 +12,7 @@ import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bl
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_event.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_state.dart';
 import 'package:hungrx_app/presentation/pages/calorie_calculation_screen/calculation_tracking.dart';
+import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/custom_expansion_panel.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/progress_bar.dart';
 import 'package:flutter_material_symbols/flutter_material_symbols.dart';
@@ -43,8 +44,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         );
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
+    // print("rest :${widget.restaurantId}");
     return BlocProvider(
       create: (context) => MenuExpansionBloc(),
       child: Scaffold(
@@ -197,6 +199,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Widget _buildMenuList(BuildContext context, RestaurantMenu menu) {
+    
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -211,30 +214,20 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   Widget _buildMenuCategory(BuildContext context, MenuCategory category) {
     return BlocBuilder<MenuExpansionBloc, MenuExpansionState>(
       builder: (context, state) {
-         debugPrint('Category ${category.id} - Expanded: ${state.expandedCategoryId == category.id}');
-        return ExpansionTile(
+        return CustomExpansionPanel(
           key: Key(category.id),
-          initiallyExpanded: state.expandedCategoryId == category.id,
+          title: category.categoryName,
+          isExpanded: state.expandedCategoryId == category.id,
           onExpansionChanged: (isExpanded) {
             context.read<MenuExpansionBloc>().add(ToggleCategory(category.id));
           },
-          title: Text(
-            category.categoryName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          collapsedIconColor: Colors.white,
-          iconColor: Colors.white,
-          backgroundColor: Colors.black,
-          collapsedBackgroundColor: Colors.black,
           children: [
             ...category.dishes.map((dish) => _buildMenuItem(dish)),
             ...category.subCategories.map(
-              (subCategory) =>
-                  _buildSubcategory(context, category.id, subCategory),
+              (subCategory) {
+                
+                return _buildSubcategory(context, category.id, subCategory);
+              },
             ),
           ],
         );
@@ -249,37 +242,28 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   ) {
     return BlocBuilder<MenuExpansionBloc, MenuExpansionState>(
       builder: (context, state) {
-        return Padding(
-          padding: const EdgeInsets.only(left: 16.0),
-          child: ExpansionTile(
-            key: Key('$parentCategoryId-${subCategory.id}'),
-            initiallyExpanded: state.expandedSubcategoryId == subCategory.id &&
-                state.expandedCategoryForSubcategory == parentCategoryId,
-            onExpansionChanged: (isExpanded) {
-              context.read<MenuExpansionBloc>().add(
-                    ToggleSubcategory(parentCategoryId, subCategory.id),
-                  );
-            },
-            title: Text(
-              subCategory.subCategoryName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-            collapsedIconColor: Colors.white,
-            iconColor: Colors.white,
-            backgroundColor: Colors.black,
-            collapsedBackgroundColor: Colors.black,
-            children:
-                subCategory.dishes.map((dish) => _buildMenuItem(dish)).toList(),
-          ),
+        
+        return CustomExpansionPanel(
+          key: Key('$parentCategoryId-${subCategory.id}'),
+          title: subCategory.subCategoryName,
+          isExpanded: state.expandedSubcategoryId == subCategory.id &&
+              state.expandedCategoryForSubcategory == parentCategoryId,
+          onExpansionChanged: (isExpanded) {
+            context.read<MenuExpansionBloc>().add(
+                  ToggleSubcategory(parentCategoryId, subCategory.id),
+                );
+          },
+          leftPadding: 16,
+          fontSize: 16,
+          children:
+              subCategory.dishes.map((dish) => _buildMenuItem(dish)).toList(),
         );
       },
     );
   }
 
   Widget _buildMenuItem(Dish dish) {
+      // print("dish :${dish.id}");
     final calories = dish.servingInfos.isNotEmpty
         ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
         : 'N/A';

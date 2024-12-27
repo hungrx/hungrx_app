@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_event.dart';
-import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_state.dart';
+import 'package:hungrx_app/presentation/blocs/add_food_kart/food_kart_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/add_food_kart/food_kart_event.dart';
+import 'package:hungrx_app/presentation/blocs/add_food_kart/food_kart_state.dart';
 
 class DishDetails extends StatefulWidget {
   final String name;
