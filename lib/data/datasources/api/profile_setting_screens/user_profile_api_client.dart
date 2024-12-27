@@ -13,8 +13,8 @@ class UserProfileApiClient {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(userProfile.toJson()),
       );
-print(response.body);
-print(response.statusCode);
+// print(response.body);
+// print(response.statusCode);
       if (response.statusCode != 200) {
         throw Exception('Failed to add user profile: ${response.body}');
       }

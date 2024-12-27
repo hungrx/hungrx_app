@@ -14,8 +14,8 @@ class ReportBugApi {
           'report': report,
         }),
       );
-print(response.body);
-print(response.statusCode);
+// print(response.body);
+// print(response.statusCode);
       if (response.statusCode == 201) {
         return json.decode(response.body);
       } else {

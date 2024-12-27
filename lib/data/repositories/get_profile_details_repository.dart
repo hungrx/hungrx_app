@@ -11,7 +11,7 @@ class GetProfileDetailsRepository {
       final data = await _api.getProfileDetails(userId);
       return GetProfileDetailsModel.fromJson(data);
     } catch (e) {
-      print(e);
+      // print(e);
       throw Exception('Repository error: $e');
     }
   }

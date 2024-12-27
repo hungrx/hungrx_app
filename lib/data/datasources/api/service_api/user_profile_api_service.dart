@@ -12,7 +12,7 @@ class UserProfileApiService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );
-      print("check user ${response.body}");
+      // print("check user ${response.body}");
       if (response.statusCode == 200) {
         return UserProfileCheckResponse.fromJson(json.decode(response.body));
       } else {

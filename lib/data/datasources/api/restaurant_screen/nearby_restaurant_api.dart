@@ -16,7 +16,7 @@ class NearbyRestaurantApi {
           '$baseUrl/users/nearby?latitude=$latitude&longitude=$longitude&radius=$radius&category=$category',
         ),
       );
-print(response.body);
+// print(response.body);
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {

@@ -22,7 +22,7 @@ class NearbyRestaurantRepository {
         latitude: position.latitude,
         longitude: position.longitude,
       );
-print(response['data']);
+// print(response['data']);
       if (response['success'] == true && response['data'] != null) {
         return List<NearbyRestaurantModel>.from(
           response['data'].map((x) => NearbyRestaurantModel.fromJson(x)),

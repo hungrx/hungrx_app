@@ -19,7 +19,7 @@ class SearchRestaurantApi {
         },
       );
 
-      print(response.body);
+      // print(response.body);
       
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);

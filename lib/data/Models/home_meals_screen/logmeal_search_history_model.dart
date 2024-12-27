@@ -26,8 +26,8 @@ class LogMealSearchHistoryModel {
         id: json['_id']?.toString() ?? '',
       );
     } catch (e) {
-      print('Error parsing LogMealSearchHistoryModel: $json');
-      print('Error details: $e');
+      // print('Error parsing LogMealSearchHistoryModel: $json');
+      // print('Error details: $e');
       rethrow;
     }
   }
@@ -55,8 +55,8 @@ class FoodItemModel {
         image: json['image']?.toString() ?? '',
       );
     } catch (e) {
-      print('Error parsing FoodItemModel: $json');
-      print('Error details: $e');
+      // print('Error parsing FoodItemModel: $json');
+      // print('Error details: $e');
       rethrow;
     }
   }
@@ -81,8 +81,8 @@ class SearchInfoModel {
         timestamp: json['timestamp']?.toString() ?? '',
       );
     } catch (e) {
-      print('Error parsing SearchInfoModel: $json');
-      print('Error details: $e');
+      // print('Error parsing SearchInfoModel: $json');
+      // print('Error details: $e');
       rethrow;
     }
   }

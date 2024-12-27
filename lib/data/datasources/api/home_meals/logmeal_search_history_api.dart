@@ -13,10 +13,10 @@ class LogMealSearchHistoryApi {
       if (userId.isEmpty || productId.isEmpty) {
       throw Exception('userId and productId cannot be empty');
     }
-    print('Request payload: ${json.encode({
-      'userId': userId,
-      'productId': productId,
-    })}');
+    // print('Request payload: ${json.encode({
+    //   'userId': userId,
+    //   'productId': productId,
+    // })}');
 
 
       final response = await http.post(

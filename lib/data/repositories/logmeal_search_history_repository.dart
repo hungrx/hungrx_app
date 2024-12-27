@@ -17,7 +17,7 @@ class LogMealSearchHistoryRepository {
       );
 
       // Print response for debugging
-      print('Repository response: $response');
+      // print('Repository response: $response');
 
       if (response['status'] == true && response['data'] != null) {
         return LogMealSearchHistoryModel.fromJson(response['data']);
@@ -25,7 +25,7 @@ class LogMealSearchHistoryRepository {
         throw Exception(response['message'] ?? 'Failed to add to history: Invalid response format');
       }
     } catch (e) {
-      print('Repository error details: $e');
+      // print('Repository error details: $e');
       if (e is FormatException) {
         throw Exception('Repository error: Invalid data format');
       } else if (e is TypeError) {

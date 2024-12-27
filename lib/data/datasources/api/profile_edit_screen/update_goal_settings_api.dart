@@ -12,8 +12,8 @@ class UpdateGoalSettingsApi {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(settings.toJson()),
       );
-      print(settings.userId);
-print(response.body);
+//       print(settings.userId);
+// print(response.body);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {

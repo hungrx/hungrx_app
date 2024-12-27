@@ -9,7 +9,7 @@ class GetProfileDetailsApi {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'userId': userId}),
       );
-print(response.body);
+// print(response.body);
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         if (data['status'] == true && data['data'] != null) {
@@ -19,7 +19,7 @@ print(response.body);
       }
       throw Exception('Failed to load profile details');
     } catch (e) {
-      print(e);
+      // print(e);
       throw Exception('Network error: $e');
     }
   }

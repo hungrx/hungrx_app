@@ -90,7 +90,7 @@ Future<void> logout() async {
       // Ensure USER_ID_KEY is definitely removed
       await prefs.remove(USER_ID_KEY);
     } catch (e) {
-      print('Error during logout: $e');
+      // print('Error during logout: $e');
       rethrow;
     }
   }
