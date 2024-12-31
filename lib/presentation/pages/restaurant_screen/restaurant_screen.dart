@@ -213,32 +213,6 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
-  // Widget _buildInitialState() {
-  //   return const Center(
-  //     child: Padding(
-  //       padding: EdgeInsets.all(24.0),
-  //       child: Column(
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: [
-  //           Icon(
-  //             Icons.location_searching,
-  //             color: Colors.grey,
-  //             size: 48,
-  //           ),
-  //           SizedBox(height: 16),
-  //           Text(
-  //             'Tap the button above to find restaurants near you',
-  //             style: TextStyle(
-  //               color: Colors.grey,
-  //               fontSize: 16,
-  //             ),
-  //             textAlign: TextAlign.center,
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
   Widget _buildSuggestedRestaurantsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,7 +220,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
           child: Text(
-            'Suggested For You',
+            'Restaurants',
             style: TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -278,8 +252,8 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                     },
                     name: restaurant.name,
                     imageUrl: 'https://via.placeholder.com/150',
-                    rating: "",
-                    address: restaurant.address ?? 'Address not available',
+                    rating: null,
+                    address: null,
                     distance: restaurant.distance != null
                         ? '${(restaurant.distance! / 1000).toStringAsFixed(1)} km'
                         : 'Distance not available',

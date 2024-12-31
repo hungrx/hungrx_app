@@ -56,11 +56,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               }
             },
             builder: (context, state) {
-              // Show skeleton loading if userId is null
-              // if (userId == null) {
-              //   return const Center(child: CircularProgressIndicator());
-              // }
-
               return SingleChildScrollView(
                 child: Stack(
                   children: [

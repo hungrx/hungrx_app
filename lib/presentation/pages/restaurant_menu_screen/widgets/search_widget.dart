@@ -10,11 +10,13 @@ import 'package:hungrx_app/presentation/blocs/manu_search/menu_search_state.dart
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
+  final String? restaurantId;
   final List<MenuCategory> categories;
 
   const SearchScreen({
     super.key,
     required this.categories,
+     this.restaurantId,
   });
 
   @override
@@ -164,6 +166,8 @@ Widget _buildDishItem(Dish dish) {
                   return FractionallySizedBox(
                     heightFactor: 0.7,
                     child: DishDetails(
+                      dishId: dish.id,
+                      restaurantId: widget.restaurantId,
                       name: dish.dishName,
                       description: dish.description,
                       imageUrl: null,
@@ -297,6 +301,8 @@ Widget _buildDishItem(Dish dish) {
                               return FractionallySizedBox(
                                 heightFactor: 0.7,
                                 child: DishDetails(
+                                  dishId: dish.id,
+                                  restaurantId: widget.restaurantId,
                                   name: dish.dishName,
                                   description: dish.description,
                                   imageUrl: null,

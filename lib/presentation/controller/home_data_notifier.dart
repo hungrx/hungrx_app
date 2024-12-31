@@ -19,7 +19,7 @@ class HomeDataNotifier {
       final response = await HomeRepository(homeApiService).getHomeData(userId);
       updateCalories(response.remaining.toDouble());
     } catch (e) {
-      print('Error fetching initial data: $e');
+      // print('Error fetching initial data: $e');
     }
   }
 }

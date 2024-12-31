@@ -21,7 +21,7 @@ import 'package:hungrx_app/data/datasources/api/dashboard_screen/streak_api_serv
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/tdee_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_basic_info_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/user_profile_api_client.dart';
-import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/cart_api_service.dart';
+import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/cart_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/restaurant_menu_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/nearby_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/search_restaurant_api.dart';
@@ -80,12 +80,13 @@ import 'package:hungrx_app/domain/usecases/weight_screen/update_weight_usecase.d
 import 'package:hungrx_app/firebase_options.dart';
 import 'package:hungrx_app/presentation/blocs/add_logscreen_search_history/add_logscreen_search_history_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_meal_log_screen/add_meal_log_screen_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_delete_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/add_food_kart/food_kart_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
@@ -201,15 +202,10 @@ class MyApp extends StatelessWidget {
             authService: authService,
           ),
         ),
+        
         // !  cart bloc in food menu
-      BlocProvider(
-          create: (context) => CartBloc(
-            AddToCartUseCase(
-              CartRepository(
-                CartApiService(),
-              ),
-            ),
-          ),
+        BlocProvider(
+          create: (context) => CartBloc(),
         ),
         BlocProvider<DeleteAccountBloc>(
           create: (context) => DeleteAccountBloc(
@@ -353,6 +349,16 @@ class MyApp extends StatelessWidget {
             otpUseCase: OtpUseCase(
               OtpRepository(),
             ),
+          ),
+        ),
+        BlocProvider<AddToCartBloc>(
+          create: (context) => AddToCartBloc(
+            AddToCartUseCase(
+              CartRepository(
+                CartApi(),
+              ),
+            ),
+            authService
           ),
         ),
         BlocProvider<UserProfileFormBloc>(

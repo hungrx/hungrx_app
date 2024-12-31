@@ -11,7 +11,8 @@ import 'package:hungrx_app/presentation/blocs/manu_search/menu_search_bloc.dart'
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_event.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_state.dart';
-import 'package:hungrx_app/presentation/pages/calorie_calculation_screen/calculation_tracking.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
+import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/custom_expansion_panel.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/progress_bar.dart';
 import 'package:flutter_material_symbols/flutter_material_symbols.dart';
@@ -43,8 +44,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         );
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
+    // print("rest :${widget.restaurantId}");
     return BlocProvider(
       create: (context) => MenuExpansionBloc(),
       child: Scaffold(
@@ -163,6 +165,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   builder: (context) => BlocProvider(
                     create: (context) => SearchBloc(),
                     child: SearchScreen(
+                      restaurantId: widget.restaurantId,
                       categories: (context.read<RestaurantMenuBloc>().state
                               as RestaurantMenuLoaded)
                           .menuResponse
@@ -197,6 +200,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Widget _buildMenuList(BuildContext context, RestaurantMenu menu) {
+    
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -211,30 +215,20 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   Widget _buildMenuCategory(BuildContext context, MenuCategory category) {
     return BlocBuilder<MenuExpansionBloc, MenuExpansionState>(
       builder: (context, state) {
-         debugPrint('Category ${category.id} - Expanded: ${state.expandedCategoryId == category.id}');
-        return ExpansionTile(
+        return CustomExpansionPanel(
           key: Key(category.id),
-          initiallyExpanded: state.expandedCategoryId == category.id,
+          title: category.categoryName,
+          isExpanded: state.expandedCategoryId == category.id,
           onExpansionChanged: (isExpanded) {
             context.read<MenuExpansionBloc>().add(ToggleCategory(category.id));
           },
-          title: Text(
-            category.categoryName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          collapsedIconColor: Colors.white,
-          iconColor: Colors.white,
-          backgroundColor: Colors.black,
-          collapsedBackgroundColor: Colors.black,
           children: [
             ...category.dishes.map((dish) => _buildMenuItem(dish)),
             ...category.subCategories.map(
-              (subCategory) =>
-                  _buildSubcategory(context, category.id, subCategory),
+              (subCategory) {
+                
+                return _buildSubcategory(context, category.id, subCategory);
+              },
             ),
           ],
         );
@@ -249,37 +243,29 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   ) {
     return BlocBuilder<MenuExpansionBloc, MenuExpansionState>(
       builder: (context, state) {
-        return Padding(
-          padding: const EdgeInsets.only(left: 16.0),
-          child: ExpansionTile(
-            key: Key('$parentCategoryId-${subCategory.id}'),
-            initiallyExpanded: state.expandedSubcategoryId == subCategory.id &&
-                state.expandedCategoryForSubcategory == parentCategoryId,
-            onExpansionChanged: (isExpanded) {
-              context.read<MenuExpansionBloc>().add(
-                    ToggleSubcategory(parentCategoryId, subCategory.id),
-                  );
-            },
-            title: Text(
-              subCategory.subCategoryName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-            collapsedIconColor: Colors.white,
-            iconColor: Colors.white,
-            backgroundColor: Colors.black,
-            collapsedBackgroundColor: Colors.black,
-            children:
-                subCategory.dishes.map((dish) => _buildMenuItem(dish)).toList(),
-          ),
+        
+        return CustomExpansionPanel(
+          backgroundColor: Colors.grey[900]!,
+          key: Key('$parentCategoryId-${subCategory.id}'),
+          title: subCategory.subCategoryName,
+          isExpanded: state.expandedSubcategoryId == subCategory.id &&
+              state.expandedCategoryForSubcategory == parentCategoryId,
+          onExpansionChanged: (isExpanded) {
+            context.read<MenuExpansionBloc>().add(
+                  ToggleSubcategory(parentCategoryId, subCategory.id),
+                );
+          },
+          leftPadding: 16,
+          fontSize: 14,
+          children:
+              subCategory.dishes.map((dish) => _buildMenuItem(dish)).toList(),
         );
       },
     );
   }
 
   Widget _buildMenuItem(Dish dish) {
+      // print("dish :${dish.id}");
     final calories = dish.servingInfos.isNotEmpty
         ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
         : 'N/A';
@@ -340,10 +326,12 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   return FractionallySizedBox(
                     heightFactor: 0.7, // Adjust height as needed
                     child: DishDetails(
+                      dishId: dish.id,
+                      restaurantId: widget.restaurantId,
                       name: dish.dishName,
                       description: dish.description,
                       // You might want to add an imageUrl field to your Dish model
-                      imageUrl: null,
+                      imageUrl: dish.description,
                       // Get all available serving sizes
                       servingSizes: dish.servingInfos
                           .map((info) => info.servingInfo.size)
@@ -358,21 +346,23 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
               );
             },
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(4.0),
               child: Row(
                 children: [
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
-                      color: Colors.grey[800],
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      MaterialSymbols.fastfood_filled,
+                    child:    const Icon(
+                      MaterialSymbols.fastfood_outlined,
                       color: AppColors.buttonColors,
                       size: 32,
                     ),
+                    
+                 
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -397,13 +387,13 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.buttonColors,
+                                color: Colors.grey[900],
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 calories,
                                 style: const TextStyle(
-                                  color: Colors.black,
+                                  color: AppColors.buttonColors,
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -415,7 +405,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryColor,
+                                color: Colors.grey[900],
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -433,7 +423,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryColor,
+                                color: Colors.grey[900],
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -457,9 +447,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                       const SizedBox(height: 8),
                       IconButton(
                         icon: const Icon(
-                          Icons.add_circle,
+                          Icons.add_circle_outline,
                           color: AppColors.buttonColors,
-                          size: 34,
+                          size: 30,
                         ),
                         onPressed: () {
                           showModalBottomSheet(
@@ -471,6 +461,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                               return FractionallySizedBox(
                                 heightFactor: 0.7, // Adjust height as needed
                                 child: DishDetails(
+                                  dishId: dish.id,
+                                  restaurantId: widget.restaurantId,
                                   name: dish.dishName,
                                   description: dish.description,
                                   // You might want to add an imageUrl field to your Dish model
@@ -512,6 +504,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
             baseConsumedCalories + cartState.totalCalories;
 
         return CalorieSummaryWidget(
+
           currentCalories: totalConsumedCalories,
           dailyCalorieTarget:
               double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0,
@@ -520,7 +513,10 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const CalorieCalculationScreen(),
+                builder: (context) =>  CartScreen(
+                  consumedCalories: baseConsumedCalories,
+
+                ),
               ),
             );
           },

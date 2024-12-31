@@ -99,7 +99,13 @@ class AppRouter {
           GoRoute(
             path: '/foodcart',
             name: RouteNames.foodcart,
-            builder: (context, state) => const CartScreen(),
+            builder: (context, state) {
+              //  final consumedCalories = state.uri.queryParameters['consumedCalories']!;
+              return const CartScreen(
+                consumedCalories: 2000,
+              
+            );
+            },
           ),
 
           GoRoute(
@@ -253,7 +259,8 @@ class AppRouter {
         path: '/goal-selection',
         name: RouteNames.goalSelection,
         builder: (BuildContext context, GoRouterState state) {
-          return const GoalSelectionScreen(); // Replace with actual GoalSelectionScreen
+          final currentWeight = state.uri.queryParameters['currentWeight']!;
+          return GoalSelectionScreen(currentWeight: currentWeight);
         },
       ),
       GoRoute(

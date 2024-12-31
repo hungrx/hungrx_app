@@ -158,7 +158,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
                     ),
                   ),
                   SizedBox(
-                    height: screenSize.height * (isSmallScreen ? 0.13 : 0.15),
+                    height: screenSize.height * (isSmallScreen ? 0.13 : 0.155),
                     child: _buildHeatMap(
                       startingDate,
                       endingDate,

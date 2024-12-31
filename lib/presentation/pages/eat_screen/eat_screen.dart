@@ -64,6 +64,9 @@ class _EatScreenState extends State<EatScreen> {
                 }
               },
               builder: (context, state) {
+                String value = _cachedData?.dailyCalorieGoal ?? "0";
+                String result = value.split('.')[0];
+
                 // Show loading indicator only if userId is null
                 // if (userId == null) {
                 //   return const Center(
@@ -72,28 +75,26 @@ class _EatScreenState extends State<EatScreen> {
                 //     ),
                 //   );
                 // }
-        
+
                 return Stack(
                   children: [
-                    SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildHeader(_cachedData),
-                          const SizedBox(height: 20),
-                          _buildSearchBar(context),
-                          const SizedBox(height: 20),
-                          _buildCalorieBudget(
-                              _cachedData?.dailyCalorieGoal ?? '0'),
-                          const SizedBox(height: 20),
-                          _buildOptionsGrid(),
-                          _buildEnjoyCalories(),
-                        ],
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(_cachedData),
+                        const SizedBox(height: 20),
+                        _buildSearchBar(context),
+                        const SizedBox(height: 20),
+                        _buildCalorieBudget(result),
+                        const SizedBox(height: 20),
+                        _buildOptionsGrid(),
+                        const Spacer(),
+                        _buildEnjoyCalories(),
+                      ],
                     ),
                     // Show loading overlay only during initial load
                     if (state is EatScreenLoading && _cachedData == null)
-        
+
                       // _buildLoadingOverlay(),{}
                       // Show error overlay only during initial load failure
                       if (state is EatScreenError && _cachedData == null)
@@ -147,14 +148,6 @@ class _EatScreenState extends State<EatScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        // const CircleAvatar(
-        //   radius: 25,
-        //   backgroundImage: AssetImage('assets/images/dp.png') as ImageProvider,
-
-        //   // data?.profilePhoto != null
-        //   //     ? NetworkImage(data!.profilePhoto!)
-        //   //     : const AssetImage('assets/images/dp.png') as ImageProvider,
-        // ),
       ],
     );
   }

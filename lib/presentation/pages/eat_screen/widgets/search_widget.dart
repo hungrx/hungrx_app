@@ -190,7 +190,7 @@ class SearchTextField extends StatelessWidget {
         ),
       ),
       onChanged: (value) {
-        print("search value: $value");
+        // print("search value: $value");
         context.read<EatScreenSearchBloc>().add(SearchTextChanged(value));
       },
     );

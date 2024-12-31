@@ -6,8 +6,8 @@ class RestaurantItem extends StatelessWidget {
   final VoidCallback ontap;
   final String name;
   final String imageUrl;
-  final String rating;
-  final String address;
+  final String? rating;
+  final String? address;
   final String distance;
 
   const RestaurantItem({
@@ -38,11 +38,11 @@ class RestaurantItem extends StatelessWidget {
                 bottomLeft: Radius.circular(12),
               ),
               child: Container(
-                width: 100,
-                height: 100,
-                color: Colors.grey[800], // Background color
+                width: 80,
+                height: 80,
+                color: Colors.grey[900], // Background color
                 child: const Icon(
-                  Icons.restaurant,
+                  Icons.restaurant_menu,
                   size: 50, // Adjust the size of the icon
                   color: AppColors.buttonColors, // Icon color
                 ),
@@ -62,14 +62,14 @@ class RestaurantItem extends StatelessWidget {
                             name,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 16,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Container(
+                       rating == null ? const SizedBox() : Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 4,
@@ -87,7 +87,7 @@ class RestaurantItem extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                rating.toString(),
+                                rating.toString().trim(),
                                 style: const TextStyle(
                                   color: Colors.black,
                                   fontWeight: FontWeight.bold,
@@ -95,12 +95,12 @@ class RestaurantItem extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ),
+                        ), 
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      address,
+                    address == null ? const SizedBox():  Text(
+                      address ?? "",
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
