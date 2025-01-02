@@ -1,3 +1,26 @@
+class CartResponseModel {
+  final bool success;
+  final String message;
+  final List<CartModel> data;
+  final double remaining;
+
+  CartResponseModel({
+    required this.success,
+    required this.message,
+    required this.data,
+    required this.remaining,
+  });
+
+  factory CartResponseModel.fromJson(Map<String, dynamic> json) {
+    return CartResponseModel(
+      success: json['success'],
+      message: json['message'],
+      data: (json['data'] as List).map((e) => CartModel.fromJson(e)).toList(),
+      remaining: (json['remaining'] as num).toDouble(), // Handle both int and double
+    );
+  }
+}
+
 class CartModel {
   final String cartId;
   final List<OrderItem> orders;
@@ -37,7 +60,7 @@ class OrderItem {
 
 class CartItem {
   final String dishId;
-  String servingSize;
+  final String servingSize;  // Changed from non-final to final
 
   CartItem({required this.dishId, required this.servingSize});
 
@@ -53,10 +76,10 @@ class DishDetail {
   final String restaurantId;
   final String restaurantName;
   final String categoryName;
-  final String? subCategoryName;
+  final String? subCategoryName;  // Already correctly marked as nullable
   final String dishId;
   final String dishName;
-  String servingSize;
+  final String servingSize;  // Changed from non-final to final since it's not modified
   final NutritionInfo nutritionInfo;
 
   DishDetail({
@@ -77,7 +100,7 @@ class DishDetail {
       categoryName: json['categoryName'],
       subCategoryName: json['subCategoryName'],
       dishId: json['dishId'],
-      dishName: json['dishName'],
+      dishName: json['dishName'].toString().trim(), // Add trim() to handle leading/trailing spaces
       servingSize: json['servingSize'],
       nutritionInfo: NutritionInfo.fromJson(json['nutritionInfo']),
     );
@@ -108,14 +131,14 @@ class NutritionInfo {
 }
 
 class NutritionValue {
-  final String value;
+  final String value;  // Keeping as String since values like "0" are strings in the API
   final String unit;
 
   NutritionValue({required this.value, required this.unit});
 
   factory NutritionValue.fromJson(Map<String, dynamic> json) {
     return NutritionValue(
-      value: json['value'],
+      value: json['value'].toString(), // Ensure string conversion
       unit: json['unit'],
     );
   }

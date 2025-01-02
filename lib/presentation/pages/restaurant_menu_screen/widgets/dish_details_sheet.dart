@@ -8,8 +8,11 @@ import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_state.dart
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_event.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_state.dart';
+import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_state.dart';
 
 class DishDetails extends StatefulWidget {
+  final double calories;
   final String? dishId;
   final String? restaurantId;
   final String name;
@@ -28,7 +31,8 @@ class DishDetails extends StatefulWidget {
     required this.sizeOptions,
     required this.ingredients,
     this.restaurantId,
-    this.dishId,
+    this.dishId, 
+    required this.calories,
   });
 
   @override
@@ -36,6 +40,43 @@ class DishDetails extends StatefulWidget {
 }
 
 class _DishDetailsState extends State<DishDetails> {
+
+  bool _checkCalorieLimit(BuildContext context, double dishCalories) {
+    final cartState = context.read<CartBloc>().state;
+    final menuState = context.read<RestaurantMenuBloc>().state;
+    
+    if (menuState is RestaurantMenuLoaded) {
+      final userStats = menuState.menuResponse.userStats;
+      final today = DateTime.now();
+      final todayDate = "${today.day.toString().padLeft(2, '0')}/${today.month.toString().padLeft(2, '0')}/${today.year}";
+      
+      final baseConsumedCalories = userStats.dailyConsumptionStats[todayDate] ?? 0.0;
+      final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+      final totalCaloriesAfterAdd = baseConsumedCalories + cartState.totalCalories + dishCalories;
+      
+      if (totalCaloriesAfterAdd > dailyCalorieGoal) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Warning: Adding this item (${dishCalories.toInt()} cal) would exceed your daily limit of ${dailyCalorieGoal.toInt()} calories',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+        return false;
+      }
+    }
+    return true;
+  }
   
   void _handleAddToCart(BuildContext context) {
     if (widget.dishId == null || widget.restaurantId == null) {
@@ -62,7 +103,7 @@ class _DishDetailsState extends State<DishDetails> {
         ),
       ],
     );
-
+ if (_checkCalorieLimit(context, widget.calories)) {
     context.read<AddToCartBloc>().add(SubmitAddToCartEvent(cartRequest));
 
     final nutrition = _calculateTotalNutrition();
@@ -74,6 +115,7 @@ class _DishDetailsState extends State<DishDetails> {
 
     // Dispatch the AddToCart event to update the progress bar
     context.read<CartBloc>().add(AddToCart(cartItem));
+ }
   }
 
   String selectedSize = '';
@@ -93,12 +135,12 @@ class _DishDetailsState extends State<DishDetails> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.description);
     final nutrition = _calculateTotalNutrition();
 
     return BlocListener<AddToCartBloc, AddToCartState>(
       listener: (context, state) {
         if (state is AddToCartSuccess) {
+           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.response.message)),
           );
@@ -309,10 +351,8 @@ class _DishDetailsState extends State<DishDetails> {
             onPressed: state is AddToCartLoading
                 ? null
                 : () {
-                  print(widget.dishId);
-                  print(widget.restaurantId);
                     _handleAddToCart(context);
-                    Navigator.pop(context);
+                  
                   },
             child: state is AddToCartLoading
                 ? const SizedBox(
@@ -320,7 +360,7 @@ class _DishDetailsState extends State<DishDetails> {
                     width: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
                     ),
                   )
                 : Text(
@@ -338,7 +378,7 @@ class _DishDetailsState extends State<DishDetails> {
 }
 
 class NutritionInfo {
-  final int calories;
+  final double calories;
   final double protein;
   final double carbs;
   final double fat;

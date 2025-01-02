@@ -1,13 +1,13 @@
 import 'package:hungrx_app/data/Models/restaurant_menu_screen/cart_request.dart';
-import 'package:hungrx_app/data/Models/restaurant_menu_screen/cart_response.dart';
-import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/cart_api.dart';
+import 'package:hungrx_app/data/Models/restaurant_menu_screen/add_cart_response.dart';
+import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/add_to_cart.dart';
 
-class CartRepository {
-  final CartApi _api;
+class AddToCartRepository {
+  final AddToCartApi _api;
 
-  CartRepository(this._api);
+  AddToCartRepository(this._api);
 
-  Future<CartResponse> addToCart(CartRequest request) async {
+  Future<AddToCartResponse> addToCart(CartRequest request) async {
     try {
       return await _api.addToCart(request);
     } catch (e) {

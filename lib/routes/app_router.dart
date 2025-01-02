@@ -100,11 +100,7 @@ class AppRouter {
             path: '/foodcart',
             name: RouteNames.foodcart,
             builder: (context, state) {
-              //  final consumedCalories = state.uri.queryParameters['consumedCalories']!;
-              return const CartScreen(
-                consumedCalories: 2000,
-              
-            );
+              return const CartScreen();
             },
           ),
 
@@ -404,6 +400,7 @@ class AppRouter {
         name: RouteNames.menu,
         builder: (BuildContext context, GoRouterState state) {
           final String? restaurantId = state.extra as String?;
+
           return RestaurantMenuScreen(
             restaurantId: restaurantId,
           ); // Replace with actual MenuScreen

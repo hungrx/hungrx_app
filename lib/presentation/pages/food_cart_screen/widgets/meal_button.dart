@@ -6,7 +6,8 @@ import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_me
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_event.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_state.dart';
 
-class MealLoggerButton extends StatelessWidget {
+class MealLoggerButton extends StatefulWidget {
+  final String totalCalories;
   final String buttonText;
   final Color buttonColor;
   final Color textColor;
@@ -15,24 +16,29 @@ class MealLoggerButton extends StatelessWidget {
   const MealLoggerButton({
     super.key,
     this.buttonText = 'Ate',
-    this.buttonColor = Colors.black,
-    this.textColor = Colors.white,
-    this.borderRadius = 20,
+    this.buttonColor = AppColors.buttonColors,
+    this.textColor = Colors.black,
+    this.borderRadius = 20, required this.totalCalories,
   });
 
+  @override
+  State<MealLoggerButton> createState() => _MealLoggerButtonState();
+}
+
+class _MealLoggerButtonState extends State<MealLoggerButton> {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () => _showMealLogDialog(context),
       style: ElevatedButton.styleFrom(
-        backgroundColor: buttonColor,
+        backgroundColor: widget.buttonColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
         ),
       ),
       child: Text(
-        buttonText,
-        style: TextStyle(color: textColor),
+        widget.buttonText,
+        style: TextStyle(color: widget.textColor),
       ),
     );
   }
@@ -42,14 +48,15 @@ class MealLoggerButton extends StatelessWidget {
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        return const MealLogDialog();
+        return  MealLogDialog(totalCalories: widget.totalCalories,);
       },
     );
   }
 }
 
 class MealLogDialog extends StatelessWidget {
-  const MealLogDialog({super.key});
+  final String totalCalories;
+  const MealLogDialog({super.key, required this.totalCalories});
 
   @override
   Widget build(BuildContext context) {
@@ -58,13 +65,14 @@ class MealLogDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       backgroundColor: Colors.grey[900],
-      child: const MealLogContent(),
+      child:  MealLogContent(totalCalories: totalCalories,),
     );
   }
 }
 
 class MealLogContent extends StatelessWidget {
-  const MealLogContent({super.key});
+    final String totalCalories;
+  const MealLogContent({super.key, required this.totalCalories});
 
   @override
   Widget build(BuildContext context) {
@@ -222,9 +230,9 @@ class MealLogContent extends StatelessWidget {
   Widget _buildCaloriesInfo() {
     return Row(
       children: [
-        const SizedBox(width: 8),
+         const SizedBox(width: 8),
         Text(
-          'Total Calories: 450 kcal',
+          'Total Calories: $totalCalories kcal',
           style: TextStyle(
             color: Colors.grey[300],
             fontSize: 16,
@@ -235,6 +243,7 @@ class MealLogContent extends StatelessWidget {
   }
 
   Widget _buildConsumeButton(BuildContext context, MealTypeLoaded state) {
+    
     return SizedBox(
       width: double.infinity,
       height: 50,

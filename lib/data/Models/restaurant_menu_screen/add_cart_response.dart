@@ -1,21 +1,22 @@
-class CartResponse {
+class AddToCartResponse {
   final bool status;
   final String message;
   final List<DishDetails> dishes;
 
-  CartResponse({
+  AddToCartResponse({
     required this.status,
     required this.message,
     required this.dishes,
   });
 
-  factory CartResponse.fromJson(Map<String, dynamic> json) {
-    return CartResponse(
+  factory AddToCartResponse.fromJson(Map<String, dynamic> json) {
+    return AddToCartResponse(
       status: json['status'] ?? false,
       message: json['message'] ?? '',
       dishes: (json['dishes'] as List?)
-          ?.map((dish) => DishDetails.fromJson(dish))
-          .toList() ?? [],
+              ?.map((dish) => DishDetails.fromJson(dish))
+              .toList() ??
+          [],
     );
   }
 }

@@ -1,25 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/Models/food_cart_screen.dart/cart_model.dart';
-import 'package:hungrx_app/data/datasources/api/cart_screen.dart/cart_api.dart';
-import 'package:hungrx_app/data/repositories/cart_screen/cart_repository.dart';
+import 'package:hungrx_app/data/Models/food_cart_screen.dart/get_cart_model.dart';
+import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_event.dart';
+import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_state.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/meal_button.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 
-class CartScreen extends StatelessWidget {
-  final double consumedCalories;
-  const CartScreen({super.key, required this.consumedCalories});
+class CartScreen extends StatefulWidget {
+  const CartScreen({
+    super.key,
+  });
+
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<GetCartBloc>().add(LoadCart());
+  }
+
+  void _showCalorieWarning(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => GetCartBloc(
-        CartRepository(CartApi()),
-      )..add(
-          LoadCart("677221b8e7e9a75db98b4d2c")), // Replace with actual userId
+    return BlocListener<DeleteDishCartBloc, DeleteDishCartState>(
+      listener: (context, state) {
+        if (state is DeleteDishCartSuccess) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Refresh the cart
+          context.read<GetCartBloc>().add(LoadCart());
+        } else if (state is DeleteDishCartError) {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.error),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -53,7 +105,7 @@ class CartScreen extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {
                         context.read<GetCartBloc>().add(
-                              LoadCart("677221b8e7e9a75db98b4d2c"),
+                              LoadCart(),
                             );
                       },
                       style: ElevatedButton.styleFrom(
@@ -65,6 +117,55 @@ class CartScreen extends StatelessWidget {
                 ),
               );
             }
+
+            if (state is CartLoaded && state.carts.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Your cart is empty',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Add some delicious food to get started',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Navigate to restaurant screen
+                        context.pushNamed(RouteNames.restaurants);
+                      },
+                      icon: const Icon(Icons.restaurant),
+                      label: const Text('Browse Restaurants'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.buttonColors,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             if (state is CartLoaded) {
               return Stack(
                 children: [
@@ -76,7 +177,8 @@ class CartScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildCalorieSummaryCard(state.totalNutrition),
+                              _buildCalorieSummaryCard(
+                                  state.remaining, state.totalNutrition),
                             ],
                           ),
                         ),
@@ -108,12 +210,17 @@ class CartScreen extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 100),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final cart = state.carts[index];
-                                return _buildFoodItem(
-                                  context,
-                                  cart.cartId,
-                                  cart.dishDetails.first,
+                              (context, cartIndex) {
+                                final cart = state.carts[cartIndex];
+                                // Create a list of food items for each dish in the cart
+                                return Column(
+                                  children: cart.dishDetails.map((dish) {
+                                    return _buildFoodItem(
+                                      context,
+                                      cart.cartId,
+                                      dish,
+                                    );
+                                  }).toList(),
                                 );
                               },
                               childCount: state.carts.length,
@@ -128,6 +235,7 @@ class CartScreen extends StatelessWidget {
                       right: 0,
                       bottom: 0,
                       child: _buildTotalCaloriesBar(
+                        state.remaining,
                         context,
                         state.totalNutrition,
                       ),
@@ -142,24 +250,49 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCalorieSummaryCard(Map<String, double> nutrition) {
+  Widget _buildCalorieSummaryCard(
+      double remainingCalories, Map<String, double> nutrition) {
+    final currentCalories = nutrition['calories'] ?? 0.0;
+    final isExceeded = currentCalories > remainingCalories;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(16),
+        border: isExceeded ? Border.all(color: Colors.red, width: 1.0) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Total Nutrition Facts ',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Total Nutrition Facts ',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+              if (isExceeded)
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red,
+                ),
+            ],
           ),
+          if (isExceeded)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                'Daily calorie limit exceeded by ${(currentCalories - remainingCalories).toInt()} calories',
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           _buildNutritionInfo(nutrition),
           const SizedBox(height: 16),
           Row(
@@ -180,7 +313,7 @@ class CartScreen extends StatelessWidget {
                   size: 30,
                 ),
                 onPressed: () {
-                  // Navigate to food selection screen
+                  context.pushNamed(RouteNames.restaurants);
                 },
               ),
             ],
@@ -196,120 +329,162 @@ class CartScreen extends StatelessWidget {
     DishDetail dish,
   ) {
     final quantity = int.tryParse(dish.servingSize) ?? 1;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Image.asset(
-            "assets/images/pizz.png",
-            width: 60,
-            height: 60,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
+    final caloriesPerItem =
+        double.tryParse(dish.nutritionInfo.calories.value) ?? 0;
+
+    return Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                "assets/images/pizz.png",
                 width: 60,
                 height: 60,
-                color: Colors.grey[800],
-                child: const Icon(
-                  Icons.restaurant,
-                  color: Colors.white,
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  dish.dishName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '${dish.nutritionInfo.calories.value} ${dish.nutritionInfo.calories.unit}',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                Text(
-                  dish.restaurantName,
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove, color: Colors.white),
-                onPressed: () {
-                  if (quantity > 1) {
-                    context.read<GetCartBloc>().add(
-                          UpdateQuantity(
-                            cartId: cartId,
-                            dishId: dish.dishId,
-                            quantity: quantity - 1,
-                          ),
-                        );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content:
-                            Text('Remove from cart functionality coming soon'),
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[800],
+                    child: const Icon(
+                      Icons.restaurant,
+                      color: Colors.white,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      dish.dishName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  }
-                },
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.grey[800],
-                  borderRadius: BorderRadius.circular(4),
+                    ),
+                    Text(
+                      '${dish.nutritionInfo.calories.value} ${dish.nutritionInfo.calories.unit}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    Text(
+                      dish.restaurantName,
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  quantity.toString(),
-                  style: const TextStyle(color: Colors.white),
-                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.add, color: Colors.white),
-                onPressed: () {
-                  context.read<GetCartBloc>().add(
-                        UpdateQuantity(
-                          cartId: cartId,
-                          dishId: dish.dishId,
-                          quantity: quantity + 1,
-                        ),
-                      );
-                },
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove, color: Colors.white),
+                    onPressed: () {
+                      if (quantity > 1) {
+                        context.read<GetCartBloc>().add(
+                              UpdateQuantity(
+                                cartId: cartId,
+                                dishId: dish.dishId,
+                                quantity: quantity - 1,
+                              ),
+                            );
+                      }
+                    },
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      quantity.toString(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    onPressed: () {
+                      final state = context.read<GetCartBloc>().state;
+                      if (state is CartLoaded) {
+                        final newTotalCalories =
+                            state.totalNutrition['calories']! + caloriesPerItem;
+
+                        if (newTotalCalories > state.remaining) {
+                          _showCalorieWarning(
+                            context,
+                            'Adding more quantity would exceed your daily calorie limit!',
+                          );
+                        } else {
+                          context.read<GetCartBloc>().add(
+                                UpdateQuantity(
+                                  cartId: cartId,
+                                  dishId: dish.dishId,
+                                  quantity: quantity + 1,
+                                ),
+                              );
+                        }
+                      }
+                    },
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          top: -10,
+          right: -2,
+          child: IconButton(
+            icon: const Icon(
+              Icons.cancel,
+              color: AppColors.buttonColors,
+              size: 24,
+            ),
+            onPressed: () {
+              context.read<DeleteDishCartBloc>().add(
+                    DeleteDishFromCart(
+                      cartId: cartId,
+                      restaurantId: dish.restaurantId,
+                      dishId: dish.dishId,
+                    ),
+                  );
+            },
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildTotalCaloriesBar(
+    double remainingCalories,
     BuildContext context,
     Map<String, double> nutrition,
   ) {
+    final currentCalories = nutrition['calories'] ?? 0.0;
+    final isExceeded = currentCalories > remainingCalories;
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: AppColors.buttonColors,
+          color: AppColors.tileColor,
+          border: Border.all(
+            color: isExceeded ? Colors.red : AppColors.buttonColors,
+            width: isExceeded ? 1.0 : 0.5,
+          ),
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
@@ -320,24 +495,39 @@ class CartScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Text(
-                  'Total Calories: ',
+                  'Calories ',
                   style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
+                    color: Colors.white,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  '${nutrition['calories']?.toStringAsFixed(0) ?? 0} / ${consumedCalories.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
+                      style: TextStyle(
+                        color: isExceeded ? Colors.red : AppColors.buttonColors,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      ' / ${remainingCalories.round().toString()} cal',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const MealLoggerButton(),
+            MealLoggerButton(
+              totalCalories:
+                  '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
+            ),
           ],
         ),
       ),

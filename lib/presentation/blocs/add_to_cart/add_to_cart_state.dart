@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/Models/restaurant_menu_screen/cart_response.dart';
+import 'package:hungrx_app/data/Models/restaurant_menu_screen/add_cart_response.dart';
 
 abstract class AddToCartState {}
 
@@ -7,7 +7,7 @@ class AddToCartInitial extends AddToCartState {}
 class AddToCartLoading extends AddToCartState {}
 
 class AddToCartSuccess extends AddToCartState {
-  final CartResponse response;
+  final AddToCartResponse response;
 
   AddToCartSuccess(this.response);
 }

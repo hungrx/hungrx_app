@@ -4,10 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_material_symbols/flutter_material_symbols.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/restaurant_menu_screen/restaurant_menu_response.dart';
+import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/manu_search/menu_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/manu_search/menu_search_event.dart';
 import 'package:hungrx_app/presentation/blocs/manu_search/menu_search_state.dart';
-import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_screen.dart';
+import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_state.dart';
+import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_sheet.dart';
 
 class SearchScreen extends StatefulWidget {
   final String? restaurantId;
@@ -32,6 +35,8 @@ class _SearchScreenState extends State<SearchScreen> {
     _searchController.addListener(_onSearchChanged);
   }
 
+
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -43,6 +48,50 @@ class _SearchScreenState extends State<SearchScreen> {
       SearchDishes(_searchController.text, widget.categories),
     );
   }
+
+  bool _checkCalorieLimit(BuildContext context, double dishCalories) {
+  // Get the current cart state
+  final cartState = context.read<CartBloc>().state;
+  
+  // Get today's date for stats
+  final today = DateTime.now();
+  final todayDate = "${today.day.toString().padLeft(2, '0')}/${today.month.toString().padLeft(2, '0')}/${today.year}";
+  
+  // Get the current state for user stats
+  final state = context.read<RestaurantMenuBloc>().state;
+  if (state is RestaurantMenuLoaded) {
+    final userStats = state.menuResponse.userStats;
+    final baseConsumedCalories = userStats.dailyConsumptionStats[todayDate] ?? 0.0;
+    final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+    
+    // Calculate total calories if this dish is added
+    final totalCaloriesAfterAdd = baseConsumedCalories + cartState.totalCalories + dishCalories;
+    
+    // Check if adding this dish would exceed the limit
+    if (totalCaloriesAfterAdd > dailyCalorieGoal) {
+      // Show warning message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Adding this item would exceed your daily calorie limit!',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Dismiss',
+            textColor: Colors.white,
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+          ),
+        ),
+      );
+      return false;
+    }
+  }
+  return true;
+}
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +171,7 @@ Widget _buildDishItem(Dish dish) {
     // Helper function to create NutritionInfo from ServingInfo
     NutritionInfo createNutritionInfo(ServingDetails servingDetails) {
       return NutritionInfo(
-        calories: int.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
+        calories: double.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
         protein: double.tryParse(servingDetails.nutritionFacts.protein.value) ?? 0,
         carbs: double.tryParse(servingDetails.nutritionFacts.carbs.value) ?? 0,
         fat: double.tryParse(servingDetails.nutritionFacts.totalFat.value) ?? 0,
@@ -138,6 +187,9 @@ Widget _buildDishItem(Dish dish) {
       sizeOptions[servingInfo.servingInfo.size] =
           createNutritionInfo(servingInfo.servingInfo);
     }
+        final defaultCalories = dish.servingInfos.isNotEmpty
+      ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts.calories.value) ?? 0.0
+      : 0.0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -158,6 +210,8 @@ Widget _buildDishItem(Dish dish) {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
+
+ if (_checkCalorieLimit(context, defaultCalories)) {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
@@ -166,6 +220,7 @@ Widget _buildDishItem(Dish dish) {
                   return FractionallySizedBox(
                     heightFactor: 0.7,
                     child: DishDetails(
+                      calories: defaultCalories,
                       dishId: dish.id,
                       restaurantId: widget.restaurantId,
                       name: dish.dishName,
@@ -180,6 +235,8 @@ Widget _buildDishItem(Dish dish) {
                   );
                 },
               );
+ }
+
             },
             child: Padding(
               padding: const EdgeInsets.all(12.0),
@@ -301,6 +358,7 @@ Widget _buildDishItem(Dish dish) {
                               return FractionallySizedBox(
                                 heightFactor: 0.7,
                                 child: DishDetails(
+                                  calories: defaultCalories,
                                   dishId: dish.id,
                                   restaurantId: widget.restaurantId,
                                   name: dish.dishName,

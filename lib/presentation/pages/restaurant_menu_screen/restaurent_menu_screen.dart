@@ -13,7 +13,7 @@ import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_ev
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_state.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/custom_expansion_panel.dart';
-import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_screen.dart';
+import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_sheet.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/progress_bar.dart';
 import 'package:flutter_material_symbols/flutter_material_symbols.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/search_widget.dart';
@@ -31,6 +31,11 @@ class RestaurantMenuScreen extends StatefulWidget {
 }
 
 class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
+
+
+
+
+
   String? expandedCategory;
   String? expandedSubcategory;
 
@@ -43,6 +48,51 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           ),
         );
   }
+
+
+  bool _checkCalorieLimit(BuildContext context, double dishCalories) {
+  // Get the current cart state
+  final cartState = context.read<CartBloc>().state;
+  
+  // Get today's date for stats
+  final today = DateTime.now();
+  final todayDate = "${today.day.toString().padLeft(2, '0')}/${today.month.toString().padLeft(2, '0')}/${today.year}";
+  
+  // Get the current state for user stats
+  final state = context.read<RestaurantMenuBloc>().state;
+  if (state is RestaurantMenuLoaded) {
+    final userStats = state.menuResponse.userStats;
+    final baseConsumedCalories = userStats.dailyConsumptionStats[todayDate] ?? 0.0;
+    final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+    
+    // Calculate total calories if this dish is added
+    final totalCaloriesAfterAdd = baseConsumedCalories + cartState.totalCalories + dishCalories;
+    
+    // Check if adding this dish would exceed the limit
+    if (totalCaloriesAfterAdd > dailyCalorieGoal) {
+      // Show warning message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Adding this item would exceed your daily calorie limit!',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Dismiss',
+            textColor: Colors.white,
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+          ),
+        ),
+      );
+      return false;
+    }
+  }
+  return true;
+}
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +250,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Widget _buildMenuList(BuildContext context, RestaurantMenu menu) {
-    
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -226,7 +275,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
             ...category.dishes.map((dish) => _buildMenuItem(dish)),
             ...category.subCategories.map(
               (subCategory) {
-                
                 return _buildSubcategory(context, category.id, subCategory);
               },
             ),
@@ -243,7 +291,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   ) {
     return BlocBuilder<MenuExpansionBloc, MenuExpansionState>(
       builder: (context, state) {
-        
         return CustomExpansionPanel(
           backgroundColor: Colors.grey[900]!,
           key: Key('$parentCategoryId-${subCategory.id}'),
@@ -265,7 +312,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Widget _buildMenuItem(Dish dish) {
-      // print("dish :${dish.id}");
+    // print("dish :${dish.id}");
     final calories = dish.servingInfos.isNotEmpty
         ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
         : 'N/A';
@@ -280,7 +327,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     NutritionInfo createNutritionInfo(ServingDetails servingDetails) {
       return NutritionInfo(
         calories:
-            int.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
+            double.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
         protein:
             double.tryParse(servingDetails.nutritionFacts.protein.value) ?? 0,
         carbs: double.tryParse(servingDetails.nutritionFacts.carbs.value) ?? 0,
@@ -298,6 +345,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       sizeOptions[servingInfo.servingInfo.size] =
           createNutritionInfo(servingInfo.servingInfo);
     }
+    final defaultCalories = dish.servingInfos.isNotEmpty
+      ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts.calories.value) ?? 0.0
+      : 0.0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -318,6 +368,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
+ if (_checkCalorieLimit(context, defaultCalories)) {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true, // Enables full-screen bottom sheet
@@ -326,6 +377,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   return FractionallySizedBox(
                     heightFactor: 0.7, // Adjust height as needed
                     child: DishDetails(
+                      calories: defaultCalories,
                       dishId: dish.id,
                       restaurantId: widget.restaurantId,
                       name: dish.dishName,
@@ -344,6 +396,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   );
                 },
               );
+
+ }
             },
             child: Padding(
               padding: const EdgeInsets.all(4.0),
@@ -356,13 +410,11 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child:    const Icon(
+                    child: const Icon(
                       MaterialSymbols.fastfood_outlined,
                       color: AppColors.buttonColors,
                       size: 32,
                     ),
-                    
-                 
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -452,6 +504,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                           size: 30,
                         ),
                         onPressed: () {
+if (_checkCalorieLimit(context, defaultCalories)) {
                           showModalBottomSheet(
                             context: context,
                             isScrollControlled:
@@ -461,6 +514,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                               return FractionallySizedBox(
                                 heightFactor: 0.7, // Adjust height as needed
                                 child: DishDetails(
+                                  calories: defaultCalories,
                                   dishId: dish.id,
                                   restaurantId: widget.restaurantId,
                                   name: dish.dishName,
@@ -479,6 +533,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                               );
                             },
                           );
+}
+
                           // Add to cart functionality
                         },
                       ),
@@ -494,29 +550,37 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Widget _buildOrderSummary(BuildContext context, UserStats userStats) {
-    final todayDate = DateTime.now().toString().split(' ')[0];
+    final today = DateTime.now();
+    final todayDate =
+        "${today.day.toString().padLeft(2, '0')}/${today.month.toString().padLeft(2, '0')}/${today.year}";
+
+    print("Today's date format: $todayDate");
+    print("Available dates in stats: ${userStats.dailyConsumptionStats.keys}");
+
     final baseConsumedCalories =
         userStats.dailyConsumptionStats[todayDate] ?? 0.0;
+    print("Base consumed calories: $baseConsumedCalories");
 
     return BlocBuilder<CartBloc, CartState>(
       builder: (context, cartState) {
         final totalConsumedCalories =
             baseConsumedCalories + cartState.totalCalories;
+        print("Total consumed calories: $totalConsumedCalories");
+
+        // Calculate remaining calories properly
+        final dailyCalorieGoal =
+            double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+        final remainingCalories = dailyCalorieGoal - totalConsumedCalories;
 
         return CalorieSummaryWidget(
-
           currentCalories: totalConsumedCalories,
-          dailyCalorieTarget:
-              double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0,
+          remainingDailyCalorie: remainingCalories,
           itemCount: cartState.items.length,
           onViewOrderPressed: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>  CartScreen(
-                  consumedCalories: baseConsumedCalories,
-
-                ),
+                builder: (context) => const CartScreen(),
               ),
             );
           },

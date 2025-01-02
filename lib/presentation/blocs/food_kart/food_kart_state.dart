@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_screen.dart';
+import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_sheet.dart';
 
 class CartItem {
   final String dishName;

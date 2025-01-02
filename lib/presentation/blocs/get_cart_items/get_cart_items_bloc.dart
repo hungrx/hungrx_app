@@ -1,13 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/data/Models/food_cart_screen.dart/cart_model.dart';
+import 'package:hungrx_app/data/Models/food_cart_screen.dart/get_cart_model.dart';
 import 'package:hungrx_app/data/repositories/cart_screen/cart_repository.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
 
 class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
-  final CartRepository cartRepository;
+  final GetCartRepository cartRepository;
+  final AuthService _authService;
 
-  GetCartBloc(this.cartRepository) : super(CartInitial()) {
+  GetCartBloc(
+    this.cartRepository,
+    this._authService,
+  ) : super(CartInitial()) {
     on<LoadCart>(_onLoadCart);
     on<UpdateQuantity>(_onUpdateQuantity);
   }
@@ -15,16 +20,26 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
   void _onLoadCart(LoadCart event, Emitter<GetCartState> emit) async {
     emit(CartLoading());
     try {
-      final carts = await cartRepository.getCart(event.userId);
-      final totalNutrition = _calculateTotalNutrition(carts);
-      emit(CartLoaded(carts, totalNutrition));
+      final userId = await _authService.getUserId();
+      if (userId == null) {
+        emit(CartError('User not logged in'));
+        return;
+      }
+      print("userId2: $userId");
+      final cartResponse = await cartRepository.getCart(userId); // Modified to get CartResponseModel
+      final totalNutrition = _calculateTotalNutrition(cartResponse.data);
+      emit(CartLoaded(
+        carts: cartResponse.data,
+        totalNutrition: totalNutrition,
+        cartResponse: cartResponse,
+        remaining: cartResponse.remaining
+      ));
     } catch (e) {
       emit(CartError(e.toString()));
     }
   }
 
-  void _onUpdateQuantity(
-      UpdateQuantity event, Emitter<GetCartState> emit) async {
+  void _onUpdateQuantity(UpdateQuantity event, Emitter<GetCartState> emit) async {
     final currentState = state;
     if (currentState is CartLoaded) {
       final updatedCarts = currentState.carts.map((cart) {
@@ -38,8 +53,7 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
                 subCategoryName: dish.subCategoryName,
                 dishId: dish.dishId,
                 dishName: dish.dishName,
-                servingSize:
-                    event.quantity.toString(), // Store quantity in servingSize
+                servingSize: event.quantity.toString(),
                 nutritionInfo: dish.nutritionInfo,
               );
             }
@@ -57,12 +71,24 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
       }).toList();
 
       final totalNutrition = _calculateTotalNutrition(updatedCarts);
-      emit(CartLoaded(updatedCarts, totalNutrition));
+      // Create updated CartResponseModel with the modified data
+      final updatedCartResponse = CartResponseModel(
+        success: currentState.cartResponse.success,
+        message: currentState.cartResponse.message,
+        data: updatedCarts,
+        remaining: currentState.remaining
+      );
+      
+      emit(CartLoaded(
+        carts: updatedCarts,
+        totalNutrition: totalNutrition,
+        cartResponse: updatedCartResponse,
+        remaining: currentState.remaining
+      ));
     }
   }
 
   double _parseServingSize(String servingSize) {
-    // Handle special serving size values
     switch (servingSize.toLowerCase()) {
       case 'normal':
         return 1.0;
@@ -71,12 +97,9 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
       case 'large':
         return 1.5;
       default:
-        // Try to parse as number, return 1.0 if fails
         try {
           return double.parse(servingSize);
         } catch (e) {
-          print(
-              'Warning: Invalid serving size format: $servingSize, using default value 1.0');
           return 1.0;
         }
     }
@@ -93,7 +116,6 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
         try {
           final servingSize = _parseServingSize(dish.servingSize);
 
-          // Parse nutrition values with error handling
           final calories =
               double.tryParse(dish.nutritionInfo.calories.value) ?? 0;
           final protein =
@@ -106,8 +128,6 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
           totalCarbs += carbs * servingSize;
           totalFat += fat * servingSize;
         } catch (e) {
-          print('Error calculating nutrition for dish ${dish.dishName}: $e');
-          // Continue processing other dishes even if one fails
           continue;
         }
       }

@@ -1,8 +1,7 @@
 abstract class GetCartEvent {}
 
 class LoadCart extends GetCartEvent {
-  final String userId;
-  LoadCart(this.userId);
+  LoadCart();
 }
 
 class UpdateQuantity extends GetCartEvent {

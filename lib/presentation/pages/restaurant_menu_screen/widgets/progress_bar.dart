@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
 class CalorieSummaryWidget extends StatelessWidget {
   final double currentCalories;
-  final double dailyCalorieTarget;
+  final double remainingDailyCalorie;
   final int itemCount;
   final VoidCallback onViewOrderPressed;
   final Color backgroundColor;
@@ -12,12 +13,12 @@ class CalorieSummaryWidget extends StatelessWidget {
   const CalorieSummaryWidget({
     super.key,
     required this.currentCalories,
-    required this.dailyCalorieTarget,
+    required this.remainingDailyCalorie,
     required this.itemCount,
     required this.onViewOrderPressed,
     this.backgroundColor = Colors.black,
-    this.buttonColor = Colors.green, // Replace with AppColors.buttonColors
-    this.primaryColor = Colors.black, // Replace with AppColors.primaryColor
+    this.buttonColor = AppColors.buttonColors, 
+    this.primaryColor = AppColors.primaryColor,
   });
 
   Color _getProgressColor(double progress) {
@@ -32,9 +33,9 @@ class CalorieSummaryWidget extends StatelessWidget {
 
 @override
 Widget build(BuildContext context) {
-final double progress = dailyCalorieTarget > 0 
-      ? (currentCalories / dailyCalorieTarget).clamp(0.0, 1.0)
-      : 0.0;
+final double progress = remainingDailyCalorie > 0 
+    ? (currentCalories / (currentCalories + remainingDailyCalorie)).clamp(0.0, 1.0)
+    : 0.0;
   final progressColor = _getProgressColor(progress);
 
   return Container(
@@ -54,9 +55,17 @@ final double progress = dailyCalorieTarget > 0
                   'Daily Calorie Progress',
                   style: TextStyle(color: Colors.grey),
                 ),
-                Text(
-                  '${currentCalories.toInt()} / ${dailyCalorieTarget.toInt()} cal',
-                  style: const TextStyle(color: Colors.grey),
+                Row(
+                  children: [
+                    Text(
+                      '${currentCalories.toInt()}',
+                      style:  TextStyle(color: _getProgressColor(progress)),
+                    ),
+                      Text(
+                      ' / ${remainingDailyCalorie.toInt()} cal',
+                      style: const TextStyle(color: Colors.blueGrey),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -65,7 +74,7 @@ final double progress = dailyCalorieTarget > 0
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value: progress,
-                backgroundColor: Colors.grey[800],
+                backgroundColor: Colors.blueGrey,
                 valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                 minHeight: 10,
               ),
