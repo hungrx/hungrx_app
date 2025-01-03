@@ -4,6 +4,9 @@ import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/restaurant_menu_screen/restaurant_menu_response.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_state.dart';
+import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
+import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
 import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_event.dart';
 import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_state.dart';
@@ -15,7 +18,6 @@ import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/custom_expansion_panel.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_sheet.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/progress_bar.dart';
-import 'package:flutter_material_symbols/flutter_material_symbols.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/search_widget.dart';
 
 class RestaurantMenuScreen extends StatefulWidget {
@@ -31,11 +33,6 @@ class RestaurantMenuScreen extends StatefulWidget {
 }
 
 class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
-
-
-
-
-
   String? expandedCategory;
   String? expandedSubcategory;
 
@@ -47,52 +44,50 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
             restaurantId: widget.restaurantId ?? "",
           ),
         );
+    context.read<GetCartBloc>().add(LoadCart());
   }
-
 
   bool _checkCalorieLimit(BuildContext context, double dishCalories) {
-  // Get the current cart state
-  final cartState = context.read<CartBloc>().state;
-  
-  // Get today's date for stats
-  final today = DateTime.now();
-  final todayDate = "${today.day.toString().padLeft(2, '0')}/${today.month.toString().padLeft(2, '0')}/${today.year}";
-  
-  // Get the current state for user stats
-  final state = context.read<RestaurantMenuBloc>().state;
-  if (state is RestaurantMenuLoaded) {
-    final userStats = state.menuResponse.userStats;
-    final baseConsumedCalories = userStats.dailyConsumptionStats[todayDate] ?? 0.0;
-    final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
-    
-    // Calculate total calories if this dish is added
-    final totalCaloriesAfterAdd = baseConsumedCalories + cartState.totalCalories + dishCalories;
-    
-    // Check if adding this dish would exceed the limit
-    if (totalCaloriesAfterAdd > dailyCalorieGoal) {
-      // Show warning message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Adding this item would exceed your daily calorie limit!',
-            style: TextStyle(color: Colors.white),
+    // Get the current cart state
+    final cartState = context.read<CartBloc>().state;
+
+    // Get the current state for user stats
+    final state = context.read<RestaurantMenuBloc>().state;
+    if (state is RestaurantMenuLoaded) {
+      final userStats = state.menuResponse.userStats;
+      final baseConsumedCalories = userStats.todayConsumption;
+      final dailyCalorieGoal =
+          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+
+      // Calculate total calories if this dish is added
+      final totalCaloriesAfterAdd =
+          baseConsumedCalories + cartState.totalCalories + dishCalories;
+
+      // Check if adding this dish would exceed the limit
+      if (totalCaloriesAfterAdd > dailyCalorieGoal) {
+        // Show warning message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Adding this item would exceed your daily calorie limit!',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
           ),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'Dismiss',
-            textColor: Colors.white,
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            },
-          ),
-        ),
-      );
-      return false;
+        );
+        return false;
+      }
     }
+    return true;
   }
-  return true;
-}
 
   @override
   Widget build(BuildContext context) {
@@ -181,30 +176,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.star, color: AppColors.buttonColors, size: 16),
-                    SizedBox(width: 4),
-                    Text('4.2',
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Row(
-            children: [
-              Icon(Icons.access_time, color: Colors.grey, size: 16),
-              SizedBox(width: 8),
-              Text('Open until 4:00 am', style: TextStyle(color: Colors.grey)),
             ],
           ),
           const SizedBox(height: 14),
@@ -346,9 +317,10 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           createNutritionInfo(servingInfo.servingInfo);
     }
     final defaultCalories = dish.servingInfos.isNotEmpty
-      ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts.calories.value) ?? 0.0
-      : 0.0;
-
+        ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts
+                .calories.value) ??
+            0.0
+        : 0.0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Container(
@@ -368,36 +340,38 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
- if (_checkCalorieLimit(context, defaultCalories)) {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true, // Enables full-screen bottom sheet
-                backgroundColor: Colors.transparent,
-                builder: (context) {
-                  return FractionallySizedBox(
-                    heightFactor: 0.7, // Adjust height as needed
-                    child: DishDetails(
-                      calories: defaultCalories,
-                      dishId: dish.id,
-                      restaurantId: widget.restaurantId,
-                      name: dish.dishName,
-                      description: dish.description,
-                      // You might want to add an imageUrl field to your Dish model
-                      imageUrl: dish.description,
-                      // Get all available serving sizes
-                      servingSizes: dish.servingInfos
-                          .map((info) => info.servingInfo.size)
-                          .toList(),
-                      sizeOptions: sizeOptions,
-                      // If you have ingredients data, add it to your model
-                      // For now, passing an empty list or you can add a default value
-                      ingredients: const [],
-                    ),
-                  );
-                },
-              );
-
- }
+              if (_checkCalorieLimit(context, defaultCalories)) {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true, // Enables full-screen bottom sheet
+                  backgroundColor: Colors.transparent,
+                  builder: (context) {
+                    return FractionallySizedBox(
+                      heightFactor: 0.7, // Adjust height as needed
+                      child: DishDetails(
+                        servingInfos: dish.servingInfos,
+                        calories: defaultCalories,
+                        dishId: dish.id,
+                        restaurantId: widget.restaurantId,
+                        name: dish.dishName,
+                        description: dish.description,
+                        // You might want to add an imageUrl field to your Dish model
+                        imageUrl: dish.servingInfos.isNotEmpty
+                            ? dish.servingInfos.first.servingInfo.url
+                            : null,
+                        // Get all available serving sizes
+                        servingSizes: dish.servingInfos
+                            .map((info) => info.servingInfo.size)
+                            .toList(),
+                        sizeOptions: sizeOptions,
+                        // If you have ingredients data, add it to your model
+                        // For now, passing an empty list or you can add a default value
+                        ingredients: const [],
+                      ),
+                    );
+                  },
+                );
+              }
             },
             child: Padding(
               padding: const EdgeInsets.all(4.0),
@@ -410,10 +384,32 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      MaterialSymbols.fastfood_outlined,
-                      color: AppColors.buttonColors,
-                      size: 32,
+                    child: ClipRRect(
+                      // Added ClipRRect to clip the image
+                      borderRadius:
+                          BorderRadius.circular(8), // Same radius as container
+                      child: dish.servingInfos.first.servingInfo.url != null
+                          ? Image.network(
+                              dish.servingInfos.first.servingInfo.url!,
+                              fit: BoxFit
+                                  .cover, // Changed to cover for better image filling
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Center(
+                                  child: Icon(
+                                    Icons.fastfood,
+                                    color: Colors.grey,
+                                    size: 32,
+                                  ),
+                                );
+                              },
+                            )
+                          : const Center(
+                              child: Icon(
+                                Icons.fastfood,
+                                color: Colors.grey,
+                                size: 32,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -504,36 +500,45 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                           size: 30,
                         ),
                         onPressed: () {
-if (_checkCalorieLimit(context, defaultCalories)) {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled:
-                                true, // Enables full-screen bottom sheet
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return FractionallySizedBox(
-                                heightFactor: 0.7, // Adjust height as needed
-                                child: DishDetails(
-                                  calories: defaultCalories,
-                                  dishId: dish.id,
-                                  restaurantId: widget.restaurantId,
-                                  name: dish.dishName,
-                                  description: dish.description,
-                                  // You might want to add an imageUrl field to your Dish model
-                                  imageUrl: null,
-                                  // Get all available serving sizes
-                                  servingSizes: dish.servingInfos
-                                      .map((info) => info.servingInfo.size)
-                                      .toList(),
-                                  sizeOptions: sizeOptions,
-                                  // If you have ingredients data, add it to your model
-                                  // For now, passing an empty list or you can add a default value
-                                  ingredients: const [],
-                                ),
-                              );
-                            },
-                          );
-}
+                          if (_checkCalorieLimit(context, defaultCalories)) {
+                            print(dish.servingInfos.isNotEmpty
+                                ? dish.servingInfos.first.servingInfo.url
+                                : null);
+
+                            print("hei ");
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled:
+                                  true, // Enables full-screen bottom sheet
+                              backgroundColor: Colors.transparent,
+                              builder: (context) {
+                                return FractionallySizedBox(
+                                  heightFactor: 0.7, // Adjust height as needed
+                                  child: DishDetails(
+                                    servingInfos: dish.servingInfos,
+                                    calories: defaultCalories,
+                                    dishId: dish.id,
+                                    restaurantId: widget.restaurantId,
+                                    name: dish.dishName,
+                                    description: dish.description,
+                                    // You might want to add an imageUrl field to your Dish model
+                                    imageUrl: dish.servingInfos.isNotEmpty
+                                        ? dish
+                                            .servingInfos.first.servingInfo.url
+                                        : null,
+                                    // Get all available serving sizes
+                                    servingSizes: dish.servingInfos
+                                        .map((info) => info.servingInfo.size)
+                                        .toList(),
+                                    sizeOptions: sizeOptions,
+                                    // If you have ingredients data, add it to your model
+                                    // For now, passing an empty list or you can add a default value
+                                    ingredients: const [],
+                                  ),
+                                );
+                              },
+                            );
+                          }
 
                           // Add to cart functionality
                         },
@@ -550,42 +555,60 @@ if (_checkCalorieLimit(context, defaultCalories)) {
   }
 
   Widget _buildOrderSummary(BuildContext context, UserStats userStats) {
-    final today = DateTime.now();
-    final todayDate =
-        "${today.day.toString().padLeft(2, '0')}/${today.month.toString().padLeft(2, '0')}/${today.year}";
-
-    print("Today's date format: $todayDate");
-    print("Available dates in stats: ${userStats.dailyConsumptionStats.keys}");
-
-    final baseConsumedCalories =
-        userStats.dailyConsumptionStats[todayDate] ?? 0.0;
-    print("Base consumed calories: $baseConsumedCalories");
-
     return BlocBuilder<CartBloc, CartState>(
       builder: (context, cartState) {
-        final totalConsumedCalories =
-            baseConsumedCalories + cartState.totalCalories;
-        print("Total consumed calories: $totalConsumedCalories");
+        return BlocBuilder<GetCartBloc, GetCartState>(
+          builder: (context, getCartState) {
+            final baseConsumedCalories = userStats.todayConsumption;
 
-        // Calculate remaining calories properly
-        final dailyCalorieGoal =
-            double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
-        final remainingCalories = dailyCalorieGoal - totalConsumedCalories;
+            print(" base :${baseConsumedCalories}");
 
-        return CalorieSummaryWidget(
-          currentCalories: totalConsumedCalories,
-          remainingDailyCalorie: remainingCalories,
-          itemCount: cartState.items.length,
-          onViewOrderPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const CartScreen(),
-              ),
+            final dailyCalorieGoal =
+                double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+
+            int totalItems = 0;
+            double cartCalories = 0.0;
+
+            if (getCartState is CartLoaded) {
+              totalItems = getCartState.carts.fold<int>(
+                0,
+                (sum, cart) =>
+                    sum +
+                    cart.dishDetails.fold<int>(
+                      0,
+                      (dishSum, dish) =>
+                          dishSum + (int.tryParse(dish.servingSize) ?? 1),
+                    ),
+              );
+
+              cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
+            }
+
+            // ! i have added the totla consumedCalories plus the total caloriees in the cart
+            // ! pass the total item count from the cart screen
+
+            final totalConsumedCalories =
+                baseConsumedCalories + cartState.totalCalories + cartCalories;
+            final cartcount = cartState.items.length;
+
+            final totalItemCount = cartcount + totalItems;
+
+            return CalorieSummaryWidget(
+              currentCalories: totalConsumedCalories,
+              remainingDailyCalorie: dailyCalorieGoal,
+              itemCount: totalItemCount,
+              onViewOrderPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CartScreen(),
+                  ),
+                );
+              },
+              buttonColor: AppColors.buttonColors,
+              primaryColor: AppColors.primaryColor,
             );
           },
-          buttonColor: AppColors.buttonColors,
-          primaryColor: AppColors.primaryColor,
         );
       },
     );

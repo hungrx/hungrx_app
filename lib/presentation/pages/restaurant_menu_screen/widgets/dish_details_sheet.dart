@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/restaurant_menu_screen/cart_request.dart';
+import 'package:hungrx_app/data/Models/restaurant_menu_screen/restaurant_menu_response.dart';
 import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_event.dart';
 import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_state.dart';
@@ -19,6 +20,7 @@ class DishDetails extends StatefulWidget {
   final String? imageUrl;
   final String description;
   final List<String> servingSizes;
+   final List<ServingInfo> servingInfos; 
   final Map<String, NutritionInfo> sizeOptions;
   final List<String> ingredients;
 
@@ -31,8 +33,8 @@ class DishDetails extends StatefulWidget {
     required this.sizeOptions,
     required this.ingredients,
     this.restaurantId,
-    this.dishId, 
-    required this.calories,
+    this.dishId,
+    required this.calories, required this.servingInfos,
   });
 
   @override
@@ -40,20 +42,19 @@ class DishDetails extends StatefulWidget {
 }
 
 class _DishDetailsState extends State<DishDetails> {
-
   bool _checkCalorieLimit(BuildContext context, double dishCalories) {
     final cartState = context.read<CartBloc>().state;
     final menuState = context.read<RestaurantMenuBloc>().state;
-    
+
     if (menuState is RestaurantMenuLoaded) {
       final userStats = menuState.menuResponse.userStats;
-      final today = DateTime.now();
-      final todayDate = "${today.day.toString().padLeft(2, '0')}/${today.month.toString().padLeft(2, '0')}/${today.year}";
-      
-      final baseConsumedCalories = userStats.dailyConsumptionStats[todayDate] ?? 0.0;
-      final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
-      final totalCaloriesAfterAdd = baseConsumedCalories + cartState.totalCalories + dishCalories;
-      
+      final baseConsumedCalories =
+          userStats.todayConsumption;
+      final dailyCalorieGoal =
+          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+      final totalCaloriesAfterAdd =
+          baseConsumedCalories + cartState.totalCalories + dishCalories;
+
       if (totalCaloriesAfterAdd > dailyCalorieGoal) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -77,7 +78,7 @@ class _DishDetailsState extends State<DishDetails> {
     }
     return true;
   }
-  
+
   void _handleAddToCart(BuildContext context) {
     if (widget.dishId == null || widget.restaurantId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,44 +104,69 @@ class _DishDetailsState extends State<DishDetails> {
         ),
       ],
     );
- if (_checkCalorieLimit(context, widget.calories)) {
-    context.read<AddToCartBloc>().add(SubmitAddToCartEvent(cartRequest));
+    if (_checkCalorieLimit(context, widget.calories)) {
+      context.read<AddToCartBloc>().add(SubmitAddToCartEvent(cartRequest));
 
-    final nutrition = _calculateTotalNutrition();
-    final cartItem = CartItem(
-      dishName: widget.name,
-      size: selectedSize,
-      nutritionInfo: nutrition,
-    );
+      final nutrition = _calculateTotalNutrition();
+      final cartItem = CartItem(
+        dishName: widget.name,
+        size: selectedSize,
+        nutritionInfo: nutrition,
+      );
 
-    // Dispatch the AddToCart event to update the progress bar
-    context.read<CartBloc>().add(AddToCart(cartItem));
- }
+      // Dispatch the AddToCart event to update the progress bar
+      context.read<CartBloc>().add(AddToCart(cartItem));
+    }
   }
 
   String selectedSize = '';
+  late ServingInfo selectedServingInfo;
 
   @override
   void initState() {
     super.initState();
     // Set default size to first available option
     if (widget.sizeOptions.isNotEmpty) {
+       selectedServingInfo = widget.servingInfos.first;
       selectedSize = widget.sizeOptions.keys.first;
     }
   }
 
+  // NutritionInfo _calculateTotalNutrition() {
+  //   return widget.sizeOptions[selectedSize]!;
+  // }
+   void _updateSelectedSize(String size) {
+    setState(() {
+      selectedSize = size;
+      selectedServingInfo = widget.servingInfos.firstWhere(
+        (info) => info.servingInfo.size == size,
+        orElse: () => widget.servingInfos.first,
+      );
+    });
+  }
+
   NutritionInfo _calculateTotalNutrition() {
-    return widget.sizeOptions[selectedSize]!;
+    final facts = selectedServingInfo.servingInfo.nutritionFacts;
+    return NutritionInfo(
+      calories: double.tryParse(facts.calories.value) ?? 0,
+      protein: double.tryParse(facts.protein.value) ?? 0,
+      carbs: double.tryParse(facts.carbs.value) ?? 0,
+      fat: double.tryParse(facts.totalFat.value) ?? 0,
+      sodium: 0, // Add if available in your model
+      sugar: 0,  // Add if available in your model
+      fiber: 0,  // Add if available in your model
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    print("url :${widget.imageUrl}");
     final nutrition = _calculateTotalNutrition();
 
     return BlocListener<AddToCartBloc, AddToCartState>(
       listener: (context, state) {
         if (state is AddToCartSuccess) {
-           Navigator.pop(context);
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.response.message)),
           );
@@ -187,28 +213,89 @@ class _DishDetailsState extends State<DishDetails> {
   }
 
   Widget _buildSliverAppBar() {
-    return SliverAppBar(
-      expandedHeight: 200,
-      pinned: true,
-      backgroundColor: Colors.white,
-      flexibleSpace: FlexibleSpaceBar(
-        background: 
-            
-            Container(
-                color: Colors.white,
-                child: const Icon(
-                  Icons.restaurant_menu,
-                  size: 100,
-                  color: Colors.grey,
-                ),
-              ),
-      ),
+final currentImageUrl = selectedServingInfo.servingInfo.url;
+// final currentServingInfo = widget.sizeOptions.entries
+//       .firstWhere((entry) => entry.key == selectedSize,
+//           orElse: () => widget.sizeOptions.entries.first);
+      
+  // Get the URL for the current size
+  // final currentImageUrl = widget.sizeOptions[selectedSize]?.imageUrl ?? widget.imageUrl;
+  // final currentImageUrl = widget.servingSizes.isNotEmpty
+  //     ? widget.sizeOptions[selectedSize]?.imageUrl
+  //     : null;
+print(currentImageUrl);
+  return SliverAppBar(
+    leading: const SizedBox(),
+    expandedHeight: 200,
+    pinned: true,
+    backgroundColor: Colors.white,
+    flexibleSpace: FlexibleSpaceBar(
+      background: currentImageUrl != null && currentImageUrl.isNotEmpty 
+          ? Image.network(
+              currentImageUrl,
+              fit: BoxFit.fitHeight,
+              errorBuilder: (context, error, stackTrace) {
+                print("Error loading image: $error"); 
+                return _buildFallbackIcon();
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) {
+                  return child;
+                }
+                return Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                    color: AppColors.buttonColors,
+                  ),
+                );
+              },
+            )
+          : _buildFallbackIcon(),
+    ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            width: 35,
+            height: 35,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(
+                Icons.close,
+                color: Colors.black,
+                size: 18,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFallbackIcon() {
+    return Container(
+      color: Colors.grey[900],
+      child: Center(
+        child: Icon(
+          Icons.restaurant_menu,
+          size: 100,
+          color: Colors.grey[400],
+        ),
+      ),
     );
   }
 
@@ -253,13 +340,12 @@ class _DishDetailsState extends State<DishDetails> {
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
-          children: widget.servingSizes.map((size) {
+          children: widget.servingInfos.map((servingInfo) {
+            final size = servingInfo.servingInfo.size;
             final isSelected = size == selectedSize;
             return GestureDetector(
               onTap: () {
-                setState(() {
-                  selectedSize = size;
-                });
+                _updateSelectedSize(size);
               },
               child: Chip(
                 label: Text(
@@ -297,10 +383,10 @@ class _DishDetailsState extends State<DishDetails> {
           spacing: 16,
           runSpacing: 16,
           children: [
-            _nutritionItem('Calories', '${nutrition.calories}'),
-            _nutritionItem('Protein', '${nutrition.protein}g'),
-            _nutritionItem('Carbs', '${nutrition.carbs}g'),
-            _nutritionItem('Fat', '${nutrition.fat}g'),
+            _nutritionItem('Calories', '${nutrition.calories.round()}'),
+            _nutritionItem('Protein', '${nutrition.protein.round()}g'),
+            _nutritionItem('Carbs', '${nutrition.carbs.round()}g'),
+            _nutritionItem('Fat', '${nutrition.fat.round()}g'),
           ],
         ),
       ],
@@ -352,7 +438,6 @@ class _DishDetailsState extends State<DishDetails> {
                 ? null
                 : () {
                     _handleAddToCart(context);
-                  
                   },
             child: state is AddToCartLoading
                 ? const SizedBox(
@@ -360,11 +445,12 @@ class _DishDetailsState extends State<DishDetails> {
                     width: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
                     ),
                   )
                 : Text(
-                    'Add to Meal (${nutrition.calories} Calories)',
+                    'Add to Meal (${nutrition.calories.round()} Calories)',
                     style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
@@ -385,6 +471,7 @@ class NutritionInfo {
   final int sodium;
   final double sugar;
   final double fiber;
+  final String? imageUrl;  // Add this field
 
   const NutritionInfo({
     required this.calories,
@@ -394,5 +481,6 @@ class NutritionInfo {
     required this.sodium,
     required this.sugar,
     required this.fiber,
+    this.imageUrl,  // Add this parameter
   });
 }

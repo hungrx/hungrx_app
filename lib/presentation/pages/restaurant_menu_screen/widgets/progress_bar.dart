@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
 class CalorieSummaryWidget extends StatelessWidget {
+  
   final double currentCalories;
   final double remainingDailyCalorie;
   final int itemCount;

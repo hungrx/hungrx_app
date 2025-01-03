@@ -53,15 +53,11 @@ class _SearchScreenState extends State<SearchScreen> {
   // Get the current cart state
   final cartState = context.read<CartBloc>().state;
   
-  // Get today's date for stats
-  final today = DateTime.now();
-  final todayDate = "${today.day.toString().padLeft(2, '0')}/${today.month.toString().padLeft(2, '0')}/${today.year}";
-  
   // Get the current state for user stats
   final state = context.read<RestaurantMenuBloc>().state;
   if (state is RestaurantMenuLoaded) {
     final userStats = state.menuResponse.userStats;
-    final baseConsumedCalories = userStats.dailyConsumptionStats[todayDate] ?? 0.0;
+    final baseConsumedCalories = userStats.todayConsumption;
     final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
     
     // Calculate total calories if this dish is added
@@ -220,6 +216,7 @@ Widget _buildDishItem(Dish dish) {
                   return FractionallySizedBox(
                     heightFactor: 0.7,
                     child: DishDetails(
+                      servingInfos: dish.servingInfos,
                       calories: defaultCalories,
                       dishId: dish.id,
                       restaurantId: widget.restaurantId,
@@ -358,6 +355,7 @@ Widget _buildDishItem(Dish dish) {
                               return FractionallySizedBox(
                                 heightFactor: 0.7,
                                 child: DishDetails(
+                                  servingInfos: dish.servingInfos,
                                   calories: defaultCalories,
                                   dishId: dish.id,
                                   restaurantId: widget.restaurantId,

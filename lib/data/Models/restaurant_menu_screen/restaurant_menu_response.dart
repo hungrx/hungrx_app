@@ -162,11 +162,14 @@ class ServingInfo {
 class ServingDetails {
   final String size;
   final String price;
+  final String? url;
   final NutritionFacts nutritionFacts;
 
   ServingDetails({
+
     required this.size,
     required this.price,
+    this.url,
     required this.nutritionFacts,
   });
 
@@ -174,6 +177,7 @@ class ServingDetails {
     return ServingDetails(
       size: json['size'] ?? '',
       price: json['price'] ?? '',
+      url: json['Url'], 
       nutritionFacts: NutritionFacts.fromJson(json['nutritionFacts'] ?? {}),
     );
   }
@@ -221,24 +225,17 @@ class NutritionValue {
 
 class UserStats {
   final String dailyCalorieGoal;
-  final Map<String, double> dailyConsumptionStats;
+  final double todayConsumption;
 
   UserStats({
     required this.dailyCalorieGoal,
-    required this.dailyConsumptionStats,
+    required this.todayConsumption,
   });
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
-    final Map<String, double> stats = {};
-    if (json['dailyConsumptionStats'] != null) {
-      (json['dailyConsumptionStats'] as Map<String, dynamic>).forEach((key, value) {
-        stats[key] = (value as num).toDouble();
-      });
-    }
-
     return UserStats(
       dailyCalorieGoal: json['dailyCalorieGoal']?.toString() ?? '0',
-      dailyConsumptionStats: stats,
+      todayConsumption: (json['todayConsumption'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
