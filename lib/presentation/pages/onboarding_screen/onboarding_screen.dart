@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/repositories/onboarding_service.dart';
+import 'package:hungrx_app/data/repositories/auth_screen/onboarding_service.dart';
 import 'components/onboarding_data.dart';
 
 class OnboardingPage extends StatefulWidget {

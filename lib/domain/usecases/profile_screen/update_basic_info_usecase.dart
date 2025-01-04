@@ -1,5 +1,5 @@
 import 'package:hungrx_app/data/Models/profile_screen/update_basic_info_request.dart';
-import 'package:hungrx_app/data/repositories/update_basic_info_repository.dart';
+import 'package:hungrx_app/data/repositories/profile_screen/update_basic_info_repository.dart';
 
 class UpdateBasicInfoUseCase {
   final UpdateBasicInfoRepository _repository;

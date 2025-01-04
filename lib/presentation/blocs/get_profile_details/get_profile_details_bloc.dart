@@ -1,5 +1,5 @@
 import 'package:bloc/bloc.dart';
-import 'package:hungrx_app/data/repositories/get_profile_details_repository.dart';
+import 'package:hungrx_app/data/repositories/profile_screen/get_profile_details_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_state.dart';

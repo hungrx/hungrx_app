@@ -1,4 +1,4 @@
-import 'package:hungrx_app/data/repositories/report_bug_repository.dart';
+import 'package:hungrx_app/data/repositories/profile_screen/report_bug_repository.dart';
 
 class ReportBugUseCase {
   final ReportBugRepository _repository;

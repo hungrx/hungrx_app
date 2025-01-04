@@ -1,24 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/data/Models/food_cart_screen.dart/consume_cart_request.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/meal_type.dart';
+import 'package:hungrx_app/presentation/blocs/consume_cart/consume_cart_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/consume_cart/consume_cart_event.dart';
+import 'package:hungrx_app/presentation/blocs/consume_cart/consume_cart_state.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_event.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_state.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/success_dialog.dart';
 
 class MealLoggerButton extends StatefulWidget {
-  final String totalCalories;
   final String buttonText;
   final Color buttonColor;
   final Color textColor;
   final double borderRadius;
 
+  final String totalCalories;
+  final List<OrderDetail> orderDetails;
+
   const MealLoggerButton({
     super.key,
-    this.buttonText = 'Ate',
+    this.buttonText = 'Ete',
     this.buttonColor = AppColors.buttonColors,
     this.textColor = Colors.black,
-    this.borderRadius = 20, required this.totalCalories,
+    this.borderRadius = 20,
+    required this.totalCalories,
+    required this.orderDetails,
   });
 
   @override
@@ -48,7 +57,10 @@ class _MealLoggerButtonState extends State<MealLoggerButton> {
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        return  MealLogDialog(totalCalories: widget.totalCalories,);
+        return MealLogDialog(
+          orderDetails: widget.orderDetails,
+          totalCalories: widget.totalCalories,
+        );
       },
     );
   }
@@ -56,7 +68,12 @@ class _MealLoggerButtonState extends State<MealLoggerButton> {
 
 class MealLogDialog extends StatelessWidget {
   final String totalCalories;
-  const MealLogDialog({super.key, required this.totalCalories});
+  final List<OrderDetail> orderDetails;
+  const MealLogDialog({
+    super.key,
+    required this.totalCalories,
+    required this.orderDetails,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -65,14 +82,47 @@ class MealLogDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       backgroundColor: Colors.grey[900],
-      child:  MealLogContent(totalCalories: totalCalories,),
+      child: BlocListener<ConsumeCartBloc, ConsumeCartState>(
+        listener: (context, state) {
+          if (state is ConsumeCartSuccess) {
+            Navigator.of(context).pop();
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return SuccessDialog(
+                  consumedCalories: totalCalories,
+                  remainingCalories: state.response.updatedCalories.remaining.round()
+                      .toString(), // Assuming you have this in your response
+                );
+              },
+            );
+          } else if (state is ConsumeCartError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: MealLogContent(
+          totalCalories: totalCalories,
+          orderDetails: orderDetails,
+        ),
+      ),
     );
   }
 }
 
 class MealLogContent extends StatelessWidget {
-    final String totalCalories;
-  const MealLogContent({super.key, required this.totalCalories});
+  final String totalCalories;
+  final List<OrderDetail> orderDetails;
+  const MealLogContent({
+    super.key,
+    required this.totalCalories,
+    required this.orderDetails,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +280,7 @@ class MealLogContent extends StatelessWidget {
   Widget _buildCaloriesInfo() {
     return Row(
       children: [
-         const SizedBox(width: 8),
+        const SizedBox(width: 8),
         Text(
           'Total Calories: $totalCalories kcal',
           style: TextStyle(
@@ -243,38 +293,63 @@ class MealLogContent extends StatelessWidget {
   }
 
   Widget _buildConsumeButton(BuildContext context, MealTypeLoaded state) {
-    
     return SizedBox(
       width: double.infinity,
       height: 50,
-      child: ElevatedButton(
-          onPressed: state.selectedMealId != null
-              ? () {
-                  // Handle meal consumption logic here
-                  Navigator.of(context).pop();
-                }
-              : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.buttonColors,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
+      child: BlocBuilder<ConsumeCartBloc, ConsumeCartState>(
+        builder: (context, consumeCartState) {
+          final isLoading = consumeCartState is ConsumeCartLoading;
+
+          return ElevatedButton(
+            onPressed: state.selectedMealId != null && !isLoading
+                ? () {
+                    context.read<ConsumeCartBloc>().add(
+                          ConsumeCartSubmitted(
+                            mealType: state.mealTypes
+                                .firstWhere((m) => m.id == state.selectedMealId)
+                                .meal
+                                .toLowerCase(),
+                            orderDetails: orderDetails,
+                          ),
+                        );
+                  }
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.buttonColors,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+              elevation: 2,
             ),
-            elevation: 2,
-          ),
-          child: state.selectedMealId != null
-              ? Text(
-                  'CONSUME ${state.mealTypes.firstWhere((m) => m.id == state.selectedMealId).meal.toUpperCase()}',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ))
-              : const Text('SELECT A MEAL TYPE',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ))),
+            child: isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                    ),
+                  )
+                : state.selectedMealId != null
+                    ? Text(
+                        'CONSUME ${state.mealTypes.firstWhere((m) => m.id == state.selectedMealId).meal.toUpperCase()}',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      )
+                    : const Text(
+                        'SELECT A MEAL TYPE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+          );
+        },
+      ),
     );
   }
 

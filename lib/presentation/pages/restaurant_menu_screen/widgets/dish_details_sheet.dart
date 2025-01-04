@@ -9,6 +9,8 @@ import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_state.dart
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_event.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_state.dart';
+import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_state.dart';
 
@@ -79,19 +81,21 @@ class _DishDetailsState extends State<DishDetails> {
     return true;
   }
 
-  void _handleAddToCart(BuildContext context) {
-    if (widget.dishId == null || widget.restaurantId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid dish or restaurant information'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+void _handleAddToCart(BuildContext context) {
+  if (widget.dishId == null || widget.restaurantId == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Invalid dish or restaurant information'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
 
+  final nutrition = _calculateTotalNutrition();
+  
+  if (_checkCalorieLimit(context, nutrition.calories)) {  // Use calculated calories
     final cartRequest = CartRequest(
-      // No need to provide userId here
       orders: [
         CartOrderRequest(
           restaurantId: widget.restaurantId!,
@@ -104,20 +108,18 @@ class _DishDetailsState extends State<DishDetails> {
         ),
       ],
     );
-    if (_checkCalorieLimit(context, widget.calories)) {
-      context.read<AddToCartBloc>().add(SubmitAddToCartEvent(cartRequest));
 
-      final nutrition = _calculateTotalNutrition();
-      final cartItem = CartItem(
-        dishName: widget.name,
-        size: selectedSize,
-        nutritionInfo: nutrition,
-      );
+    context.read<AddToCartBloc>().add(SubmitAddToCartEvent(cartRequest));
 
-      // Dispatch the AddToCart event to update the progress bar
-      context.read<CartBloc>().add(AddToCart(cartItem));
-    }
+    final cartItem = CartItem(
+      dishName: widget.name,
+      size: selectedSize,
+      nutritionInfo: nutrition,
+    );
+
+    context.read<CartBloc>().add(AddToCart(cartItem));
   }
+}
 
   String selectedSize = '';
   late ServingInfo selectedServingInfo;
@@ -131,10 +133,6 @@ class _DishDetailsState extends State<DishDetails> {
       selectedSize = widget.sizeOptions.keys.first;
     }
   }
-
-  // NutritionInfo _calculateTotalNutrition() {
-  //   return widget.sizeOptions[selectedSize]!;
-  // }
    void _updateSelectedSize(String size) {
     setState(() {
       selectedSize = size;
@@ -160,13 +158,13 @@ class _DishDetailsState extends State<DishDetails> {
 
   @override
   Widget build(BuildContext context) {
-    print("url :${widget.imageUrl}");
     final nutrition = _calculateTotalNutrition();
 
     return BlocListener<AddToCartBloc, AddToCartState>(
       listener: (context, state) {
         if (state is AddToCartSuccess) {
           Navigator.pop(context);
+           context.read<GetCartBloc>().add(LoadCart());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.response.message)),
           );

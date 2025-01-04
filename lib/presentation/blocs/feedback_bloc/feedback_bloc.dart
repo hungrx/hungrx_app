@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/data/Models/dashboad_screen/feedback_model.dart';
-import 'package:hungrx_app/domain/usecases/submit_feedback_usecase.dart';
+import 'package:hungrx_app/domain/usecases/dashboad_screen/submit_feedback_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/feedback_bloc/feedback_event.dart';
 import 'package:hungrx_app/presentation/blocs/feedback_bloc/feedback_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';

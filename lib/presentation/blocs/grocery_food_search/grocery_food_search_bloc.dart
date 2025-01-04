@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/data/repositories/food_search_repository.dart';
+import 'package:hungrx_app/data/repositories/home_meals_screen/food_search_repository.dart';
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_event.dart';
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_state.dart';
 

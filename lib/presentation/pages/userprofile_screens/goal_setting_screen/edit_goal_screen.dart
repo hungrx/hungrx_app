@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/data/Models/profile_screen/update_goal_settings_model.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_goal_settings_api.dart';
-import 'package:hungrx_app/data/repositories/update_goal_settings_repository.dart';
+import 'package:hungrx_app/data/repositories/profile_setting_screen/update_goal_settings_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/domain/usecases/profile_screen/update_goal_settings_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_bloc.dart';

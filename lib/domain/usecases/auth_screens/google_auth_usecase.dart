@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hungrx_app/data/repositories/google_auth_repository.dart';
+import 'package:hungrx_app/data/repositories/auth_screen/google_auth_repository.dart';
 
 class GoogleAuthUseCase {
   final GoogleAuthRepository repository;

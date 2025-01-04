@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
-import 'package:hungrx_app/data/Models/user_profile_check_response.dart';
+import 'package:hungrx_app/data/Models/auth_screens/user_profile_check_response.dart';
 
 class UserProfileApiService {
   Future<UserProfileCheckResponse> checkUserProfile(String userId) async {

@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/domain/usecases/check_user_profile_usecase.dart';
+import 'package:hungrx_app/domain/usecases/auth_screens/check_user_profile_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/check_profile_status/check_profile_status_event.dart';
 import 'package:hungrx_app/presentation/blocs/check_profile_status/check_profile_status_state.dart';
 

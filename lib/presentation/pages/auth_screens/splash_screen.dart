@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'dart:async';
 import 'package:hungrx_app/data/services/auth_service.dart';
-import 'package:hungrx_app/data/repositories/onboarding_service.dart';
+import 'package:hungrx_app/data/repositories/auth_screen/onboarding_service.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/internet_connection/internet_connection_bloc.dart';

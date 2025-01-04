@@ -1,5 +1,5 @@
 import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
-import 'package:hungrx_app/data/repositories/search_history_log_repository.dart';
+import 'package:hungrx_app/data/repositories/log_screen/search_history_log_repository.dart';
 
 class GetSearchHistoryLogUseCase {
   final SearchHistoryLogRepository repository;

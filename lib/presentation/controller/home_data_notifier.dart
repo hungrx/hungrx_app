@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:hungrx_app/data/datasources/api/dashboard_screen/home_screen_api_service.dart';
-import 'package:hungrx_app/data/repositories/home_screen_repository.dart';
+import 'package:hungrx_app/data/repositories/dashboad_screen/home_screen_repository.dart';
 
 class HomeDataNotifier {
   

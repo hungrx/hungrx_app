@@ -34,10 +34,8 @@ class CalorieSummaryWidget extends StatelessWidget {
 
 @override
 Widget build(BuildContext context) {
-final double progress = remainingDailyCalorie > 0 
-    ? (currentCalories / (currentCalories + remainingDailyCalorie)).clamp(0.0, 1.0)
-    : 0.0;
-  final progressColor = _getProgressColor(progress);
+   final double progress = (currentCalories / remainingDailyCalorie).clamp(0.0, 1.0);
+    final progressColor = _getProgressColor(progress);
 
   return Container(
     padding: const EdgeInsets.all(16),
@@ -63,7 +61,7 @@ final double progress = remainingDailyCalorie > 0
                       style:  TextStyle(color: _getProgressColor(progress)),
                     ),
                       Text(
-                      ' / ${remainingDailyCalorie.toInt()} cal',
+                      ' / ${remainingDailyCalorie.round()} cal',
                       style: const TextStyle(color: Colors.blueGrey),
                     ),
                   ],

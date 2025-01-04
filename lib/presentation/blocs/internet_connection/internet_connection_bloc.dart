@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:hungrx_app/data/repositories/connectivity_repository.dart';
+import 'package:hungrx_app/data/repositories/auth_screen/connectivity_repository.dart';
 import 'package:hungrx_app/presentation/blocs/internet_connection/internet_connection_event.dart';
 import 'package:hungrx_app/presentation/blocs/internet_connection/internet_connection_state.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';

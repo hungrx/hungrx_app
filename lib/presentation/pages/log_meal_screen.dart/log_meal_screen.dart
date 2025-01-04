@@ -3,13 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
-import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_state.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_state.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/bottom_search_bar.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 
@@ -50,74 +49,53 @@ class _LogMealViewState extends State<LogMealView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
+    return SafeArea(
+      child: Scaffold(
         backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text(
-          'Log your meal',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSearchBar(context),
-              _buildHistoryHeader(),
-              _buildFoodList(),
-            ],
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.pop(),
           ),
+          title: const Text(
+            'Log your meal',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // _buildSearchBar(context),
+                    _buildHistoryHeader(),
+                    _buildFoodList(),
+                    //  const SizedBox(height: 180),
+                  ],
+                ),
+              ),
+            ),
+            BottomCalorieSearchWidget(
+              currentCalories:
+                  1500, // Replace with actual values from your state
+              remainingDailyCalorie:
+                  2000, // Replace with actual values from your state
+              userId: widget.userId,
+              onSearchHistoryRefresh: () {
+                context.read<SearchHistoryLogBloc>().add(
+                      GetSearchHistoryLogRequested(userId: widget.userId),
+                    );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
-    return BlocBuilder<SearchBloc, SearchState>(
-      builder: (context, state) {
-        return Column(
-          children: [
-            Padding( 
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[900],
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: TextField(
-                  style: const TextStyle(color: Colors.white),
-                  onTap: () {
-                    context.pushNamed(RouteNames.grocerySeach).then((_) {
-                      // ignore: use_build_context_synchronously
-                      context.read<SearchHistoryLogBloc>().add(
-                            GetSearchHistoryLogRequested(userId: widget.userId),
-                          );
-                    });
-                  },
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    hintText: 'Search your food',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey),
-                    border: InputBorder.none,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                  ),
-                ),
-              ),
-            ),
-       
-          ],
-        );
-      },
-    );
-  }
 
   Widget _buildHistoryHeader() {
     return BlocBuilder<SearchHistoryLogBloc, SearchHistoryLogState>(
@@ -180,7 +158,6 @@ class _LogMealViewState extends State<LogMealView> {
     return BlocBuilder<SearchHistoryLogBloc, SearchHistoryLogState>(
       builder: (context, state) {
         if (state is SearchHistoryLogLoading) {
-
           return const Center(
             child: CircularProgressIndicator(color: AppColors.buttonColors),
           );
@@ -190,11 +167,17 @@ class _LogMealViewState extends State<LogMealView> {
           return const Center(
             child: Column(
               children: [
-                Icon(Icons.error_outline, color: Colors.red,size: 25,),
-                SizedBox(height: 20,),
+                Icon(
+                  Icons.error_outline,
+                  color: Colors.red,
+                  size: 25,
+                ),
+                SizedBox(
+                  height: 20,
+                ),
                 Text(
                   'Some Error Occurred',
-                  style: TextStyle(color: Colors.red,fontSize: 16),
+                  style: TextStyle(color: Colors.red, fontSize: 16),
                 ),
               ],
             ),
@@ -266,8 +249,7 @@ class _LogMealViewState extends State<LogMealView> {
                     pathParameters: {'id': item.foodId},
                     extra: {
                       'isSearchScreen': true, // or false based on your screen
-                      'searchFood':
-                          item, // pass if it's a search food item
+                      'searchFood': item, // pass if it's a search food item
                       // 'foodItem': food, // pass if it's a regular food item
                     },
                   );

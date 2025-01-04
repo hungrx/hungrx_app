@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/data/Models/food_cart_screen.dart/consume_cart_request.dart';
 import 'package:hungrx_app/data/Models/food_cart_screen.dart/get_cart_model.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_event.dart';
@@ -22,6 +23,7 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  List<OrderDetail> orderDetails = [];
   @override
   void initState() {
     super.initState();
@@ -343,21 +345,40 @@ class _CartScreenState extends State<CartScreen> {
           ),
           child: Row(
             children: [
-              Image.asset(
-                "assets/images/pizz.png",
-                width: 60,
-                height: 60,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 60,
-                    height: 60,
-                    color: Colors.grey[800],
-                    child: const Icon(
-                      Icons.restaurant,
-                      color: Colors.white,
-                    ),
-                  );
-                },
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  // Added ClipRRect to clip the image
+                  borderRadius:
+                      BorderRadius.circular(8), // Same radius as container
+                  child: dish.servingSize.isNotEmpty
+                      ? Image.network(
+                          "https://www.allrecipes.com/thmb/5JVfA7MxfTUPfRerQMdF-nGKsLY=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/25473-the-perfect-basic-burger-DDMFS-4x3-56eaba3833fd4a26a82755bcd0be0c54.jpg",
+                          fit: BoxFit
+                              .cover, // Changed to cover for better image filling
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.fastfood,
+                                color: Colors.grey,
+                                size: 32,
+                              ),
+                            );
+                          },
+                        )
+                      : const Center(
+                          child: Icon(
+                            Icons.fastfood,
+                            color: Colors.grey,
+                            size: 32,
+                          ),
+                        ),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -474,7 +495,18 @@ class _CartScreenState extends State<CartScreen> {
   ) {
     final currentCalories = nutrition['calories'] ?? 0.0;
     final isExceeded = currentCalories > remainingCalories;
+    final cartState = context.read<GetCartBloc>().state;
 
+    if (cartState is CartLoaded) {
+      orderDetails = cartState.carts.expand((cart) {
+        return cart.dishDetails.map((dish) {
+          return OrderDetail(
+            dishId: dish.dishId,
+            quantity: int.tryParse(dish.servingSize) ?? 1,
+          );
+        });
+      }).toList();
+    }
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Container(
@@ -525,6 +557,7 @@ class _CartScreenState extends State<CartScreen> {
               ],
             ),
             MealLoggerButton(
+              orderDetails: orderDetails,
               totalCalories:
                   '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
             ),

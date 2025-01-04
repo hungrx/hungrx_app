@@ -48,29 +48,31 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   bool _checkCalorieLimit(BuildContext context, double dishCalories) {
-    // Get the current cart state
-    final cartState = context.read<CartBloc>().state;
+    final getCartState = context.read<GetCartBloc>().state;
+    final menuState = context.read<RestaurantMenuBloc>().state;
 
-    // Get the current state for user stats
-    final state = context.read<RestaurantMenuBloc>().state;
-    if (state is RestaurantMenuLoaded) {
-      final userStats = state.menuResponse.userStats;
+    if (menuState is RestaurantMenuLoaded) {
+      final userStats = menuState.menuResponse.userStats;
       final baseConsumedCalories = userStats.todayConsumption;
       final dailyCalorieGoal =
           double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
 
-      // Calculate total calories if this dish is added
-      final totalCaloriesAfterAdd =
-          baseConsumedCalories + cartState.totalCalories + dishCalories;
+      // Get calories from GetCartBloc
+      double cartCalories = 0.0;
+      if (getCartState is CartLoaded) {
+        cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
+      }
 
-      // Check if adding this dish would exceed the limit
-      if (totalCaloriesAfterAdd > dailyCalorieGoal) {
-        // Show warning message
+      // Calculate current total and remaining calories
+      final currentTotal = baseConsumedCalories + cartCalories;
+      final remainingCalories = dailyCalorieGoal - currentTotal;
+
+      if (dishCalories > remainingCalories) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
-              'Adding this item would exceed your daily calorie limit!',
-              style: TextStyle(color: Colors.white),
+            content: Text(
+              'Warning: Adding this item (${dishCalories.toInt()} cal) would exceed your remaining calories (${remainingCalories.toInt()} cal)',
+              style: const TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
@@ -587,23 +589,26 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
             // ! i have added the totla consumedCalories plus the total caloriees in the cart
             // ! pass the total item count from the cart screen
 
-            final totalConsumedCalories =
-                baseConsumedCalories + cartState.totalCalories + cartCalories;
-            final cartcount = cartState.items.length;
+            final totalConsumedCalories = baseConsumedCalories + cartCalories;
+            // final cartcount = cartState.items.length;
 
-            final totalItemCount = cartcount + totalItems;
+            final totalItemCount = totalItems;
 
             return CalorieSummaryWidget(
               currentCalories: totalConsumedCalories,
               remainingDailyCalorie: dailyCalorieGoal,
               itemCount: totalItemCount,
-              onViewOrderPressed: () {
-                Navigator.push(
+              onViewOrderPressed: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const CartScreen(),
                   ),
                 );
+                // Refresh cart data when returning from CartScreen
+                if (mounted) {
+                  context.read<GetCartBloc>().add(LoadCart());
+                }
               },
               buttonColor: AppColors.buttonColors,
               primaryColor: AppColors.primaryColor,

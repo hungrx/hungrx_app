@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/utils/api_exception.dart';
-import 'package:hungrx_app/data/repositories/tdee_repository.dart';
+import 'package:hungrx_app/data/repositories/profile_setting_screen/tdee_repository.dart';
 import 'package:hungrx_app/presentation/blocs/result_bloc/result_event.dart';
 import 'package:hungrx_app/presentation/blocs/result_bloc/result_state.dart';
 

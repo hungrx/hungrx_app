@@ -1,5 +1,5 @@
 import 'package:hungrx_app/data/Models/home_meals_screen/logmeal_search_history_model.dart';
-import 'package:hungrx_app/data/repositories/logmeal_search_history_repository.dart';
+import 'package:hungrx_app/data/repositories/log_screen/logmeal_search_history_repository.dart';
 
 class AddLogMealSearchHistoryUseCase {
   final LogMealSearchHistoryRepository _repository;

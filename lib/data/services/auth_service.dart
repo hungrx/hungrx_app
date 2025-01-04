@@ -3,8 +3,8 @@ import 'package:hungrx_app/data/datasources/api/dashboard_screen/home_screen_api
 import 'package:hungrx_app/data/datasources/api/service_api/user_profile_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/email_signin_repository.dart';
-import 'package:hungrx_app/data/repositories/google_auth_repository.dart';
-import 'package:hungrx_app/data/repositories/otp_repository.dart';
+import 'package:hungrx_app/data/repositories/auth_screen/google_auth_repository.dart';
+import 'package:hungrx_app/data/repositories/otp_auth_screen/otp_repository.dart';
 
 // thie class is for checking the user is logged in or not , user id is stored in shared prefferance
 class AuthService {

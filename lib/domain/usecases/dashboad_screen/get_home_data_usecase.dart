@@ -1,5 +1,5 @@
 import 'package:hungrx_app/data/Models/dashboad_screen/home_screen_model.dart';
-import 'package:hungrx_app/data/repositories/home_screen_repository.dart';
+import 'package:hungrx_app/data/repositories/dashboad_screen/home_screen_repository.dart';
 
 class GetHomeDataUseCase {
   final HomeRepository repository;

@@ -1,7 +1,5 @@
-// search_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_material_symbols/flutter_material_symbols.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/restaurant_menu_screen/restaurant_menu_response.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
@@ -19,7 +17,7 @@ class SearchScreen extends StatefulWidget {
   const SearchScreen({
     super.key,
     required this.categories,
-     this.restaurantId,
+    this.restaurantId,
   });
 
   @override
@@ -28,14 +26,12 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  
+
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
   }
-
-
 
   @override
   void dispose() {
@@ -45,49 +41,51 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _onSearchChanged() {
     context.read<SearchBloc>().add(
-      SearchDishes(_searchController.text, widget.categories),
-    );
+          SearchDishes(_searchController.text, widget.categories),
+        );
   }
 
   bool _checkCalorieLimit(BuildContext context, double dishCalories) {
-  // Get the current cart state
-  final cartState = context.read<CartBloc>().state;
-  
-  // Get the current state for user stats
-  final state = context.read<RestaurantMenuBloc>().state;
-  if (state is RestaurantMenuLoaded) {
-    final userStats = state.menuResponse.userStats;
-    final baseConsumedCalories = userStats.todayConsumption;
-    final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
-    
-    // Calculate total calories if this dish is added
-    final totalCaloriesAfterAdd = baseConsumedCalories + cartState.totalCalories + dishCalories;
-    
-    // Check if adding this dish would exceed the limit
-    if (totalCaloriesAfterAdd > dailyCalorieGoal) {
-      // Show warning message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Adding this item would exceed your daily calorie limit!',
-            style: TextStyle(color: Colors.white),
+    // Get the current cart state
+    final cartState = context.read<CartBloc>().state;
+
+    // Get the current state for user stats
+    final state = context.read<RestaurantMenuBloc>().state;
+    if (state is RestaurantMenuLoaded) {
+      final userStats = state.menuResponse.userStats;
+      final baseConsumedCalories = userStats.todayConsumption;
+      final dailyCalorieGoal =
+          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+
+      // Calculate total calories if this dish is added
+      final totalCaloriesAfterAdd =
+          baseConsumedCalories + cartState.totalCalories + dishCalories;
+
+      // Check if adding this dish would exceed the limit
+      if (totalCaloriesAfterAdd > dailyCalorieGoal) {
+        // Show warning message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Adding this item would exceed your daily calorie limit!',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
           ),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'Dismiss',
-            textColor: Colors.white,
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            },
-          ),
-        ),
-      );
-      return false;
+        );
+        return false;
+      }
     }
+    return true;
   }
-  return true;
-}
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +120,7 @@ class _SearchScreenState extends State<SearchScreen> {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           if (state.error.isNotEmpty) {
             return Center(
               child: Text(
@@ -132,7 +130,8 @@ class _SearchScreenState extends State<SearchScreen> {
             );
           }
 
-          if (state.searchResults.isEmpty && _searchController.text.isNotEmpty) {
+          if (state.searchResults.isEmpty &&
+              _searchController.text.isNotEmpty) {
             return const Center(
               child: Text(
                 'No results found',
@@ -153,7 +152,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-Widget _buildDishItem(Dish dish) {
+  Widget _buildDishItem(Dish dish) {
     final calories = dish.servingInfos.isNotEmpty
         ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
         : 'N/A';
@@ -167,8 +166,10 @@ Widget _buildDishItem(Dish dish) {
     // Helper function to create NutritionInfo from ServingInfo
     NutritionInfo createNutritionInfo(ServingDetails servingDetails) {
       return NutritionInfo(
-        calories: double.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
-        protein: double.tryParse(servingDetails.nutritionFacts.protein.value) ?? 0,
+        calories:
+            double.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
+        protein:
+            double.tryParse(servingDetails.nutritionFacts.protein.value) ?? 0,
         carbs: double.tryParse(servingDetails.nutritionFacts.carbs.value) ?? 0,
         fat: double.tryParse(servingDetails.nutritionFacts.totalFat.value) ?? 0,
         sodium: 0,
@@ -183,9 +184,11 @@ Widget _buildDishItem(Dish dish) {
       sizeOptions[servingInfo.servingInfo.size] =
           createNutritionInfo(servingInfo.servingInfo);
     }
-        final defaultCalories = dish.servingInfos.isNotEmpty
-      ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts.calories.value) ?? 0.0
-      : 0.0;
+    final defaultCalories = dish.servingInfos.isNotEmpty
+        ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts
+                .calories.value) ??
+            0.0
+        : 0.0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -206,34 +209,32 @@ Widget _buildDishItem(Dish dish) {
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
-
- if (_checkCalorieLimit(context, defaultCalories)) {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) {
-                  return FractionallySizedBox(
-                    heightFactor: 0.7,
-                    child: DishDetails(
-                      servingInfos: dish.servingInfos,
-                      calories: defaultCalories,
-                      dishId: dish.id,
-                      restaurantId: widget.restaurantId,
-                      name: dish.dishName,
-                      description: dish.description,
-                      imageUrl: null,
-                      servingSizes: dish.servingInfos
-                          .map((info) => info.servingInfo.size)
-                          .toList(),
-                      sizeOptions: sizeOptions,
-                      ingredients: const [],
-                    ),
-                  );
-                },
-              );
- }
-
+              if (_checkCalorieLimit(context, defaultCalories)) {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) {
+                    return FractionallySizedBox(
+                      heightFactor: 0.7,
+                      child: DishDetails(
+                        servingInfos: dish.servingInfos,
+                        calories: defaultCalories,
+                        dishId: dish.id,
+                        restaurantId: widget.restaurantId,
+                        name: dish.dishName,
+                        description: dish.description,
+                        imageUrl: null,
+                        servingSizes: dish.servingInfos
+                            .map((info) => info.servingInfo.size)
+                            .toList(),
+                        sizeOptions: sizeOptions,
+                        ingredients: const [],
+                      ),
+                    );
+                  },
+                );
+              }
             },
             child: Padding(
               padding: const EdgeInsets.all(12.0),
@@ -241,16 +242,38 @@ Widget _buildDishItem(Dish dish) {
                 children: [
                   // Icon Container
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
-                      color: Colors.grey[800],
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      MaterialSymbols.fastfood_filled,
-                      color: AppColors.buttonColors,
-                      size: 32,
+                    child: ClipRRect(
+                      // Added ClipRRect to clip the image
+                      borderRadius:
+                          BorderRadius.circular(8), // Same radius as container
+                      child: dish.servingInfos.first.servingInfo.url != null
+                          ? Image.network(
+                              dish.servingInfos.first.servingInfo.url!,
+                              fit: BoxFit
+                                  .cover, // Changed to cover for better image filling
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Center(
+                                  child: Icon(
+                                    Icons.fastfood,
+                                    color: Colors.grey,
+                                    size: 32,
+                                  ),
+                                );
+                              },
+                            )
+                          : const Center(
+                              child: Icon(
+                                Icons.fastfood,
+                                color: Colors.grey,
+                                size: 32,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -382,5 +405,5 @@ Widget _buildDishItem(Dish dish) {
         ),
       ),
     );
-}
+  }
 }

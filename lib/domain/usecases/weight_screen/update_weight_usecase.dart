@@ -1,5 +1,5 @@
 import 'package:hungrx_app/data/Models/weight_screen/weight_response_model.dart';
-import 'package:hungrx_app/data/repositories/weight_update_repository.dart';
+import 'package:hungrx_app/data/repositories/weight_screen/weight_update_repository.dart';
 
 class UpdateWeightUseCase {
   final WeightUpdateRepository _repository;
