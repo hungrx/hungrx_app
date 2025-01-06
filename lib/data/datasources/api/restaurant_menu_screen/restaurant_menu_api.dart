@@ -16,7 +16,6 @@ class RestaurantMenuApi {
           'userId': userId,
         }),
       );
-print(response.body);
       if (response.statusCode == 200) {
         return RestaurantMenuResponse.fromJson(jsonDecode(response.body));
       } else {

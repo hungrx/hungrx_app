@@ -11,6 +11,7 @@ import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_event.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_state.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
+import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_state.dart';
 
@@ -45,27 +46,51 @@ class DishDetails extends StatefulWidget {
 
 class _DishDetailsState extends State<DishDetails> {
   bool _checkCalorieLimit(BuildContext context, double dishCalories) {
-    final cartState = context.read<CartBloc>().state;
+    // Get current cart state for items in cart
+    // final cartState = context.read<CartBloc>().state;
     final menuState = context.read<RestaurantMenuBloc>().state;
-
+    
+    // Get cart bloc for total nutrition calculation
+    final getCartState = context.read<GetCartBloc>().state;
+    
     if (menuState is RestaurantMenuLoaded) {
       final userStats = menuState.menuResponse.userStats;
-      final baseConsumedCalories =
-          userStats.todayConsumption;
-      final dailyCalorieGoal =
-          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
-      final totalCaloriesAfterAdd =
-          baseConsumedCalories + cartState.totalCalories + dishCalories;
+      final baseConsumedCalories = userStats.todayConsumption;
+      final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+      
+      // Get calories from cart using GetCartBloc
+      double cartCalories = 0.0;
+      if (getCartState is CartLoaded) {
+        cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
+      }
+
+      // Calculate total calories including base consumption, cart items, and new dish
+      final totalCaloriesAfterAdd = baseConsumedCalories + cartCalories + dishCalories;
 
       if (totalCaloriesAfterAdd > dailyCalorieGoal) {
+        // Calculate remaining calories for better user feedback
+        final remainingCalories = dailyCalorieGoal - (baseConsumedCalories + cartCalories);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Warning: Adding this item (${dishCalories.toInt()} cal) would exceed your daily limit of ${dailyCalorieGoal.toInt()} calories',
-              style: const TextStyle(color: Colors.white),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Warning: Adding this item would exceed your daily limit',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Item calories: ${dishCalories.toInt()} cal\n'
+                  'Remaining calories: ${remainingCalories.toInt()} cal',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
             ),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
             action: SnackBarAction(
               label: 'Dismiss',
               textColor: Colors.white,
@@ -79,7 +104,7 @@ class _DishDetailsState extends State<DishDetails> {
       }
     }
     return true;
-  }
+}
 
 void _handleAddToCart(BuildContext context) {
   if (widget.dishId == null || widget.restaurantId == null) {
@@ -212,16 +237,6 @@ void _handleAddToCart(BuildContext context) {
 
   Widget _buildSliverAppBar() {
 final currentImageUrl = selectedServingInfo.servingInfo.url;
-// final currentServingInfo = widget.sizeOptions.entries
-//       .firstWhere((entry) => entry.key == selectedSize,
-//           orElse: () => widget.sizeOptions.entries.first);
-      
-  // Get the URL for the current size
-  // final currentImageUrl = widget.sizeOptions[selectedSize]?.imageUrl ?? widget.imageUrl;
-  // final currentImageUrl = widget.servingSizes.isNotEmpty
-  //     ? widget.sizeOptions[selectedSize]?.imageUrl
-  //     : null;
-print(currentImageUrl);
   return SliverAppBar(
     leading: const SizedBox(),
     expandedHeight: 200,
@@ -233,7 +248,6 @@ print(currentImageUrl);
               currentImageUrl,
               fit: BoxFit.fitHeight,
               errorBuilder: (context, error, stackTrace) {
-                print("Error loading image: $error"); 
                 return _buildFallbackIcon();
               },
               loadingBuilder: (context, child, loadingProgress) {

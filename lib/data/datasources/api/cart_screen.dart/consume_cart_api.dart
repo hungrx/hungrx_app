@@ -7,18 +7,12 @@ class ConsumeCartApi {
   static const String baseUrl = 'https://hungrxbackend.onrender.com';
 
   Future<ConsumeCartResponse> consumeCart(ConsumeCartRequest request) async {
-    print(request.mealType);
-    print(request.orderDetails.first.dishId);
-    print(request.orderDetails.first.quantity);
-    print(request.userId);
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/removeCart'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(request.toJson()),
       );
-      print(response.body);
-      print(response.statusCode);
 
       if (response.statusCode == 200) {
         return ConsumeCartResponse.fromJson(jsonDecode(response.body));

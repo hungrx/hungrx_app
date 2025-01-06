@@ -55,7 +55,7 @@ class SplashScreenState extends State<SplashScreen> {
         final userId = await _authService.getUserId();
         if (userId != null) {
           // Check profile completion
-          print("user id is ${userId}");
+          // print("user id is ${userId}");
           final bool isProfileComplete =
               await _authService.checkProfileCompletion(userId);
 

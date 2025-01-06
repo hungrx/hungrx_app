@@ -313,10 +313,6 @@ class FoodDetailsDialog extends StatelessWidget {
                 } else {
                   mealIds = consumedFood.lunch.mealId;
                 }
-                print(mealIds);
-                print(userId);
-                print(date);
-
                 context.read<DeleteFoodBloc>().add(
                       DeleteConsumedFoodRequested(
                         userId: userId,

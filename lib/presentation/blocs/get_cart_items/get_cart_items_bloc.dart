@@ -25,7 +25,7 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
         emit(CartError('User not logged in'));
         return;
       }
-      print("userId2: $userId");
+      // print("userId2: $userId");
       final cartResponse = await cartRepository.getCart(userId); // Modified to get CartResponseModel
       final totalNutrition = _calculateTotalNutrition(cartResponse.data);
       emit(CartLoaded(

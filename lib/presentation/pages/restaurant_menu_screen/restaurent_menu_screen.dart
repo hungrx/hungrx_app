@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/restaurant_menu_screen/restaurant_menu_response.dart';
+import 'package:hungrx_app/data/Models/restuarent_screen/nearby_restaurant_model.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_state.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
@@ -21,11 +22,13 @@ import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/pro
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/search_widget.dart';
 
 class RestaurantMenuScreen extends StatefulWidget {
+  final NearbyRestaurantModel? restaurant;
   final String? restaurantId;
 
   const RestaurantMenuScreen({
     super.key,
     required this.restaurantId,
+    this.restaurant,
   });
 
   @override
@@ -503,11 +506,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                         ),
                         onPressed: () {
                           if (_checkCalorieLimit(context, defaultCalories)) {
-                            print(dish.servingInfos.isNotEmpty
-                                ? dish.servingInfos.first.servingInfo.url
-                                : null);
-
-                            print("hei ");
                             showModalBottomSheet(
                               context: context,
                               isScrollControlled:
@@ -595,14 +593,16 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
             final totalItemCount = totalItems;
 
             return CalorieSummaryWidget(
-              currentCalories: totalConsumedCalories,
-              remainingDailyCalorie: dailyCalorieGoal,
+              consumedCalories: totalConsumedCalories,
+              dailyCalorieGoal: dailyCalorieGoal,
               itemCount: totalItemCount,
               onViewOrderPressed: () async {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const CartScreen(),
+                    builder: (context) => CartScreen(
+                      restaurant: widget.restaurant,
+                    ),
                   ),
                 );
                 // Refresh cart data when returning from CartScreen

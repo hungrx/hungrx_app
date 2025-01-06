@@ -78,12 +78,14 @@
               name: RouteNames.profile,
               builder: (context, state) => const UserProfileScreen(),
             ),
-            // Cart route
+        
             GoRoute(
               path: '/foodcart',
               name: RouteNames.foodcart,
               builder: (context, state) {
-                return const CartScreen();
+                return const CartScreen(
+                  restaurant: null,
+                );
               },
             ),
           ],

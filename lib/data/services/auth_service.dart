@@ -6,59 +6,54 @@ import 'package:hungrx_app/data/repositories/auth_screen/email_signin_repository
 import 'package:hungrx_app/data/repositories/auth_screen/google_auth_repository.dart';
 import 'package:hungrx_app/data/repositories/otp_auth_screen/otp_repository.dart';
 
-// thie class is for checking the user is logged in or not , user id is stored in shared prefferance
 class AuthService {
   final HomeApiService _homeApiService = HomeApiService();
   final UserSignInRepository _emailSignInRepository = UserSignInRepository();
   final GoogleAuthRepository _googleAuthRepository = GoogleAuthRepository();
   final OtpRepository _otpRepository = OtpRepository();
-final UserProfileApiService _userProfileApiService = UserProfileApiService();
+  final UserProfileApiService _userProfileApiService = UserProfileApiService();
 
+  static String userIdKey = 'user_id';
+  static String installKey = 'installation_check';
 
-  static const String USER_ID_KEY = 'user_id';
-  static const String INSTALL_KEY = 'installation_check';
-
-
-Future<void> initialize() async {
+  Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
-    final bool isExistingInstall = prefs.getBool(INSTALL_KEY) ?? false;
-    
+    final bool isExistingInstall = prefs.getBool(installKey) ?? false;
+
     if (!isExistingInstall) {
-      // New installation - clear any leftover data
       await prefs.clear();
-      await prefs.setBool(INSTALL_KEY, true);
+      await prefs.setBool(installKey, true);
     }
   }
-Future<bool> isLoggedIn() async {
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString(USER_ID_KEY);
-    
-    if (userId == null || userId.isEmpty) {
+
+  Future<bool> isLoggedIn() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString(userIdKey);
+
+      if (userId == null || userId.isEmpty) {
+        return false;
+      }
+      return true;
+    } catch (e) {
+      await logout();
       return false;
     }
-    return true;
-  } catch (e) {
-    // On any error, assume user is not logged in
-    await logout();
-    return false;
   }
-}
 
- Future<bool> checkProfileCompletion(String userId) async {
+  Future<bool> checkProfileCompletion(String userId) async {
     try {
       final response = await _userProfileApiService.checkUserProfile(userId);
-      return response.status  == true;
+      return response.status == true;
     } catch (e) {
       // print('Error checking profile completion: $e');
       return false;
     }
   }
 
-
   Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(USER_ID_KEY);
+    return prefs.getString(userIdKey);
   }
 
   Future<HomeData?> fetchHomeData() async {
@@ -69,28 +64,21 @@ Future<bool> isLoggedIn() async {
       }
       return null;
     } catch (e) {
-      // print('Error fetching home data: $e');
       return null;
     }
   }
 
-Future<void> logout() async {
+  Future<void> logout() async {
     try {
       await _emailSignInRepository.logout();
       await _googleAuthRepository.signOut();
       await _otpRepository.logout();
 
       final prefs = await SharedPreferences.getInstance();
-      // Clear all data first
       await prefs.clear();
-      
-      // Reset only the installation check
-      await prefs.setBool(INSTALL_KEY, true);
-      
-      // Ensure USER_ID_KEY is definitely removed
-      await prefs.remove(USER_ID_KEY);
+      await prefs.setBool(installKey, true);
+      await prefs.remove(userIdKey);
     } catch (e) {
-      // print('Error during logout: $e');
       rethrow;
     }
   }

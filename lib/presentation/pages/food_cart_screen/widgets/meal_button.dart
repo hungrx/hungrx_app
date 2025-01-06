@@ -22,7 +22,7 @@ class MealLoggerButton extends StatefulWidget {
 
   const MealLoggerButton({
     super.key,
-    this.buttonText = 'Ete',
+    this.buttonText = 'Consume',
     this.buttonColor = AppColors.buttonColors,
     this.textColor = Colors.black,
     this.borderRadius = 20,

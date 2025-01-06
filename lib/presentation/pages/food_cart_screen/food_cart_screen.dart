@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/food_cart_screen.dart/consume_cart_request.dart';
 import 'package:hungrx_app/data/Models/food_cart_screen.dart/get_cart_model.dart';
+import 'package:hungrx_app/data/Models/restuarent_screen/nearby_restaurant_model.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_event.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_state.dart';
@@ -14,10 +15,12 @@ import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/meal_butt
 import 'package:hungrx_app/routes/route_names.dart';
 
 class CartScreen extends StatefulWidget {
+  final NearbyRestaurantModel? restaurant;
+
   const CartScreen({
     super.key,
+    required this.restaurant,
   });
-
   @override
   State<CartScreen> createState() => _CartScreenState();
 }
@@ -84,6 +87,21 @@ class _CartScreenState extends State<CartScreen> {
             style: TextStyle(color: Colors.white, fontSize: 24),
           ),
         ),
+        // floatingActionButton: BlocBuilder<GetCartBloc, GetCartState>(
+        //   builder: (context, state) {
+        //     if (state is CartLoaded && state.carts.isNotEmpty) {
+        //       return Padding(
+        //         padding: const EdgeInsets.only(
+        //             right: 10, bottom: 80.0), // Adjust this value as needed
+        //         child: AddressDirectionButton(
+        //           restaurant: widget.restaurant,
+        //         ),
+        //       );
+        //     }
+        //     return const SizedBox.shrink();
+        //   },
+        // ),
+        // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: BlocBuilder<GetCartBloc, GetCartState>(
           builder: (context, state) {
             if (state is CartLoading) {
@@ -154,7 +172,10 @@ class _CartScreenState extends State<CartScreen> {
                         context.pushNamed(RouteNames.restaurants);
                       },
                       icon: const Icon(Icons.restaurant),
-                      label: const Text('Browse Restaurants'),
+                      label: const Text(
+                        'Browse Restaurants',
+                        style: TextStyle(color: Colors.black),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.buttonColors,
                         padding: const EdgeInsets.symmetric(
@@ -296,31 +317,161 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
           _buildNutritionInfo(nutrition),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          const SizedBox(height: 10),
+          // Information Section
+          Column(
             children: [
-              const Text(
-                'Add Food',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              _buildInfoRow(
+                icon: Icons.warning_rounded,
+                text: 'Check restaurant for allergen information',
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: Colors.grey[900],
+                      title: const Text(
+                        'Allergen Information',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      content: const Text(
+                        'Please check with the respective restaurant for detailed allergen information. Food allergies and intolerances should be discussed with the restaurant staff before placing your order.',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Got it'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-              IconButton(
-                icon: const Icon(
-                  Icons.add_circle,
-                  color: AppColors.buttonColors,
-                  size: 30,
-                ),
-                onPressed: () {
-                  context.pushNamed(RouteNames.restaurants);
+              _buildInfoRow(
+                icon: Icons.location_on_outlined,
+                text: 'Dish availability varies by location',
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: Colors.grey[900],
+                      title: const Text(
+                        'Location-based Availability',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      content: const Text(
+                        'Some dishes may not be available at certain locations due to seasonal ingredients, local preferences, or regional restrictions.',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Got it'),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.only(left: 10 ,right: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey[800],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Add Food',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.add_circle,
+                    color: AppColors.buttonColors,
+                    size: 30,
+                  ),
+                  onPressed: () {
+                    context.pushNamed(RouteNames.restaurants);
+                  },
+                ),
+              ],
+            ),
+          ),
+                const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.only(left: 10 ,right: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey[800],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Go to Restaurant',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.directions,
+                    color: AppColors.buttonColors,
+                    size: 30,
+                  ),
+                  onPressed: () {
+                    context.pushNamed(RouteNames.restaurants);
+                  },
+                ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+// Helper widget for building info rows
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.info_outline,
+              size: 16,
+              color: Colors.redAccent,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -497,6 +648,9 @@ class _CartScreenState extends State<CartScreen> {
     final isExceeded = currentCalories > remainingCalories;
     final cartState = context.read<GetCartBloc>().state;
 
+    // Calculate actual remaining calories
+    // final actualRemainingCalories = remainingCalories - currentCalories;
+
     if (cartState is CartLoaded) {
       orderDetails = cartState.carts.expand((cart) {
         return cart.dishDetails.map((dish) {
@@ -507,10 +661,11 @@ class _CartScreenState extends State<CartScreen> {
         });
       }).toList();
     }
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         decoration: BoxDecoration(
           color: AppColors.tileColor,
           border: Border.all(
@@ -519,47 +674,54 @@ class _CartScreenState extends State<CartScreen> {
           ),
           borderRadius: BorderRadius.circular(30),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Calories ',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
+                    const Text(
+                      'Calories ',
                       style: TextStyle(
-                        color: isExceeded ? Colors.red : AppColors.buttonColors,
-                        fontSize: 14,
+                        color: Colors.white,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
-                      ' / ${remainingCalories.round().toString()} cal',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
+                          style: TextStyle(
+                            color: isExceeded
+                                ? Colors.red
+                                : AppColors.buttonColors,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          ' / ${remainingCalories.round().toString()} cal',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
+                MealLoggerButton(
+                  orderDetails: orderDetails,
+                  totalCalories:
+                      '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
+                ),
               ],
-            ),
-            MealLoggerButton(
-              orderDetails: orderDetails,
-              totalCalories:
-                  '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
             ),
           ],
         ),
