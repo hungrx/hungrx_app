@@ -87,21 +87,6 @@ class _CartScreenState extends State<CartScreen> {
             style: TextStyle(color: Colors.white, fontSize: 24),
           ),
         ),
-        // floatingActionButton: BlocBuilder<GetCartBloc, GetCartState>(
-        //   builder: (context, state) {
-        //     if (state is CartLoaded && state.carts.isNotEmpty) {
-        //       return Padding(
-        //         padding: const EdgeInsets.only(
-        //             right: 10, bottom: 80.0), // Adjust this value as needed
-        //         child: AddressDirectionButton(
-        //           restaurant: widget.restaurant,
-        //         ),
-        //       );
-        //     }
-        //     return const SizedBox.shrink();
-        //   },
-        // ),
-        // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: BlocBuilder<GetCartBloc, GetCartState>(
           builder: (context, state) {
             if (state is CartLoading) {
@@ -166,23 +151,47 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // Navigate to restaurant screen
-                        context.pushNamed(RouteNames.restaurants);
-                      },
-                      icon: const Icon(Icons.restaurant),
-                      label: const Text(
-                        'Browse Restaurants',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.buttonColors,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 16,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            // Navigate to restaurant screen
+                            context.pushNamed(RouteNames.restaurants);
+                          },
+                          icon: const Icon(Icons.restaurant),
+                          label: const Text(
+                            'Show Restaurants',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.buttonColors,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                          ),
                         ),
-                      ),
+                          ElevatedButton.icon(
+                          onPressed: () {
+                            // Navigate to restaurant screen
+                            context.pushNamed(RouteNames.dailyInsightScreen);
+                          },
+                          icon: const Icon(Icons.history),
+                          label: const Text(
+                            'See log history',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.buttonColors,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -376,65 +385,75 @@ class _CartScreenState extends State<CartScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.only(left: 10 ,right: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[800],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Add Food',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+          GestureDetector(
+            onTap: (){
+              context.pushNamed(RouteNames.restaurants);
+            },
+            child: Container(
+              padding: const EdgeInsets.only(left: 10, right: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Add Food',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.add_circle,
-                    color: AppColors.buttonColors,
-                    size: 30,
+                  IconButton(
+                    icon: const Icon(
+                      Icons.add_circle,
+                      color: AppColors.buttonColors,
+                      size: 30,
+                    ),
+                    onPressed: () {
+                      context.pushNamed(RouteNames.restaurants);
+                    },
                   ),
-                  onPressed: () {
-                    context.pushNamed(RouteNames.restaurants);
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-                const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.only(left: 10 ,right: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[800],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Go to Restaurant',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: (){
+              context.pushNamed(RouteNames.restaurants);
+            },
+            child: Container(
+              padding: const EdgeInsets.only(left: 10, right: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Go to Restaurant',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.directions,
-                    color: AppColors.buttonColors,
-                    size: 30,
+                  IconButton(
+                    icon: const Icon(
+                      Icons.directions,
+                      color: AppColors.buttonColors,
+                      size: 30,
+                    ),
+                    onPressed: () {
+                      context.pushNamed(RouteNames.restaurants);
+                    },
                   ),
-                  onPressed: () {
-                    context.pushNamed(RouteNames.restaurants);
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

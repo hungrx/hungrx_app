@@ -38,7 +38,7 @@ class RestaurantMenuScreen extends StatefulWidget {
 class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   String? expandedCategory;
   String? expandedSubcategory;
-
+  bool isLoading = false;
   @override
   void initState() {
     super.initState();
@@ -289,14 +289,46 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
   Widget _buildMenuItem(Dish dish) {
     // print("dish :${dish.id}");
-    final calories = dish.servingInfos.isNotEmpty
-        ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
-        : 'N/A';
+    // final calories = dish.servingInfos.isNotEmpty
+    //     ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
+    //     : 'N/A';
     final protine = dish.servingInfos.isNotEmpty
         ? '${dish.servingInfos.first.servingInfo.nutritionFacts.protein.value} '
         : 'N/A';
     final cards = dish.servingInfos.isNotEmpty
         ? '${dish.servingInfos.first.servingInfo.nutritionFacts.carbs.value} '
+        : 'N/A';
+
+    final getCartState = context.read<GetCartBloc>().state;
+    final menuState = context.read<RestaurantMenuBloc>().state;
+
+    // Calculate remaining calories
+    double remainingCalories = 0.0;
+    if (menuState is RestaurantMenuLoaded) {
+      final userStats = menuState.menuResponse.userStats;
+      final baseConsumedCalories = userStats.todayConsumption;
+      final dailyCalorieGoal =
+          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+
+      // Get calories from cart
+      double cartCalories = 0.0;
+      if (getCartState is CartLoaded) {
+        cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
+      }
+
+      // Calculate remaining calories
+      final currentTotal = baseConsumedCalories + cartCalories;
+      remainingCalories = dailyCalorieGoal - currentTotal;
+    }
+
+    final defaultCalories = dish.servingInfos.isNotEmpty
+        ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts
+                .calories.value) ??
+            0.0
+        : 0.0;
+
+    final calories = dish.servingInfos.isNotEmpty
+        ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
         : 'N/A';
 
     // Helper function to create NutritionInfo from ServingInfo
@@ -321,11 +353,11 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       sizeOptions[servingInfo.servingInfo.size] =
           createNutritionInfo(servingInfo.servingInfo);
     }
-    final defaultCalories = dish.servingInfos.isNotEmpty
-        ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts
-                .calories.value) ??
-            0.0
-        : 0.0;
+    // final defaultCalories = dish.servingInfos.isNotEmpty
+    //     ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts
+    //             .calories.value) ??
+    //         0.0
+    //     : 0.0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Container(
@@ -445,8 +477,11 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                               ),
                               child: Text(
                                 calories,
-                                style: const TextStyle(
-                                  color: AppColors.buttonColors,
+                                style: TextStyle(
+                                  // Change color to red if dish calories exceed remaining calories
+                                  color: defaultCalories > remainingCalories
+                                      ? Colors.red
+                                      : AppColors.buttonColors,
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -560,15 +595,14 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         return BlocBuilder<GetCartBloc, GetCartState>(
           builder: (context, getCartState) {
             final baseConsumedCalories = userStats.todayConsumption;
-
-            print(" base :${baseConsumedCalories}");
-
             final dailyCalorieGoal =
                 double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
 
-            int totalItems = 0;
+            // Default values when cart isn't loaded yet
             double cartCalories = 0.0;
+            int totalItems = 0;
 
+            // Update values if cart is loaded
             if (getCartState is CartLoaded) {
               totalItems = getCartState.carts.fold<int>(
                 0,
@@ -584,18 +618,12 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
               cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
             }
 
-            // ! i have added the totla consumedCalories plus the total caloriees in the cart
-            // ! pass the total item count from the cart screen
-
             final totalConsumedCalories = baseConsumedCalories + cartCalories;
-            // final cartcount = cartState.items.length;
-
-            final totalItemCount = totalItems;
 
             return CalorieSummaryWidget(
               consumedCalories: totalConsumedCalories,
               dailyCalorieGoal: dailyCalorieGoal,
-              itemCount: totalItemCount,
+              itemCount: totalItems,
               onViewOrderPressed: () async {
                 await Navigator.push(
                   context,
@@ -605,7 +633,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                     ),
                   ),
                 );
-                // Refresh cart data when returning from CartScreen
                 if (mounted) {
                   context.read<GetCartBloc>().add(LoadCart());
                 }
