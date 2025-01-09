@@ -74,7 +74,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Warning: Adding this item (${dishCalories.toInt()} cal) would exceed your remaining calories (${remainingCalories.toInt()} cal)',
+              'Warning: Adding this item (${dishCalories.round()} cal) would exceed your remaining calories (${remainingCalories.round()} cal)',
               style: const TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.red,

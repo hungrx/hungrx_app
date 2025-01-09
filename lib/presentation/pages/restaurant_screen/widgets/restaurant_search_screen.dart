@@ -1,199 +1,169 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/data/Models/restuarent_screen/suggested_restaurant_model.dart';
 import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_event.dart';
 import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_state.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/widgets/restaurant_tile.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 
-class RestaurantSearchScreen extends StatelessWidget {
-  const RestaurantSearchScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => RestaurantSearchBloc(),
-      child: const RestaurantSearchView(),
-    );
-  }
-}
-
-class RestaurantSearchView extends StatefulWidget {
-  const RestaurantSearchView({super.key});
+class RestaurantSearchScreen extends StatefulWidget {
+  final List<SuggestedRestaurantModel> restaurants;
+  
+  const RestaurantSearchScreen({
+    super.key, 
+    required this.restaurants,
+  });
 
   @override
-  State<RestaurantSearchView> createState() => _RestaurantSearchViewState();
+  State<RestaurantSearchScreen> createState() => _RestaurantSearchScreenState();
 }
 
-class _RestaurantSearchViewState extends State<RestaurantSearchView> {
+class _RestaurantSearchScreenState extends State<RestaurantSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      context.read<RestaurantSearchBloc>().add(
+        SearchRestaurants(_searchController.text),
+      );
+    });
+  }
+
+  @override
+Widget build(BuildContext context) {
+  return BlocProvider.value(
+    value: context.read<RestaurantSearchBloc>(),
+    child: _RestaurantSearchContent(
+      searchController: _searchController,
+    ),
+  );
+}
+}
+
+class _RestaurantSearchContent extends StatelessWidget {
+  final TextEditingController searchController;
+
+  const _RestaurantSearchContent({
+    required this.searchController,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // _buildHeader(context),
-            _buildSearchBar(context),
-            Expanded(
-              child: _buildSearchResults(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Row(
-          children: [
-            IconButton(
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: TextField(
+          controller: searchController,
+          autofocus: true,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Search restaurants...',
+            hintStyle: const TextStyle(color: Colors.grey),
+            border: InputBorder.none,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
               onPressed: () {
-                context.pop();
+                searchController.clear();
+                context.read<RestaurantSearchBloc>().add(ClearRestaurantSearch());
               },
-              icon: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 24,
-              ),
             ),
-            Expanded(
-              // Moved Expanded here to wrap the TextField
-              child: TextField(
-                controller: _searchController,
-                style: const TextStyle(color: Colors.white),
-                onChanged: (query) {
-                  context.read<RestaurantSearchBloc>().add(
-                        RestaurantSearchQueryChanged(query),
-                      );
-                },
-                decoration: InputDecoration(
-                  hintText: 'Search restaurants...',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, color: Colors.grey),
-                          onPressed: () {
-                            _searchController.clear();
-                            context.read<RestaurantSearchBloc>().add(
-                                  RestaurantSearchQueryChanged(''),
-                                );
-                          },
-                        )
-                      : null,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                ),
-              ),
-            ),
-          ],
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-    );
-  }
+      body: BlocBuilder<RestaurantSearchBloc, RestaurantSearchState>(
 
-  Widget _buildSearchResults(BuildContext context) {
-    return BlocBuilder<RestaurantSearchBloc, RestaurantSearchState>(
-      builder: (context, state) {
-        if (state is RestaurantSearchInitial) {
-          return _buildMessageWidget(
-            icon: Icons.search,
-            message: 'Start typing to search restaurants',
-          );
-        }
+        builder: (context, state) {
+          debugPrint('Rebuilding UI with ${state.searchResults.length} results');
+          if (state.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            );
+          }
 
-        if (state is RestaurantSearchLoading) {
-          return const Center(
-            child: CircularProgressIndicator(
-              color: Colors.green,
-              strokeWidth: 3,
-            ),
-          );
-        }
+          if (state.error.isNotEmpty) {
+            return Center(
+              child: Text(
+                state.error,
+                style: const TextStyle(color: Colors.white),
+              ),
+            );
+          }
 
-        if (state is RestaurantSearchError) {
-          return _buildMessageWidget(
-            icon: Icons.error_outline,
-            message: state.message,
-            isError: true,
-          );
-        }
+          if (state.searchResults.isEmpty && searchController.text.isNotEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.search_off,
+                    color: Colors.grey,
+                    size: 48,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'No restaurants found',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
 
-        if (state is RestaurantSearchEmpty) {
-          return _buildMessageWidget(
-            icon: Icons.restaurant_outlined,
-            message:
-                'No restaurants found matching "${_searchController.text}"',
-          );
-        }
-
-        if (state is RestaurantSearchSuccess) {
           return ListView.builder(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 0.0, vertical: 8.0),
-            itemCount: state.restaurants.length,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            itemCount: state.searchResults.length,
             itemBuilder: (context, index) {
-              final restaurant = state.restaurants[index];
-              return RestaurantItem(
-                name: restaurant.name,
-                imageUrl: restaurant.logo,
-                rating: '0.0',
-                address: 'unknow',
-                distance: 'unknow',
-                ontap: () => context.push('/restaurant/${restaurant.id}'),
+              final restaurant = state.searchResults[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 0,
+                ),
+                child: RestaurantItem(
+                  ontap: () => context.pushNamed(
+                    RouteNames.menu,
+                    extra: restaurant.id,
+                  ),
+                  name: restaurant.name,
+                  imageUrl: restaurant.logo,
+                  rating: null,
+                  address: restaurant.address,
+                  distance: restaurant.distance != null
+                      ? '${(restaurant.distance! / 1000).toStringAsFixed(1)} km'
+                      : 'Distance not available',
+                ),
               );
             },
           );
-        }
-
-        return const SizedBox.shrink();
-      },
-    );
-  }
-
-  Widget _buildMessageWidget({
-    required IconData icon,
-    required String message,
-    bool isError = false,
-  }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 64,
-              color: isError ? Colors.red[400] : Colors.grey[600],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: TextStyle(
-                color: isError ? Colors.red[400] : Colors.grey[400],
-                fontSize: 16,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+        },
       ),
     );
   }

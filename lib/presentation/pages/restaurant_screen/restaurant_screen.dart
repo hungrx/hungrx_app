@@ -19,6 +19,9 @@ class RestaurantScreen extends StatefulWidget {
 }
 
 class _RestaurantScreenState extends State<RestaurantScreen> {
+  final _restaurantTypeController = TextEditingController();
+  final _restaurantNameController = TextEditingController();
+  final _areaController = TextEditingController();
   bool showNearbyRestaurants = false;
   @override
   void initState() {
@@ -30,17 +33,16 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     context.read<SuggestedRestaurantsBloc>().add(FetchSuggestedRestaurants());
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: _buildAppBar(),
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(),
+            // _buildHeader(),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () async {
@@ -67,67 +69,230 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () {
-            context.pop();
-          },
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
-            size: 24,
-          ),
+  // Widget _buildHeader() {
+  //   return Row(
+  //     children: [
+  //       IconButton(
+  //         onPressed: () {
+  //           context.pop();
+  //         },
+  //         icon: const Icon(
+  //           Icons.arrow_back,
+  //           color: Colors.white,
+  //           size: 24,
+  //         ),
+  //       ),
+  //       const Text(
+  //         'Restaurants',
+  //         style: TextStyle(
+  //           color: Colors.white,
+  //           fontSize: 24,
+  //           fontWeight: FontWeight.bold,
+  //         ),
+  //       ),
+
+  //     ],
+  //   );
+  // }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.black,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+      title: const Text(
+        'Restaurants',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
         ),
-        const Text(
-          'Restaurants',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+      ),
+      actions: [
+        PopupMenuButton<String>(
+          color: Colors.black,
+          icon: const Icon(Icons.more_vert, color: Colors.white),
+          onSelected: (value) {
+            if (value == 'request_restaurant') {
+              _showRequestDialog();
+            }
+          },
+          itemBuilder: (BuildContext context) => [
+            const PopupMenuItem<String>(
+              value: 'request_restaurant',
+              child: Row(
+                children: [
+                  Icon(Icons.restaurant, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text(
+                    'Request New Restaurant',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GestureDetector(
-        onTap: () {
-          context.pushNamed(RouteNames.restarantSearch);
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(30),
+  void _showRequestDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          child: const IgnorePointer(
-            child: TextField(
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Search restaurants...',
-                hintStyle: TextStyle(color: Colors.grey),
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 15),
-              ),
+          child: Container(
+            color: Colors.black,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Request New Restaurant',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _restaurantNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Restaurant Name',
+                    prefixIcon: const Icon(Icons.restaurant),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[900],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _restaurantTypeController,
+                  decoration: InputDecoration(
+                    labelText: 'Restaurant Type',
+                    prefixIcon: const Icon(Icons.category),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[900],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _areaController,
+                  decoration: InputDecoration(
+                    labelText: 'Area',
+                    prefixIcon: const Icon(Icons.location_on),
+                    border: OutlineInputBorder(
+                      borderSide:
+                          BorderSide(width: 1, color: AppColors.buttonColors),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[900],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Handle the restaurant request here
+                        // You can access the values using:
+                        // _restaurantNameController.text
+                        // _restaurantTypeController.text
+                        // _areaController.text
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Submit',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+// In your RestaurantScreen
+Widget _buildSearchBar() {
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: GestureDetector(
+      onTap: () {
+        final suggestedBloc = context.read<SuggestedRestaurantsBloc>();
+        if (suggestedBloc.state is SuggestedRestaurantsLoaded) {
+          final restaurants = (suggestedBloc.state as SuggestedRestaurantsLoaded).restaurants;
+          context.pushNamed(
+            RouteNames.restaurantSearch,
+            extra: restaurants,
+          );
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: const IgnorePointer(
+          child: TextField(
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Search restaurants...',
+              hintStyle: TextStyle(color: Colors.grey),
+              prefixIcon: Icon(Icons.search, color: Colors.grey),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(vertical: 15),
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildNearbyRestaurantsButton() {
     return Container(
       margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
       width: double.infinity,
       child: ElevatedButton.icon(
-        
-        onPressed: (){},
+        onPressed: () {},
         // () {
         //   setState(() {
         //     showNearbyRestaurants = true;
@@ -198,7 +363,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   return RestaurantItem(
                     ontap: () => _onRestaurantTap(restaurant.id),
                     name: restaurant.name,
-                    imageUrl: 'https://via.placeholder.com/150',
+                    imageUrl: restaurant.id,
                     rating:
                         '${(restaurant.distance / 1000).toStringAsFixed(1)} km',
                     address: restaurant.address,
@@ -253,7 +418,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                       _onRestaurantTap(restaurant.id);
                     },
                     name: restaurant.name,
-                    imageUrl: 'https://via.placeholder.com/150',
+                    imageUrl: restaurant.logo,
                     rating: null,
                     address: null,
                     distance: restaurant.distance != null

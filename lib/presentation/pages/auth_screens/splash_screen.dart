@@ -13,6 +13,7 @@ import 'package:hungrx_app/presentation/blocs/internet_connection/internet_conne
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_event.dart';
 import 'package:hungrx_app/presentation/no_internet_screen/no_internet_screen.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -116,16 +117,19 @@ class SplashScreenState extends State<SplashScreen> {
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 30,
                 children: [
+                  // Logo
                   Image.asset(
-                    'assets/images/companylogo.png',
-                    width: 350,
-                    height: 350,
+                    'assets/images/logos.png',
+                    width: 300,
+                    height: 300,
                   ),
-                  const SizedBox(height: 20),
-                  const CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
+                  // Loading Animation positioned at the bottom of the logo
+                  LoadingAnimationWidget.staggeredDotsWave(
+                    color: AppColors.primaryColor,
+                    size: 40,
                   ),
                 ],
               ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/feedbacks_widget.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/feedbacks_widget.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
-
 class RestaurantItem extends StatelessWidget {
   final VoidCallback ontap;
   final String name;
-  final String imageUrl;
+  final String? imageUrl;
   final String? rating;
   final String? address;
   final String distance;
@@ -25,26 +24,51 @@ class RestaurantItem extends StatelessWidget {
     return GestureDetector(
       onTap: ontap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.grey[900],
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-              ),
-              child: Container(
-                width: 80,
-                height: 80,
-                color: Colors.grey[900], // Background color
-                child: const Icon(
-                  Icons.restaurant_menu,
-                  size: 50, // Adjust the size of the icon
-                  color: AppColors.buttonColors, // Icon color
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: SizedBox(
+                width: 90,
+                height: 90,
+                child: ClipRRect(
+                  // Added ClipRRect to clip the image
+                  borderRadius:
+                      BorderRadius.circular(8), // Same radius as container
+                  child: imageUrl != null
+                      ? Image.network(
+                          imageUrl ?? "",
+                          fit: BoxFit
+                              .cover, // Changed to cover for better image filling
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                  color: Colors.grey[900],
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.restaurant,
+                                  color: Colors.grey,
+                                  size: 32,
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : const Center(
+                          child: Icon(
+                            Icons.restaurant,
+                            color: Colors.grey,
+                            size: 32,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -69,45 +93,49 @@ class RestaurantItem extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                       rating == null ? const SizedBox() : Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.buttonColors,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.location_pin,
-                                color: Colors.black,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                rating.toString().trim(),
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
+                        rating == null
+                            ? const SizedBox()
+                            : Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.buttonColors,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_pin,
+                                      color: Colors.black,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      rating.toString().trim(),
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ), 
                       ],
                     ),
                     const SizedBox(height: 8),
-                    address == null ? const SizedBox():  Text(
-                      address ?? "",
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    address == null
+                        ? const SizedBox()
+                        : Text(
+                            address ?? " ",
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                     const SizedBox(height: 4),
                     // Text(
                     //   distance,

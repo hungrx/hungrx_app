@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/water_container.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/presentation/pages/water_intake_screeen/widgets/water_dialog.dart';
+import 'package:intl/intl.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 
 class WaterIntakeScreen extends StatefulWidget {
   const WaterIntakeScreen({super.key});
@@ -9,152 +12,179 @@ class WaterIntakeScreen extends StatefulWidget {
 }
 
 class WaterIntakeScreenState extends State<WaterIntakeScreen> {
-  double totalIntake = 2.1; // Total daily target in liters
-  double consumedWater = 1.5; // Currently consumed water in liters
-  List<WaterEntry> waterHistory = [];
+  late DateTime selectedDate;
+  final List<String> weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  double goalAmount = 2000; // 2 Liter in ml
+  double consumedAmount = 800; // Current consumed amount in ml
+  List<WaterIntake> intakeHistory = [];
+
+  @override
+  void initState() {
+    super.initState();
+    selectedDate = DateTime.now();
+    // Initialize dummy data
+    intakeHistory = [
+      WaterIntake(DateTime.now(), 200),
+      WaterIntake(DateTime.now(), 200),
+      WaterIntake(DateTime.now(), 200),
+      WaterIntake(DateTime.now(), 200),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 20),
-              _buildWaterContainer(),
-              const SizedBox(height: 40),
-              _buildWaterCupOptions(),
-            ],
-          ),
+        child: Column(
+          children: [
+            // Fixed header section
+            _buildHeader(),
+            // Fixed date selector
+            _buildDateSelector(),
+            // Scrollable middle content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildWaterProgress(),
+                    _buildIntakeHistory(),
+                  ],
+                ),
+              ),
+            ),
+            // Fixed bottom buttons
+            _buildQuickAddButtons(),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'TOTAL DAILY INTAKE',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              '2.1L of water',
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        IconButton(
-          icon: const Icon(Icons.history, color: Colors.white),
-          onPressed: () => _showHistoryDialog(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWaterContainer() {
-    return GestureDetector(
-      onTap: () => _showHistoryDialog(),
-      child: SizedBox(
-        height: 300,
-        width: 200,
-        child: WaterContainer(
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white, width: 2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Text(
-                  'REMAINING\n${(totalIntake - consumedWater).toStringAsFixed(1)}L',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  'CONSUMED\n${consumedWater.toStringAsFixed(1)}L',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                const Text(
-                  'DRINK',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
+    return Container(
+      padding: const EdgeInsets.only(left: 16,right: 16, top: 10,bottom: 10),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.pop(),
+          ),
+          const SizedBox(
+            width: 10,
+          ),
+          const Text(
+            'Water Intake',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onPressed: () {
+              // Show options menu
+            },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildWaterCupOptions() {
-    List<Map<String, dynamic>> cups = [
-      {'volume': 100, 'label': '100ml'},
-      {'volume': 200, 'label': '200ml'},
-      {'volume': 250, 'label': '250ml'},
-      {'volume': 500, 'label': '500ml'},
-      {'volume': 1000, 'label': '1000ml'},
-    ];
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: cups.map((cup) => _buildCupButton(cup)).toList(),
+  Widget _buildDateSelector() {
+    return Container(
+      padding: const EdgeInsets.only(left: 16,right: 16, bottom: 10),
+      height: 70,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 7,
+        itemBuilder: (context, index) {
+          final date = DateTime.now().add(Duration(days: index - 3));
+          final isSelected = _isSameDay(date, selectedDate);
+          return GestureDetector(
+            onTap: () => setState(() => selectedDate = date),
+            child: Container(
+              width: 50,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.lightBlueAccent : Colors.grey[900],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${date.day}',
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    weekDays[date.weekday % 7],
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildCupButton(Map<String, dynamic> cup) {
-    return GestureDetector(
-      onTap: () => _addWaterIntake(cup['volume']),
-      child: Column(
+  Widget _buildWaterProgress() {
+    final remainingAmount = goalAmount - consumedAmount;
+    final progress = (consumedAmount / goalAmount).clamp(0.0, 1.0);
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
         children: [
-          Container(
-            height: 50,
-            width: 40,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.blue),
-              borderRadius: BorderRadius.circular(8),
+          CircularPercentIndicator(
+            radius: 80,
+            lineWidth: 10,
+            percent: progress,
+            center: const Icon(
+              Icons.water_drop,
+              color: Colors.lightBlueAccent,
+              size: 40,
             ),
-            child: CustomPaint(
-              painter: CupPainter(),
-            ),
+            progressColor: Colors.lightBlueAccent,
+            backgroundColor: Colors.lightBlueAccent.withOpacity(0.2),
           ),
-          const SizedBox(height: 4),
-          Text(
-            cup['label'],
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProgressItem(
+                  Icons.flag,
+                  'Goal',
+                  '${(goalAmount / 1000).toStringAsFixed(1)} Liter',
+                ),
+                const SizedBox(height: 12),
+                _buildProgressItem(
+                  Icons.water_drop_outlined,
+                  'Remaining',
+                  '${(remainingAmount / 1000).toStringAsFixed(1)} L',
+                ),
+                const SizedBox(height: 12),
+                _buildProgressItem(
+                  Icons.check_circle_outline,
+                  'Consumed',
+                  '${consumedAmount.toInt()} ml',
+                ),
+              ],
             ),
           ),
         ],
@@ -162,125 +192,202 @@ class WaterIntakeScreenState extends State<WaterIntakeScreen> {
     );
   }
 
-  void _addWaterIntake(int volume) {
-    setState(() {
-      double liters = volume / 1000;
-      consumedWater = (consumedWater + liters).clamp(0.0, totalIntake);
-      waterHistory.insert(
-        0,
-        WaterEntry(
-          date: DateTime.now(),
-          volume: volume,
-        ),
-      );
-    });
-  }
-
-  void _showHistoryDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.grey[900],
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Water consumption',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+  Widget _buildProgressItem(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.lightBlueAccent, size: 20),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 16),
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: waterHistory.length,
-                itemBuilder: (context, index) {
-                  final entry = waterHistory[index];
-                  return Dismissible(
-                    key: Key(entry.date.toString()),
-                    background: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 16),
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    onDismissed: (direction) {
-                      setState(() {
-                        waterHistory.removeAt(index);
-                        // Recalculate consumed water
-                        consumedWater = waterHistory.fold(
-                          0.0,
-                          (sum, entry) => sum + entry.volume / 1000,
-                        );
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: ListTile(
-                      title: Text(
-                        '${entry.volume}ml',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      subtitle: Text(
-                        _formatDate(entry.date),
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      trailing: const Icon(Icons.delete, color: Colors.grey),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
+      ],
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}-${date.month}-${date.year} ${date.hour}:${date.minute}';
+  Widget _buildIntakeHistory() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            'Intake History',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        ListView.builder(
+          itemCount: intakeHistory.length,
+          shrinkWrap: true, // Important for nested ListView
+          physics: const NeverScrollableScrollPhysics(), // Disable ListView's scroll
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemBuilder: (context, index) {
+            final intake = intakeHistory[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        DateFormat('dd- MMMM - yyyy').format(intake.timestamp),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        DateFormat('hh:mm a').format(intake.timestamp),
+                        style: TextStyle(color: Colors.grey[400]),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        '${intake.amount} ml',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline,
+                            color: Colors.grey),
+                        onPressed: () {
+                          setState(() {
+                            intakeHistory.removeAt(index);
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickAddButtons() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildWaterButton(100),
+              _buildWaterButton(200),
+              _buildWaterButton(250),
+              _buildWaterButton(500),
+              _buildWaterButton(1000),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.add, color: Colors.lightBlueAccent),
+              label: const Text('Drink',
+                  style: TextStyle(color: Colors.lightBlueAccent)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.lightBlueAccent),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+               _showAddWaterDialog();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  void _showAddWaterDialog() {
+  final TextEditingController amountController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return WaterIntakeDialog(
+        amountController: amountController,
+        onCancel: () => Navigator.pop(context),
+        onAdd: (int amount) {
+          setState(() {
+            consumedAmount += amount;
+            intakeHistory.insert(
+              0,
+              WaterIntake(DateTime.now(), amount),
+            );
+          });
+          Navigator.pop(context);
+        },
+      );
+    },
+  );
+}
+
+  Widget _buildWaterButton(int amount) {
+    return Column(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.water_drop, color: Colors.blue),
+          onPressed: () {
+            setState(() {
+              consumedAmount += amount;
+              intakeHistory.insert(0, WaterIntake(DateTime.now(), amount));
+            });
+          },
+        ),
+        Text(
+          '${amount}ml',
+          style: const TextStyle(color: Colors.white, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }
 
-class CupPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.blue.withOpacity(0.3)
-      ..style = PaintingStyle.fill;
+class WaterIntake {
+  final DateTime timestamp;
+  final int amount;
 
-    final path = Path()
-      ..moveTo(size.width * 0.1, 0)
-      ..lineTo(size.width * 0.9, 0)
-      ..lineTo(size.width * 0.8, size.height)
-      ..lineTo(size.width * 0.2, size.height)
-      ..close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class WaterEntry {
-  final DateTime date;
-  final int volume;
-
-  WaterEntry({
-    required this.date,
-    required this.volume,
-  });
+  WaterIntake(this.timestamp, this.amount);
 }

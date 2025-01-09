@@ -1,19 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-// import 'package:go_router/go_router.dart';
-// import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_state.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/dashboard_widgets.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/streak_calendar.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-// import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/water_container.dart';
-// import 'package:google_fonts/google_fonts.dart';
-// import 'package:hungrx_app/routes/route_names.dart';
-// import 'package:lucide_icons/lucide_icons.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,13 +22,11 @@ class DashboardScreenState extends State<DashboardScreen> {
   final _calorieController = StreamController<double>.broadcast();
   Timer? _refreshTimer;
 
-
   @override
   void initState() {
     super.initState();
     // Fetch data when screen initializes
     _fetchData();
-    
   }
 
   @override
@@ -190,20 +184,65 @@ class DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const StreakCalendar(userId: "",),
-                            Container(
-                              width: 125,
-                              height: 230,
-                              decoration: BoxDecoration(
-                                color: AppColors.tileColor,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Icon(
-                                fill: 1,
-                                LucideIcons.glassWater,
-                                color: Color(0xFFB4D147),
-                                size: 100,
+                            // Streak Calendar with flex
+                            const Expanded(
+                              flex: 3,
+                              child: StreakCalendar(),
+                            ),
+                            const SizedBox(width: 12),
+
+                            // when user tap on this container show the water screen
+                            // Replace the existing GestureDetector with this updated version
+                            Expanded(
+                              flex: 2,
+                              child: GestureDetector(
+                                onTap: () {
+                                 context.push('/water-intake');
+                                },
+                                child: Container(
+                                  // Use MediaQuery for responsive height
+                                  height: MediaQuery.of(context).size.height *
+                                      0.266,
+                                  // Min height to ensure visibility
+                                  constraints: const BoxConstraints(
+                                    minHeight: 200,
+                                    maxHeight: 300,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.tileColor,
+                                    borderRadius: BorderRadius.circular(20),
+                                    // Add subtle border for better visibility
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        LucideIcons.glassWater,
+                                        color: Color(0xFFB4D147),
+                                        size: 64,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'Water Intake',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      // Optional: Add current water intake if available
+                                      // Text(
+                                      //   '0/2L',
+                                      //   style: TextStyle(
+                                      //     color: Colors.white.withOpacity(0.7),
+                                      //     fontSize: 14,
+                                      //   ),
+                                      // ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             )
                           ],
@@ -229,49 +268,4 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-
-  // Widget _buildStreakCalendar() {
-  //   return const StreakCalendar();
-  // }
-
-  // Widget _buildDrinkButton() {
-  //   return GestureDetector(
-  //     onTap: () {
-  //       context.pushNamed(RouteNames.waterIntake);
-  //     },
-  //     child: Container(
-  //       height: 100, // Add fixed height for better animation
-  //       // padding: const EdgeInsets.all(20),
-  //       decoration: BoxDecoration(
-  //         color: AppColors.tileColor,
-  //         borderRadius: BorderRadius.circular(20),
-  //       ),
-  //       child: WaterContainer(
-  //         child: Padding(
-  //           padding: const EdgeInsets.all(20),
-  //           child: Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               Text(
-  //                 'Water',
-  //                 style: GoogleFonts.stickNoBills(
-  //                   color: Colors.white,
-  //                   fontSize: 40,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //               const Icon(
-  //                 fill: 1,
-  //                 LucideIcons.glassWater,
-  //                 color: Color(0xFFB4D147),
-  //                 size: 35,
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 }

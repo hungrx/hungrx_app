@@ -7,6 +7,7 @@ import 'package:hungrx_app/core/widgets/responsive_text.dart';
 import 'package:hungrx_app/data/Models/dashboad_screen/home_screen_model.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/animated_calorie_count.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/feedback_bottom.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -261,7 +262,15 @@ class DashboardWidgets {
         Expanded(
           child: GestureDetector(
             onTap: () {
-              context.pushNamed(RouteNames.feedback);
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => const FeedbackBottomSheet(
+                  phoneNumber:
+                      '7736150287', // Replace with your WhatsApp number
+                ),
+              );
             },
             child: Container(
               padding: EdgeInsets.symmetric(

@@ -1,82 +1,59 @@
-import 'dart:async';
+// restaurant_search_bloc.dart
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/domain/usecases/restaurant_screen/search_restaurants_usecase.dart';
+import 'package:hungrx_app/data/Models/restuarent_screen/suggested_restaurant_model.dart';
 import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_event.dart';
 import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_state.dart';
 
-class RestaurantSearchBloc extends Bloc<RestaurantSearchEvent, RestaurantSearchState> {
-  final SearchRestaurantsUseCase _searchUseCase;
-  Timer? _debounceTimer;
-  
-  RestaurantSearchBloc({
-    SearchRestaurantsUseCase? searchUseCase,
-  })  : _searchUseCase = searchUseCase ?? SearchRestaurantsUseCase(),
-        super(RestaurantSearchInitial()) {
-    on<RestaurantSearchQueryChanged>(_onQueryChanged);
+class RestaurantSearchBloc
+    extends Bloc<RestaurantSearchEvent, RestaurantSearchState> {
+  final List<SuggestedRestaurantModel> allRestaurants;
+
+  RestaurantSearchBloc(this.allRestaurants)
+      : super(RestaurantSearchState.initial(allRestaurants)) {
+    on<SearchRestaurants>(_onSearchRestaurants);
+    on<ClearRestaurantSearch>(_onClearSearch);
   }
 
-void _onQueryChanged(
-  RestaurantSearchQueryChanged event,
-  Emitter<RestaurantSearchState> emit,
-) async {
-  // Clear previous timer
-  _debounceTimer?.cancel();
-
-  // If query is empty, return to initial state
-  if (event.query.isEmpty) {
-    emit(RestaurantSearchInitial());
-    return;
-  }
-
-  // Show loading state immediately for better UX
-  emit(RestaurantSearchLoading());
-
-  // Use a Completer to handle the debounced API call
-  final completer = Completer<void>();
-  
-  _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-    completer.complete();
-  });
-
-  // Wait for the debounce timer
-  await completer.future;
-
-  // Check if bloc is still active
-  if (isClosed) return;
+void _onSearchRestaurants(SearchRestaurants event, Emitter<RestaurantSearchState> emit) {
+  emit(state.copyWith(isLoading: true));
 
   try {
-    final restaurants = await _searchUseCase.execute(event.query);
+    final query = event.query.trim().toLowerCase();
 
-    // Check if bloc is still active
-    if (isClosed) return;
-
-    if (restaurants.isEmpty) {
-      emit(RestaurantSearchEmpty());
-    } else {
-      emit(RestaurantSearchSuccess(restaurants));
+    if (query.isEmpty) {
+      emit(state.copyWith(
+        searchResults: allRestaurants,
+        isLoading: false,
+        error: '',
+      ));
+      return;
     }
+
+    final results = allRestaurants.where((restaurant) {
+      final name = restaurant.name.toLowerCase();
+      final address = restaurant.address?.toLowerCase() ?? '';
+      return name.contains(query) || address.contains(query);
+    }).toList();
+debugPrint('Search query: ${event.query}');
+debugPrint('Results: ${results.length}');
+
+    emit(state.copyWith(
+      searchResults: results,
+      isLoading: false,
+      error: '',
+    ));
   } catch (e) {
-    if (!isClosed) {
-      emit(RestaurantSearchError(_formatErrorMessage(e.toString())));
-    }
+    emit(state.copyWith(
+      isLoading: false,
+      error: 'Error searching restaurants: $e',
+    ));
   }
 }
 
-  String _formatErrorMessage(String error) {
-    // Clean up error message for better user experience
-    if (error.contains('SocketException')) {
-      return 'No internet connection. Please check your network.';
-    }
-    if (error.contains('TimeoutException')) {
-      return 'Request timed out. Please try again.';
-    }
-    // Add more error message formatting as needed
-    return 'Failed to search restaurants. Please try again.';
-  }
 
-  @override
-  Future<void> close() {
-    _debounceTimer?.cancel();
-    return super.close();
+  void _onClearSearch(
+      ClearRestaurantSearch event, Emitter<RestaurantSearchState> emit) {
+    emit(RestaurantSearchState.initial(allRestaurants));
   }
 }

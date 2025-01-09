@@ -139,13 +139,18 @@ class MealLogContent extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _buildInfoItem(
-            'Please check dish availability at the restaurant before logging it.',
+            'Please check dish availability at the restaurant',
             Icons.restaurant,
           ),
           const SizedBox(height: 8),
           _buildInfoItem(
-            'Consume your meal before logging it in the app.',
+            ' before logging it Consume your meal.',
             Icons.schedule,
+          ),
+           const SizedBox(height: 8),
+          _buildInfoItem(
+            'Please check with the respective restaurant for detailed allergen information.',
+            Icons.info_outline,
           ),
         ],
       ),
@@ -203,9 +208,9 @@ class MealLogContent extends StatelessWidget {
     return Column(
       children: [
         _buildMealTypeGrid(context, state),
-        const SizedBox(height: 15),
+        const SizedBox(height: 18),
         _buildCaloriesInfo(),
-        const SizedBox(height: 15),
+        const SizedBox(height: 10),
         _buildConsumeButton(context, state),
       ],
     );
@@ -213,16 +218,16 @@ class MealLogContent extends StatelessWidget {
 
   Widget _buildMealTypeGrid(BuildContext context, MealTypeLoaded state) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(0),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final chipWidth = (constraints.maxWidth - 18) / 2;
           return Wrap(
-            spacing: 16,
-            runSpacing: 16,
+            spacing: 14,
+            runSpacing: 14,
             alignment: WrapAlignment.start,
             children: state.mealTypes.map((mealType) {
               return _buildMealTypeChip(context, state, mealType, chipWidth);
@@ -247,7 +252,7 @@ class MealLogContent extends StatelessWidget {
       child: Container(
         width: chipWidth,
         padding: const EdgeInsets.symmetric(
-          horizontal: 15,
+          horizontal: 12,
           vertical: 12,
         ),
         decoration: BoxDecoration(

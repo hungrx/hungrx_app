@@ -40,6 +40,7 @@ class RouteNames {
   static const String subscriptionScreen = 'subscriptionScreen';
   static const String helpSupportScreen = 'helpSupportScreen';
   static const String policiesScreen = 'policiesScreen';
+  static const String restaurantSearch = 'restaurantSearch'; 
   
 
 }

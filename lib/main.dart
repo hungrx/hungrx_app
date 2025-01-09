@@ -28,7 +28,6 @@ import 'package:hungrx_app/data/datasources/api/profile_setting_screens/user_pro
 import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/add_to_cart.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/restaurant_menu_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/nearby_restaurant_api.dart';
-import 'package:hungrx_app/data/datasources/api/restaurant_screen/search_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/suggested_restaurants_api.dart';
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_history_api.dart';
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_update_api.dart';
@@ -56,7 +55,6 @@ import 'package:hungrx_app/data/repositories/profile_screen/report_bug_repositor
 import 'package:hungrx_app/data/repositories/restaurant_menu_screen/cart_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_menu_screen/restaurant_menu_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_screen/nearby_restaurant_repository.dart';
-import 'package:hungrx_app/data/repositories/restaurant_screen/search_restaurant_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_screen/suggested_restaurants_repository.dart';
 import 'package:hungrx_app/data/repositories/log_screen/search_history_log_repository.dart';
 import 'package:hungrx_app/data/repositories/dashboad_screen/streak_repository.dart';
@@ -82,7 +80,6 @@ import 'package:hungrx_app/domain/usecases/dashboad_screen/get_streak_usecase.da
 import 'package:hungrx_app/domain/usecases/profile_setting_screen/get_goal_settings_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_menu.dart/add_to_cart_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_screen/get_suggested_restaurants_usecase.dart';
-import 'package:hungrx_app/domain/usecases/restaurant_screen/search_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/dashboad_screen/submit_feedback_usecase.dart';
 import 'package:hungrx_app/domain/usecases/weight_screen/get_weight_history_usecase.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/google_auth_usecase.dart';
@@ -123,10 +120,10 @@ import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/result_bloc/result_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_event.dart';
@@ -238,15 +235,19 @@ class MyApp extends StatelessWidget {
             authService: authService,
           ),
         ),
-        BlocProvider<RestaurantSearchBloc>(
-          create: (context) => RestaurantSearchBloc(
-            searchUseCase: SearchRestaurantsUseCase(
-              repository: SearchRestaurantRepository(
-                api: SearchRestaurantApi(),
-              ),
-            ),
-          ),
-        ),
+        // BlocProvider<RestaurantSearchBloc>(
+        //   create: (context) {
+        //     final suggestedBloc = context.read<SuggestedRestaurantsBloc>();
+        //     final restaurants =
+        //         suggestedBloc.state is SuggestedRestaurantsLoaded
+        //             ? (suggestedBloc.state as SuggestedRestaurantsLoaded)
+        //                 .restaurants
+        //             : <SuggestedRestaurantModel>[];
+
+        //     return RestaurantSearchBloc(restaurants);
+        //   },
+        // ),
+
         BlocProvider(
           create: (context) => NearbyRestaurantBloc(
             NearbyRestaurantRepository(
@@ -270,10 +271,10 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        BlocProvider<SuggestedRestaurantsBloc>(
-          create: (context) =>
-              SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase),
-        ),
+   BlocProvider<SuggestedRestaurantsBloc>(
+  create: (context) => SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase)
+    ..add(FetchSuggestedRestaurants()), // Initialize with data
+),
 
         BlocProvider(
           create: (context) => GetBasicInfoBloc(getBasicInfoUseCase),

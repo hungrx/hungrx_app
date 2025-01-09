@@ -1,6 +1,10 @@
+// restaurant_search_event.dart
 abstract class RestaurantSearchEvent {}
 
-class RestaurantSearchQueryChanged extends RestaurantSearchEvent {
+class SearchRestaurants extends RestaurantSearchEvent {
   final String query;
-  RestaurantSearchQueryChanged(this.query);
+
+  SearchRestaurants(this.query);
 }
+
+class ClearRestaurantSearch extends RestaurantSearchEvent {}

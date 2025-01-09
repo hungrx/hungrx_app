@@ -9,8 +9,8 @@ import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_state.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class StreakCalendar extends StatefulWidget {
-  final String userId;
-  const StreakCalendar({super.key, required this.userId});
+  
+  const StreakCalendar({super.key});
 
   @override
   State<StreakCalendar> createState() => _StreakCalendarState();
