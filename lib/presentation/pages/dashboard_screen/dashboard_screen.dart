@@ -7,6 +7,7 @@ import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart'
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_state.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/dashboard_widgets.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/shimmer_effect.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/streak_calendar.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -76,26 +77,9 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildLoadingView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Loading your dashboard...',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 16,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+Widget _buildLoadingView() {
+  return const DashboardShimmer();
+}
 
   Future<void> _handleRefresh() async {
     try {
@@ -232,14 +216,6 @@ class DashboardScreenState extends State<DashboardScreen> {
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                      // Optional: Add current water intake if available
-                                      // Text(
-                                      //   '0/2L',
-                                      //   style: TextStyle(
-                                      //     color: Colors.white.withOpacity(0.7),
-                                      //     fontSize: 14,
-                                      //   ),
-                                      // ),
                                     ],
                                   ),
                                 ),

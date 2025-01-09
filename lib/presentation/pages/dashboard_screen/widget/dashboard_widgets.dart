@@ -175,7 +175,7 @@ class DashboardWidgets {
             ),
           ),
         ),
-        SizedBox(width: getPadding(context, 0.04)),
+        SizedBox(width: getPadding(context, 0.03)),
         Expanded(
           child: GestureDetector(
             onTap: () {
@@ -295,7 +295,7 @@ class DashboardWidgets {
             ),
           ),
         ),
-        SizedBox(width: getPadding(context, 0.04)),
+        SizedBox(width: getPadding(context, 0.03)),
         Expanded(
           child: GestureDetector(
             onTap: () async {

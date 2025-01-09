@@ -6,17 +6,18 @@ import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_s
 
 class SearchBloc extends Bloc<SearchEvent, SearchState> {
   final FoodSearchRepository repository;
-  Timer? _debounceTimer;
 
   SearchBloc(this.repository) : super(SearchInitial()) {
-    on<SearchQueryChanged>(_onSearchQueryChanged);
+    // Register the event handlers
+    on<SearchQueryChanged>(_onSearchQueryChanged);  // Keep this for backward compatibility
+    on<PerformSearch>(_onPerformSearch);  // Add this line
     on<ClearSearch>((event, emit) {
-    emit( SearchInitial()); // Reset to initial state
-  });
+      emit(SearchInitial());
+    });
   }
 
-  FutureOr<void> _onSearchQueryChanged(
-    SearchQueryChanged event,
+  Future<void> _onPerformSearch(
+    PerformSearch event,
     Emitter<SearchState> emit,
   ) async {
     if (event.query.isEmpty) {
@@ -24,38 +25,21 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
       return;
     }
 
-    // Cancel any existing timer
-    _debounceTimer?.cancel();
-
-    // Create a completer to handle the debounced operation
-    final completer = Completer<void>();
-
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
-      try {
-        emit(SearchLoading());
-        
-        // Await the repository call
-        final foods = await repository.searchFood(event.query);
-        
-        if (!emit.isDone) {
-          emit(SearchSuccess(foods));
-        }
-      } catch (e) {
-        if (!emit.isDone) {
-          emit(SearchError(e.toString()));
-        }
-      } finally {
-        completer.complete();
-      }
-    });
-
-    // Wait for the debounced operation to complete
-    await completer.future;
+    try {
+      emit(SearchLoading());
+      final foods = await repository.searchFood(event.query);
+      emit(SearchSuccess(foods));
+    } catch (e) {
+      emit(SearchError(e.toString()));
+    }
   }
 
-  @override
-  Future<void> close() {
-    _debounceTimer?.cancel();
-    return super.close();
+  // Keep this method for backward compatibility
+  Future<void> _onSearchQueryChanged(
+    SearchQueryChanged event,
+    Emitter<SearchState> emit,
+  ) async {
+    // Simply forward to _onPerformSearch
+    await _onPerformSearch(PerformSearch(event.query), emit);
   }
 }

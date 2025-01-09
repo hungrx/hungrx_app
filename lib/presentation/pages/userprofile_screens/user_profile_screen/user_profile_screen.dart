@@ -241,13 +241,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             'userId': userId,
           });
         }),
-        _buildDetailItem(Icons.info_outline, 'About',
-            'About us, Privacy Policy, app version', () {
-          context.pushNamed(RouteNames.policiesScreen);
-        }),
         _buildDetailItem(Icons.help_outline, 'Help & Support',
             'Help, feedbacks, social media', () {
           context.pushNamed(RouteNames.helpSupportScreen);
+        }),
+        _buildDetailItem(Icons.info_outline, 'About',
+            'About us, Privacy Policy, app version', () {
+          context.pushNamed(RouteNames.policiesScreen);
         }),
       ],
     );

@@ -11,6 +11,7 @@ import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_state.dart
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/cart_shimmer.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/meal_button.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 
@@ -90,11 +91,7 @@ class _CartScreenState extends State<CartScreen> {
         body: BlocBuilder<GetCartBloc, GetCartState>(
           builder: (context, state) {
             if (state is CartLoading) {
-              return const Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.buttonColors,
-                ),
-              );
+              return _buildLoadingView();
             }
             if (state is CartError) {
               return Center(
@@ -281,6 +278,9 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
   }
+  Widget _buildLoadingView() {
+  return const CartScreenShimmer();
+}
 
   Widget _buildCalorieSummaryCard(
       double remainingCalories, Map<String, double> nutrition) {
