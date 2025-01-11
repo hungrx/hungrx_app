@@ -3,15 +3,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/food_item_model.dart';
+import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_event.dart';
+import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_state.dart';
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_event.dart';
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_state.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/common_food_list.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/custom_food_dialog.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/shimmer_effect.dart';
-import 'package:hungrx_app/routes/route_names.dart';
 
 class FoodSearchScreen extends StatefulWidget {
   const FoodSearchScreen({super.key});
@@ -20,16 +23,17 @@ class FoodSearchScreen extends StatefulWidget {
   State<FoodSearchScreen> createState() => _FoodSearchScreenState();
 }
 
-class _FoodSearchScreenState extends State<FoodSearchScreen> with SingleTickerProviderStateMixin {
+class _FoodSearchScreenState extends State<FoodSearchScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
-  
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<SearchBloc>().add(ClearSearch());
@@ -48,8 +52,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> with SingleTickerPr
       // Branded foods search
       context.read<SearchBloc>().add(PerformSearch(query));
     } else {
-      // Common foods search
-      // context.read<SearchBloc>().add(PerformCommonFoodSearch(query));
+      context.read<CommonFoodSearchBloc>().add(CommonFoodSearchStarted(query));
     }
   }
 
@@ -65,6 +68,7 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> with SingleTickerPr
     return WillPopScope(
       onWillPop: () async {
         context.read<SearchBloc>().add(ClearSearch());
+        context.read<CommonFoodSearchBloc>().add(CommonFoodSearchCleared());
         return true;
       },
       child: Scaffold(
@@ -81,13 +85,13 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> with SingleTickerPr
             unselectedLabelColor: Colors.grey,
             tabs: const [
               Tab(
-
                 icon: SizedBox(),
                 text: 'Branded Foods',
               ),
               Tab(
                 icon: SizedBox(),
                 text: 'Common Foods',
+                
               ),
             ],
           ),
@@ -126,6 +130,15 @@ class _FoodSearchScreenState extends State<FoodSearchScreen> with SingleTickerPr
         ),
       ),
       onSubmitted: _performSearch,
+      onChanged: (value) {
+        if (value.isEmpty) {
+          if (_tabController.index == 0) {
+            context.read<SearchBloc>().add(ClearSearch());
+          } else {
+            context.read<CommonFoodSearchBloc>().add(CommonFoodSearchCleared());
+          }
+        }
+      },
     );
   }
 }
@@ -156,13 +169,13 @@ class _BrandedFoodsTab extends StatelessWidget {
 class _CommonFoodsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<SearchBloc, SearchState>(
+    return BlocBuilder<CommonFoodSearchBloc, CommonFoodSearchState>(
       builder: (context, state) {
-        if (state is SearchLoading) {
-          return _buildLoader();
-        } else if (state is SearchSuccess) {
-          return _buildFoodList(context, state.foods);
-        } else if (state is SearchError) {
+        if (state is CommonFoodSearchLoading) {
+          return const FoodListShimmer();
+        } else if (state is CommonFoodSearchSuccess) {
+          return CommonFoodList(foods: state.foods);
+        } else if (state is CommonFoodSearchError) {
           return _buildErrorState(context);
         }
         return const Center(
@@ -294,30 +307,6 @@ Widget _buildFoodItem(BuildContext context, FoodItemModel food) {
       borderRadius: BorderRadius.circular(10),
     ),
     child: ListTile(
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: food.image != null
-            ? Image.network(
-                food.image!,
-                width: 56,
-                height: 56,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 56,
-                    height: 56,
-                    color: Colors.grey.shade800,
-                    child: Icon(Icons.fastfood, color: Colors.grey.shade400),
-                  );
-                },
-              )
-            : Container(
-                width: 56,
-                height: 56,
-                color: Colors.grey.shade800,
-                child: Icon(Icons.fastfood, color: Colors.grey.shade400),
-              ),
-      ),
       contentPadding: const EdgeInsets.all(8),
       title: Text(
         food.name,
@@ -366,16 +355,6 @@ Widget _buildFoodItem(BuildContext context, FoodItemModel food) {
           ),
         ],
       ),
-      onTap: () {
-        context.pushNamed(
-          RouteNames.foodDetail,
-          pathParameters: {'id': food.id},
-          extra: {
-            'isSearchScreen': false,
-            'foodItem': food,
-          },
-        );
-      },
     ),
   );
 }

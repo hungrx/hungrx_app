@@ -17,6 +17,17 @@ class StreakCalendar extends StatefulWidget {
 }
 
 class _StreakCalendarState extends State<StreakCalendar> {
+  double getFontSize(BuildContext context, double factor) {
+    return MediaQuery.of(context).size.width * factor;
+  }
+
+  double getPadding(BuildContext context, double factor) {
+    return MediaQuery.of(context).size.width * factor;
+  }
+
+  double getIconSize(BuildContext context, double factor) {
+    return MediaQuery.of(context).size.width * factor;
+  }
   bool _isLoading = false;
 
   @override
@@ -35,24 +46,24 @@ class _StreakCalendarState extends State<StreakCalendar> {
     setState(() => _isLoading = false);
   }
 
-  Widget _buildLoadingView() {
+Widget _buildLoadingView() {
     return _buildContainer(
       context,
       child: SizedBox(
-        width: 240,
-        height: 230,
+        width: MediaQuery.of(context).size.width * 0.6,
+        height: MediaQuery.of(context).size.height * 0.25,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFB4D147)),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: getPadding(context, 0.04)),
             Text(
               'Loading streaks...',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
-                fontSize: 14,
+                fontSize: getFontSize(context, 0.035),
               ),
             ),
           ],
@@ -61,40 +72,46 @@ class _StreakCalendarState extends State<StreakCalendar> {
     );
   }
 
-  Widget _buildErrorView(String message) {
+   Widget _buildErrorView(String message) {
     return _buildContainer(
       context,
       child: SizedBox(
-        width: 240,
-        height: 230,
+        width: MediaQuery.of(context).size.width * 0.6,
+        height: MediaQuery.of(context).size.height * 0.25,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               LucideIcons.alertCircle,
               color: Colors.red[300],
-              size: 32,
+              size: getIconSize(context, 0.08),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: getPadding(context, 0.03)),
             Text(
               message,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 12,
+                fontSize: getFontSize(context, 0.03),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: getPadding(context, 0.03)),
             ElevatedButton.icon(
               onPressed: _loadStreakData,
-              icon: const Icon(LucideIcons.refreshCw, size: 16),
-              label: const Text('Retry'),
+              icon: Icon(LucideIcons.refreshCw, 
+                size: getIconSize(context, 0.04)),
+              label: Text(
+                'Retry',
+                style: TextStyle(
+                  fontSize: getFontSize(context, 0.035),
+                ),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFB4D147),
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                padding: EdgeInsets.symmetric(
+                  horizontal: getPadding(context, 0.04),
+                  vertical: getPadding(context, 0.02),
                 ),
               ),
             ),
@@ -164,6 +181,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
                       endingDate,
                       streakMap,
                       screenSize,
+                      isSmallScreen
                     ),
                   ),
                   Padding(
@@ -183,7 +201,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
 
   Widget _buildContainer(BuildContext context, {required Widget child}) {
     return Container(
-      padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.025),
+      padding: EdgeInsets.all(getPadding(context, 0.025)),
       decoration: BoxDecoration(
         color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(20),
@@ -199,7 +217,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
         Row(
           children: [
             Container(
-              padding: EdgeInsets.all(isSmallScreen ? 6 : 6),
+              padding: EdgeInsets.all(getPadding(context, 0.015)),
               decoration: BoxDecoration(
                 color: const Color(0xFFB4D147),
                 borderRadius: BorderRadius.circular(12),
@@ -207,10 +225,10 @@ class _StreakCalendarState extends State<StreakCalendar> {
               child: Icon(
                 LucideIcons.flame,
                 color: Colors.black,
-                size: isSmallScreen ? 24 : 26,
+                size: getIconSize(context, isSmallScreen ? 0.06 : 0.07),
               ),
             ),
-            SizedBox(width: isSmallScreen ? 8 : 12),
+            SizedBox(width: getPadding(context, 0.02)),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -218,7 +236,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
                   'Streaks',
                   style: GoogleFonts.stickNoBills(
                     color: Colors.white,
-                    fontSize: isSmallScreen ? 18 : 18,
+                    fontSize: getFontSize(context, 0.045),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -227,7 +245,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
                   style: TextStyle(
                     fontStyle: FontStyle.italic,
                     color: Colors.grey[500],
-                    fontSize: isSmallScreen ? 12 : 12,
+                    fontSize: getFontSize(context, 0.03),
                   ),
                 ),
               ],
@@ -238,11 +256,13 @@ class _StreakCalendarState extends State<StreakCalendar> {
     );
   }
 
+
   Widget _buildHeatMap(
     DateTime startDate,
     DateTime endDate,
     Map<DateTime, int> datasets,
     Size screenSize,
+    bool isSmallScreen
   ) {
     return ShaderMask(
       shaderCallback: (Rect bounds) {
@@ -272,7 +292,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
           showColorTip: false,
           showText: false,
           scrollable: true,
-          size: screenSize.width < 360 ? 8 : 13,
+          size: screenSize.width * (isSmallScreen ? 0.01 : 0.032),
           colorsets: const {
             1: Color(0xFFB4D147),
           },
@@ -304,7 +324,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
     );
   }
 
-  Widget _buildStatContainer({
+Widget _buildStatContainer({
     IconData? icon,
     required String text,
     required bool isSmallScreen,
@@ -312,8 +332,8 @@ class _StreakCalendarState extends State<StreakCalendar> {
   }) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isSmallScreen ? 12 : 16,
-        vertical: isSmallScreen ? 2 : 6,
+        horizontal: getPadding(context, 0.03),
+        vertical: getPadding(context, isSmallScreen ? 0.01 : 0.015),
       ),
       decoration: BoxDecoration(
         color: const Color(0xFF2A2A2A),
@@ -325,15 +345,15 @@ class _StreakCalendarState extends State<StreakCalendar> {
             Icon(
               icon,
               color: const Color(0xFFB4D147),
-              size: isSmallScreen ? 16 : 20,
+              size: getIconSize(context, isSmallScreen ? 0.04 : 0.05),
             ),
-            SizedBox(width: isSmallScreen ? 6 : 8),
+            SizedBox(width: getPadding(context, 0.02)),
           ],
           Text(
             text,
             style: GoogleFonts.stickNoBills(
               color: Colors.white,
-              fontSize: isSmallScreen ? 14 : 18,
+              fontSize: getFontSize(context, isSmallScreen ? 0.035 : 0.045),
               fontWeight: FontWeight.bold,
             ),
           ),

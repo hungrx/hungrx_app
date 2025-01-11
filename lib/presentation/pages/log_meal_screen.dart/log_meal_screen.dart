@@ -10,7 +10,6 @@ import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/bottom_search_bar.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';
-import 'package:hungrx_app/routes/route_names.dart';
 
 class LogMealScreen extends StatelessWidget {
   const LogMealScreen({super.key});
@@ -43,7 +42,7 @@ class _LogMealViewState extends State<LogMealView> {
     super.initState();
     // Trigger search history refresh when screen loads
     context.read<SearchHistoryLogBloc>().add(
-          GetSearchHistoryLogRequested(userId: widget.userId),
+          GetSearchHistoryLogRequested(),
         );
   }
 
@@ -86,7 +85,7 @@ class _LogMealViewState extends State<LogMealView> {
               userId: widget.userId,
               onSearchHistoryRefresh: () {
                 context.read<SearchHistoryLogBloc>().add(
-                      GetSearchHistoryLogRequested(userId: widget.userId),
+                      GetSearchHistoryLogRequested(),
                     );
               },
             ),
@@ -244,16 +243,6 @@ class _LogMealViewState extends State<LogMealView> {
                 brandName: item.brandName,
                 imageUrl: item.image,
                 onTap: () {
-                  context.pushNamed(
-                    RouteNames.foodDetail,
-                    pathParameters: {'id': item.foodId},
-                    extra: {
-                      'isSearchScreen': true, // or false based on your screen
-                      'searchFood': item, // pass if it's a search food item
-                      // 'foodItem': food, // pass if it's a regular food item
-                    },
-                  );
-                  //  !add detail screen
                 },
               );
             },

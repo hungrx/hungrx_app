@@ -28,7 +28,8 @@ class LogMealSearchHistoryApi {
         }),
       );
 // print("User history added log :${response.body}");
-
+print(response.body);
+print(response.statusCode);
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {

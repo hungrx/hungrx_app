@@ -23,7 +23,7 @@ class DishDetails extends StatefulWidget {
   final String? imageUrl;
   final String description;
   final List<String> servingSizes;
-   final List<ServingInfo> servingInfos; 
+  final List<ServingInfo> servingInfos;
   final Map<String, NutritionInfo> sizeOptions;
   final List<String> ingredients;
 
@@ -37,7 +37,8 @@ class DishDetails extends StatefulWidget {
     required this.ingredients,
     this.restaurantId,
     this.dishId,
-    required this.calories, required this.servingInfos,
+    required this.calories,
+    required this.servingInfos,
   });
 
   @override
@@ -45,19 +46,21 @@ class DishDetails extends StatefulWidget {
 }
 
 class _DishDetailsState extends State<DishDetails> {
+  bool isExceedingLimit = false;
   bool _checkCalorieLimit(BuildContext context, double dishCalories) {
     // Get current cart state for items in cart
     // final cartState = context.read<CartBloc>().state;
     final menuState = context.read<RestaurantMenuBloc>().state;
-    
+
     // Get cart bloc for total nutrition calculation
     final getCartState = context.read<GetCartBloc>().state;
-    
+
     if (menuState is RestaurantMenuLoaded) {
       final userStats = menuState.menuResponse.userStats;
       final baseConsumedCalories = userStats.todayConsumption;
-      final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
-      
+      final dailyCalorieGoal =
+          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+
       // Get calories from cart using GetCartBloc
       double cartCalories = 0.0;
       if (getCartState is CartLoaded) {
@@ -65,12 +68,14 @@ class _DishDetailsState extends State<DishDetails> {
       }
 
       // Calculate total calories including base consumption, cart items, and new dish
-      final totalCaloriesAfterAdd = baseConsumedCalories + cartCalories + dishCalories;
+      final totalCaloriesAfterAdd =
+          baseConsumedCalories + cartCalories + dishCalories;
 
       if (totalCaloriesAfterAdd > dailyCalorieGoal) {
         // Calculate remaining calories for better user feedback
-        final remainingCalories = dailyCalorieGoal - (baseConsumedCalories + cartCalories);
-        
+        final remainingCalories =
+            dailyCalorieGoal - (baseConsumedCalories + cartCalories);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Column(
@@ -79,7 +84,8 @@ class _DishDetailsState extends State<DishDetails> {
               children: [
                 const Text(
                   'Warning: Adding this item would exceed your daily limit',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -104,47 +110,48 @@ class _DishDetailsState extends State<DishDetails> {
       }
     }
     return true;
-}
-
-void _handleAddToCart(BuildContext context) {
-  if (widget.dishId == null || widget.restaurantId == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Invalid dish or restaurant information'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
   }
 
-  final nutrition = _calculateTotalNutrition();
-  
-  if (_checkCalorieLimit(context, nutrition.calories)) {  // Use calculated calories
-    final cartRequest = CartRequest(
-      orders: [
-        CartOrderRequest(
-          restaurantId: widget.restaurantId!,
-          items: [
-            CartItemRequest(
-              dishId: widget.dishId!,
-              servingSize: selectedSize,
-            ),
-          ],
+  void _handleAddToCart(BuildContext context) {
+    if (widget.dishId == null || widget.restaurantId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid dish or restaurant information'),
+          backgroundColor: Colors.red,
         ),
-      ],
-    );
+      );
+      return;
+    }
 
-    context.read<AddToCartBloc>().add(SubmitAddToCartEvent(cartRequest));
+    final nutrition = _calculateTotalNutrition();
 
-    final cartItem = CartItem(
-      dishName: widget.name,
-      size: selectedSize,
-      nutritionInfo: nutrition,
-    );
+    if (_checkCalorieLimit(context, nutrition.calories)) {
+      // Use calculated calories
+      final cartRequest = CartRequest(
+        orders: [
+          CartOrderRequest(
+            restaurantId: widget.restaurantId!,
+            items: [
+              CartItemRequest(
+                dishId: widget.dishId!,
+                servingSize: selectedSize,
+              ),
+            ],
+          ),
+        ],
+      );
 
-    context.read<CartBloc>().add(AddToCart(cartItem));
+      context.read<AddToCartBloc>().add(SubmitAddToCartEvent(cartRequest));
+
+      final cartItem = CartItem(
+        dishName: widget.name,
+        size: selectedSize,
+        nutritionInfo: nutrition,
+      );
+
+      context.read<CartBloc>().add(AddToCart(cartItem));
+    }
   }
-}
 
   String selectedSize = '';
   late ServingInfo selectedServingInfo;
@@ -154,17 +161,45 @@ void _handleAddToCart(BuildContext context) {
     super.initState();
     // Set default size to first available option
     if (widget.sizeOptions.isNotEmpty) {
-       selectedServingInfo = widget.servingInfos.first;
+      selectedServingInfo = widget.servingInfos.first;
       selectedSize = widget.sizeOptions.keys.first;
+      _checkAndUpdateCalorieLimitStatus();
     }
   }
-   void _updateSelectedSize(String size) {
+
+  void _checkAndUpdateCalorieLimitStatus() {
+    final nutrition = _calculateTotalNutrition();
+    final menuState = context.read<RestaurantMenuBloc>().state;
+    final getCartState = context.read<GetCartBloc>().state;
+
+    if (menuState is RestaurantMenuLoaded) {
+      final userStats = menuState.menuResponse.userStats;
+      final baseConsumedCalories = userStats.todayConsumption;
+      final dailyCalorieGoal =
+          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+
+      double cartCalories = 0.0;
+      if (getCartState is CartLoaded) {
+        cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
+      }
+
+      final totalCaloriesAfterAdd =
+          baseConsumedCalories + cartCalories + nutrition.calories;
+
+      setState(() {
+        isExceedingLimit = totalCaloriesAfterAdd > dailyCalorieGoal;
+      });
+    }
+  }
+
+  void _updateSelectedSize(String size) {
     setState(() {
       selectedSize = size;
       selectedServingInfo = widget.servingInfos.firstWhere(
         (info) => info.servingInfo.size == size,
         orElse: () => widget.servingInfos.first,
       );
+      _checkAndUpdateCalorieLimitStatus();
     });
   }
 
@@ -176,8 +211,8 @@ void _handleAddToCart(BuildContext context) {
       carbs: double.tryParse(facts.carbs.value) ?? 0,
       fat: double.tryParse(facts.totalFat.value) ?? 0,
       sodium: 0, // Add if available in your model
-      sugar: 0,  // Add if available in your model
-      fiber: 0,  // Add if available in your model
+      sugar: 0, // Add if available in your model
+      fiber: 0, // Add if available in your model
     );
   }
 
@@ -189,7 +224,7 @@ void _handleAddToCart(BuildContext context) {
       listener: (context, state) {
         if (state is AddToCartSuccess) {
           Navigator.pop(context);
-           context.read<GetCartBloc>().add(LoadCart());
+          context.read<GetCartBloc>().add(LoadCart());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.response.message)),
           );
@@ -236,37 +271,37 @@ void _handleAddToCart(BuildContext context) {
   }
 
   Widget _buildSliverAppBar() {
-final currentImageUrl = selectedServingInfo.servingInfo.url;
-  return SliverAppBar(
-    leading: const SizedBox(),
-    expandedHeight: 200,
-    pinned: true,
-    backgroundColor: Colors.white,
-    flexibleSpace: FlexibleSpaceBar(
-      background: currentImageUrl != null && currentImageUrl.isNotEmpty 
-          ? Image.network(
-              currentImageUrl,
-              fit: BoxFit.fitHeight,
-              errorBuilder: (context, error, stackTrace) {
-                return _buildFallbackIcon();
-              },
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) {
-                  return child;
-                }
-                return Center(
-                  child: CircularProgressIndicator(
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                        : null,
-                    color: AppColors.buttonColors,
-                  ),
-                );
-              },
-            )
-          : _buildFallbackIcon(),
-    ),
+    final currentImageUrl = selectedServingInfo.servingInfo.url;
+    return SliverAppBar(
+      leading: const SizedBox(),
+      expandedHeight: 200,
+      pinned: true,
+      backgroundColor: Colors.white,
+      flexibleSpace: FlexibleSpaceBar(
+        background: currentImageUrl != null && currentImageUrl.isNotEmpty
+            ? Image.network(
+                currentImageUrl,
+                fit: BoxFit.fitHeight,
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildFallbackIcon();
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  }
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                      color: AppColors.buttonColors,
+                    ),
+                  );
+                },
+              )
+            : _buildFallbackIcon(),
+      ),
       actions: [
         Padding(
           padding: const EdgeInsets.all(8.0),
@@ -395,29 +430,39 @@ final currentImageUrl = selectedServingInfo.servingInfo.url;
           spacing: 16,
           runSpacing: 16,
           children: [
-            _nutritionItem('Calories', '${nutrition.calories.round()}'),
-            _nutritionItem('Protein', '${nutrition.protein.round()}g'),
-            _nutritionItem('Carbs', '${nutrition.carbs.round()}g'),
-            _nutritionItem('Fat', '${nutrition.fat.round()}g'),
+            _nutritionItem(
+              'Calories',
+              '${nutrition.calories.round()}',
+              isExceedingLimit,
+            ),
+            // _nutritionItem('Calories', '${nutrition.calories.round()}'),
+            _nutritionItem('Protein', '${nutrition.protein.round()}g', false),
+            _nutritionItem('Carbs', '${nutrition.carbs.round()}g', false),
+            _nutritionItem('Fat', '${nutrition.fat.round()}g', false),
           ],
         ),
       ],
     );
   }
 
-  Widget _nutritionItem(String label, String value) {
+  Widget _nutritionItem(String label, String value, bool isCaloriesExceeding) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(8),
+        border: label == 'Calories' && isCaloriesExceeding
+            ? Border.all(color: Colors.red, width: 1)
+            : null,
       ),
       child: Column(
         children: [
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: label == 'Calories' && isCaloriesExceeding
+                  ? Colors.red
+                  : Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -425,8 +470,10 @@ final currentImageUrl = selectedServingInfo.servingInfo.url;
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.grey,
+            style: TextStyle(
+              color: label == 'Calories' && isCaloriesExceeding
+                  ? Colors.red
+                  : Colors.grey,
               fontSize: 12,
             ),
           ),
@@ -483,7 +530,7 @@ class NutritionInfo {
   final int sodium;
   final double sugar;
   final double fiber;
-  final String? imageUrl;  // Add this field
+  final String? imageUrl; // Add this field
 
   const NutritionInfo({
     required this.calories,
@@ -493,6 +540,6 @@ class NutritionInfo {
     required this.sodium,
     required this.sugar,
     required this.fiber,
-    this.imageUrl,  // Add this parameter
+    this.imageUrl, // Add this parameter
   });
 }

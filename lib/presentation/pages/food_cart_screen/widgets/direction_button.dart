@@ -12,17 +12,26 @@ class AddressDirectionButton extends StatelessWidget {
     required this.restaurant,
   });
 
-  Future<void> _launchMaps(List<double> coordinates) async {
-    final lat = coordinates[1]; // Latitude is typically the second element
-    final lng = coordinates[0]; // Longitude is typically the first element
-    final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+Future<void> _launchMaps(String address) async {
+  // Remove any extra whitespace and ensure proper formatting
+  final cleanAddress = address.trim().replaceAll(RegExp(r'\s+'), ' ');
+  final encodedAddress = Uri.encodeComponent(cleanAddress);
+  final url = 'https://www.google.com/maps/dir/?api=1&destination=$encodedAddress';
 
+  try {
     if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
+      await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
     } else {
-      throw 'Could not launch $url';
+      throw 'Could not launch maps';
     }
+  } catch (e) {
+    debugPrint('Error launching maps: $e');
   }
+}
+
 
   void _showAddressDialog(BuildContext context) {
     showDialog(
@@ -51,7 +60,7 @@ class AddressDirectionButton extends StatelessWidget {
                   color: Colors.grey[800],
                   child: ListTile(
                     title: Text(
-                      restaurant?.name??"",
+                      restaurant?.restaurantName??"",
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -88,7 +97,7 @@ class AddressDirectionButton extends StatelessWidget {
                     ),
                     onTap: () {
                       Navigator.pop(context);
-                      _launchMaps(restaurant?.coordinates??[]);
+                      _launchMaps(restaurant?.address ?? "");
                     },
                   ),
                 ),

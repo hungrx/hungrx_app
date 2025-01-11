@@ -97,7 +97,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
       if (mounted) {
         // Navigate to login screen
-        GoRouter.of(context).go('/login');
+        GoRouter.of(context).go('/phoneNumber');
       }
     } catch (e) {
       if (mounted) {
@@ -204,7 +204,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               );
               Navigator.of(context).popUntil((route) => route.isFirst);
               // Navigate to login screen
-              GoRouter.of(context).go('/login');
+              GoRouter.of(context).go('/phoneNumber');
               // context.go('/login');
             } else if (state is DeleteAccountFailure) {
               ScaffoldMessenger.of(context).showSnackBar(

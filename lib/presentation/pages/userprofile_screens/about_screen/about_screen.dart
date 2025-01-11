@@ -1,37 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
-class PoliciesScreen extends StatelessWidget {
+class PoliciesScreen extends StatefulWidget {
   const PoliciesScreen({super.key});
 
-Future<void> launchUrlInBrowser(BuildContext context, String urlString) async {
-  try {
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(
-      url,
-      mode: LaunchMode.externalApplication, // This forces the URL to open in external browser
-    )) {
+  @override
+  State<PoliciesScreen> createState() => _PoliciesScreenState();
+}
+
+class _PoliciesScreenState extends State<PoliciesScreen> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _getAppVersion();
+  }
+
+  Future<void> _getAppVersion() async {
+    final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = packageInfo.version;
+    });
+  }
+
+  Future<void> launchUrlInBrowser(BuildContext context, String urlString) async {
+    try {
+      final Uri url = Uri.parse(urlString);
+      if (!await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      )) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not launch the webpage. Please try again later.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not launch the webpage. Please try again later.'),
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
     }
-  } catch (e) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
   }
-}
 
   void _showAboutDialog(BuildContext context) {
     showDialog(
@@ -53,7 +74,7 @@ Future<void> launchUrlInBrowser(BuildContext context, String urlString) async {
               ),
               const SizedBox(height: 20),
               Text(
-                'Version 4.1.0',
+                'Version $_version',
                 style: TextStyle(color: Colors.grey[400]),
               ),
             ],
@@ -102,12 +123,6 @@ Future<void> launchUrlInBrowser(BuildContext context, String urlString) async {
               title: 'Privacy Policy',
               onTap: () => launchUrlInBrowser(context,'https://www.hungrx.com/privacy-policy.html'),
             ),
-            // _buildPolicyItem(
-            //   context,
-            //   icon: Icons.medical_services_outlined,
-            //   title: 'Health Disclaimer',
-            //   onTap: () => launchUrlInBrowser(context,'https://www.hungrx.com/health-disclaimer.html'),
-            // ),
             _buildPolicyItem(
               context,
               icon: Icons.cookie_outlined,
@@ -124,7 +139,7 @@ Future<void> launchUrlInBrowser(BuildContext context, String urlString) async {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Version 4.1.0',
+                'Version $_version',
                 style: TextStyle(color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),

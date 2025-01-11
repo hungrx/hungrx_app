@@ -49,7 +49,7 @@ class SplashScreenState extends State<SplashScreen> {
 
     final bool isLoggedIn = await _authService.isLoggedIn();
     final bool hasSeenOnboarding = await _onboardingService.hasSeenOnboarding();
-    String route = '/login';
+    String route = '/phoneNumber';
 
     if (isLoggedIn) {
       try {
@@ -83,7 +83,7 @@ class SplashScreenState extends State<SplashScreen> {
                     Text('Error checking profile status. Please try again.')),
           );
         }
-        route = '/login'; // Fallback to login on error
+        route = '/phoneNumber'; // Fallback to login on error
       }
     } else if (!hasSeenOnboarding) {
       route = '/onboarding';

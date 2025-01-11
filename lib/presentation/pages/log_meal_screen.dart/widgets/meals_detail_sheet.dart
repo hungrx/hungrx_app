@@ -128,15 +128,11 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
     );
     // ! for animating the calorie count
     HomeDataNotifier.decreaseCalories(totalCalories);
-    // HomeDataNotifier.updateCalories(
-    //     HomeDataNotifier.caloriesNotifier.value + totalCalories
-    //   );
     context.read<AddMealBloc>().add(AddMealSubmitted(request));
 
     if (!widget.isHistoryScreen) {
       context.read<LogMealSearchHistoryBloc>().add(
             AddToLogMealSearchHistory(
-              userId: widget.userId,
               productId: widget.productId,
             ),
           );
@@ -151,7 +147,7 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
           listener: (context, state) {
             if (state is AddMealSuccess) {
               context.read<SearchHistoryLogBloc>().add(
-                    GetSearchHistoryLogRequested(userId: widget.userId),
+                    GetSearchHistoryLogRequested(),
                   );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -177,7 +173,7 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
           listener: (context, state) {
             if (state is LogMealSearchHistorySuccess) {
               context.read<SearchHistoryLogBloc>().add(
-                    GetSearchHistoryLogRequested(userId: widget.userId),
+                    GetSearchHistoryLogRequested(),
                   );
             } else if (state is LogMealSearchHistoryError) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -426,27 +422,44 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                       SizedBox(
                         width: double.infinity,
                         height: 50,
-                        child: ElevatedButton(
-                          onPressed: _handleAddToMeal,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.buttonColors,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            elevation: 2,
-                          ),
-                          child: Text(
-                            selectedMealType == 'CHOOSE'
-                                ? "CHOOSE MEAL"
-                                : 'ADD TO $selectedMealType',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
+                        child: BlocBuilder<AddMealBloc, AddMealState>(
+                          builder: (context, state) {
+                            return ElevatedButton(
+                              onPressed: state is AddMealLoading
+                                  ? null
+                                  : _handleAddToMeal,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.buttonColors,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                elevation: 2,
+                              ),
+                              child: state is AddMealLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.black),
+                                      ),
+                                    )
+                                  : Text(
+                                      selectedMealType == 'CHOOSE'
+                                          ? "CHOOSE MEAL"
+                                          : 'ADD TO $selectedMealType',
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                            );
+                          },
                         ),
-                      ),
+                      )
                     ],
                   ),
                 ),

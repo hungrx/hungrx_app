@@ -57,8 +57,10 @@ class AuthService {
   }
 
   Future<HomeData?> fetchHomeData() async {
+
     try {
       final userId = await getUserId();
+          print("userId :$userId");
       if (userId != null) {
         return await _homeApiService.fetchHomeData(userId);
       }

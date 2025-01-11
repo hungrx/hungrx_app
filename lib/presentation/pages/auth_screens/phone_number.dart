@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_event.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_state.dart';
@@ -32,24 +33,6 @@ class PhoneNumberScreen extends StatefulWidget {
 class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  void _showLoadingOverlay(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
-        child: Container(
-          color: Colors.black.withOpacity(0.5),
-          child: const Center(
-            child: CircularProgressIndicator(
-              color: AppColors.buttonColors,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   void _hideLoadingOverlay(BuildContext context) {
     if (context.canPop()) {
@@ -90,7 +73,7 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
     return null;
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return MultiBlocProvider(
@@ -107,9 +90,11 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                 context.pushNamed(
                   RouteNames.otpVerify,
                   pathParameters: {
-                    'phoneNumber':
-                        context.read<CountryCodeBloc>().state.selectedCountryCode +
-                            _phoneController.text
+                    'phoneNumber': context
+                            .read<CountryCodeBloc>()
+                            .state
+                            .selectedCountryCode +
+                        _phoneController.text
                   },
                 );
               } else if (state is OtpSendFailure) {
@@ -124,23 +109,70 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
             },
           ),
           BlocListener<GoogleAuthBloc, GoogleAuthState>(
-            listener: (context, state) {
-              if (state is GoogleAuthLoading) {
-                _showLoadingOverlay(context);
-              } else if (state is GoogleAuthSuccess) {
-                _hideLoadingOverlay(context);
-                context.pushNamed(RouteNames.userInfoOne);
+            listener: (context, state) async {
+              if (!mounted) return;
+
+              if (state is GoogleAuthSuccess) {
+                final currentContext = context;
+
+                if (!mounted) return;
+
+                final authService = AuthService();
+                final userId = await authService.getUserId();
+
+                if (!mounted) return;
+
+                if (userId != null) {
+                  try {
+                    final isProfileComplete =
+                        await authService.checkProfileCompletion(userId);
+                    if (!mounted) return;
+
+                    if (isProfileComplete) {
+                      // Existing user - navigate to home
+                      if (mounted) {
+                        GoRouter.of(currentContext).go('/home');
+                      }
+                    } else {
+                      // New user - navigate to user info screen
+                      if (mounted) {
+                        GoRouter.of(currentContext).go('/user-info-one');
+                      }
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(currentContext).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Error checking profile status. Please try again.'),
+                          duration: Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      _handleGoogleAuthError(
+                          currentContext, 'Error during profile check: $e');
+                    }
+                  }
+                } else {
+                  if (mounted) {
+                    _handleGoogleAuthError(
+                        currentContext, 'Failed to get user ID');
+                  }
+                }
               } else if (state is GoogleAuthCancelled) {
-                _hideLoadingOverlay(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Sign in cancelled'),
-                    duration: Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Sign in cancelled'),
+                      duration: Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               } else if (state is GoogleAuthFailure) {
-                _handleGoogleAuthError(context, state.error);
+                if (mounted) {
+                  _handleGoogleAuthError(context, state.error);
+                }
               }
             },
           ),
@@ -173,7 +205,7 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                             HeaderText(
                               mainHeading: widget.isSignUp
                                   ? "Create Account"
-                                  : "Welcome back,",
+                                  : "Welcome,",
                               subHeading: widget.isSignUp
                                   ? "Let's get started"
                                   : "Glad You're here",
@@ -186,13 +218,15 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  BlocBuilder<CountryCodeBloc, CountryCodeState>(
+                                  BlocBuilder<CountryCodeBloc,
+                                      CountryCodeState>(
                                     builder: (context, countryCodeState) {
                                       return CountryCodePicker(
                                         onChanged: (CountryCode countryCode) {
                                           context.read<CountryCodeBloc>().add(
                                                 CountryCodeChanged(
-                                                    countryCode.dialCode ?? '+1'),
+                                                    countryCode.dialCode ??
+                                                        '+1'),
                                               );
                                         },
                                         initialSelection: 'US',
@@ -231,7 +265,8 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                                   onPressed: state is OtpSendLoading
                                       ? null
                                       : () {
-                                          if (_formKey.currentState!.validate()) {
+                                          if (_formKey.currentState!
+                                              .validate()) {
                                             final countryCode = context
                                                 .read<CountryCodeBloc>()
                                                 .state
@@ -248,8 +283,10 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                             ),
                             const SizedBox(height: 20),
                             const ClickableTermsAndPolicyText(
-                              policyUrl: "https://www.hungrx.com/",
-                              termsUrl: "https://www.hungrx.com/",
+                              policyUrl:
+                                  "https://www.hungrx.com/privacy-policy.html",
+                              termsUrl:
+                                  "https://www.hungrx.com/terms-and-conditions.html",
                             ),
                             Column(
                               children: [
@@ -257,30 +294,30 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    SocialLoginBotton(
-                                      iconPath: 'assets/icons/google.png',
-                                      label: 'Google',
-                                      size: 25,
-                                      onPressed: () {
-                                        context
-                                            .read<GoogleAuthBloc>()
-                                            .add(GoogleSignInRequested());
-                                      },
+                                    Expanded(
+                                      child: SocialLoginBotton(
+                                        iconPath: 'assets/icons/google.png',
+                                        label: 'Google',
+                                        size: 25,
+                                        onPressed: () {
+                                          context
+                                              .read<GoogleAuthBloc>()
+                                              .add(GoogleSignInRequested());
+                                        },
+                                        style: SocialButtonStyle.capsule,
+                                      ),
                                     ),
-                                    const SizedBox(width: 20),
-                                    const SocialLoginBotton(
-                                      iconPath: 'assets/icons/facebook.png',
-                                      label: 'Facebook',
-                                      size: 60,
-                                    ),
-                                    const SizedBox(width: 20),
-                                    SocialLoginBotton(
-                                      iconPath: 'assets/icons/mail.png',
-                                      label: 'Email',
-                                      size: 30,
-                                      onPressed: () {
-                                        context.pushNamed(RouteNames.login);
-                                      },
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: SocialLoginBotton(
+                                        iconPath: 'assets/icons/apple.png',
+                                        label: 'Apple',
+                                        size: 25,
+                                        onPressed: () {
+                                          // Implement Apple sign in
+                                        },
+                                        style: SocialButtonStyle.capsule,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -293,7 +330,8 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                     ),
                     // Loading overlays
                     if (context.watch<OtpAuthBloc>().state is OtpSendLoading ||
-                        context.watch<GoogleAuthBloc>().state is GoogleAuthLoading)
+                        context.watch<GoogleAuthBloc>().state
+                            is GoogleAuthLoading)
                       Container(
                         color: Colors.black.withOpacity(0.5),
                         child: const Center(

@@ -25,6 +25,7 @@ class DailyInsightDataSource {
         throw Exception('Failed to load daily insight data');
       }
     } catch (e) {
+      print(e);
       throw Exception('Network error: $e');
     }
   }

@@ -114,7 +114,6 @@ class MealLogContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey[850],
         borderRadius: BorderRadius.circular(12),
-       
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,16 +137,61 @@ class MealLogContent extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _buildInfoItem(
-            'Please check dish availability at the restaurant',
-            Icons.restaurant,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.restaurant,
+                color: Colors.grey[400],
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: RichText(
+                  overflow: TextOverflow.clip,
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Confirm dish availability before you ",
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                      ),
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment
+                            .middle, // Align the button vertically with text
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 0),
+                          decoration: BoxDecoration(
+                            color: AppColors.buttonColors,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            "consume",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                      TextSpan(
+                        text: " your meal.",
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
-          _buildInfoItem(
-            ' before logging it Consume your meal.',
-            Icons.schedule,
-          ),
-           const SizedBox(height: 8),
           _buildInfoItem(
             'Please check with the respective restaurant for detailed allergen information.',
             Icons.info_outline,
@@ -321,7 +365,6 @@ class MealLogContent extends StatelessWidget {
           final isLoading = consumeCartState is ConsumeCartLoading;
 
           return ElevatedButton(
-
             onPressed: state.selectedMealId != null && !isLoading
                 ? () {
                     context.read<ConsumeCartBloc>().add(
@@ -335,13 +378,10 @@ class MealLogContent extends StatelessWidget {
                         );
                   }
                 : null,
-                
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.buttonColors,
               shape: RoundedRectangleBorder(
-
                 borderRadius: BorderRadius.circular(25),
-                
               ),
               elevation: 2,
             ),
@@ -351,7 +391,8 @@ class MealLogContent extends StatelessWidget {
                     width: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
                     ),
                   )
                 : state.selectedMealId != null

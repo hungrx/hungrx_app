@@ -653,6 +653,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
               child: MealDetailsBottomSheet(
+                
                 productId: itemId,
                 userId: userState.userId ??
                     "", // Assuming this is correct for your use case

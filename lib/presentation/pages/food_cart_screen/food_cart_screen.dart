@@ -170,7 +170,7 @@ class _CartScreenState extends State<CartScreen> {
                             ),
                           ),
                         ),
-                          ElevatedButton.icon(
+                        ElevatedButton.icon(
                           onPressed: () {
                             // Navigate to restaurant screen
                             context.pushNamed(RouteNames.dailyInsightScreen);
@@ -278,9 +278,10 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
   }
+
   Widget _buildLoadingView() {
-  return const CartScreenShimmer();
-}
+    return const CartScreenShimmer();
+  }
 
   Widget _buildCalorieSummaryCard(
       double remainingCalories, Map<String, double> nutrition) {
@@ -358,7 +359,8 @@ class _CartScreenState extends State<CartScreen> {
               ),
               _buildInfoRow(
                 icon: Icons.location_on_outlined,
-                text: 'Dish availability varies by location',
+                text:
+                    'Dish availability varies by location of respective restaurant',
                 onTap: () {
                   showDialog(
                     context: context,
@@ -386,7 +388,7 @@ class _CartScreenState extends State<CartScreen> {
           ),
           const SizedBox(height: 10),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               context.pushNamed(RouteNames.restaurants);
             },
             child: Container(
@@ -422,7 +424,7 @@ class _CartScreenState extends State<CartScreen> {
           ),
           const SizedBox(height: 10),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               context.pushNamed(RouteNames.restaurants);
             },
             child: Container(

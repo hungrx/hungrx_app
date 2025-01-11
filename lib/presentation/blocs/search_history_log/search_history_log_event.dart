@@ -2,8 +2,7 @@ abstract class SearchHistoryLogEvent {}
 
 class GetSearchHistoryLogRequested extends SearchHistoryLogEvent {
   
-  final String userId;
-  GetSearchHistoryLogRequested({required this.userId});
+  GetSearchHistoryLogRequested();
 }
 
 class SortSearchHistoryLogRequested extends SearchHistoryLogEvent {

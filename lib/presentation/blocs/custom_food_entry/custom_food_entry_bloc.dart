@@ -25,6 +25,7 @@ class CustomFoodEntryBloc extends Bloc<CustomFoodEntryEvent, CustomFoodEntryStat
       );
       emit(CustomFoodEntrySuccess(response));
     } catch (e) {
+      print(e);
       emit(CustomFoodEntryFailure(e.toString()));
     }
   }

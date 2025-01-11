@@ -23,6 +23,18 @@ class DashboardScreenState extends State<DashboardScreen> {
   final _calorieController = StreamController<double>.broadcast();
   Timer? _refreshTimer;
 
+  static double getFontSize(BuildContext context, double factor) {
+    return MediaQuery.of(context).size.width * factor;
+  }
+
+  static double getPadding(BuildContext context, double factor) {
+    return MediaQuery.of(context).size.width * factor;
+  }
+
+  static double getIconSize(BuildContext context, double factor) {
+    return MediaQuery.of(context).size.width * factor;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,30 +58,45 @@ class DashboardScreenState extends State<DashboardScreen> {
     _calorieController.add(newValue);
   }
 
-  Widget _buildErrorView(String message, VoidCallback onRetry) {
+ Widget _buildErrorView(String message, VoidCallback onRetry) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             LucideIcons.alertCircle,
-            size: 48,
+            size: getIconSize(context, 0.12),
             color: Colors.red[300],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: getPadding(context, 0.04)),
           Text(
             message,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: getFontSize(context, 0.04),
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: getPadding(context, 0.04)),
           ElevatedButton.icon(
             onPressed: onRetry,
-            icon: const Icon(LucideIcons.refreshCw),
-            label: const Text('Try Again'),
+            icon: Icon(
+              LucideIcons.refreshCw,
+              size: getIconSize(context, 0.05),
+            ),
+            label: Text(
+              'Try Again',
+              style: TextStyle(
+                fontSize: getFontSize(context, 0.04),
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.tileColor,
               foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(
+                horizontal: getPadding(context, 0.04),
+                vertical: getPadding(context, 0.02),
+              ),
             ),
           ),
         ],
@@ -111,6 +138,8 @@ Widget _buildLoadingView() {
 
   @override
   Widget build(BuildContext context) {
+        final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
     return Scaffold(
       backgroundColor: Colors.black,
       body: BlocConsumer<HomeBloc, HomeState>(
@@ -136,10 +165,7 @@ Widget _buildLoadingView() {
           }
 
           if (state is HomeError) {
-            return _buildErrorView(
-              state.message,
-              _fetchData,
-            );
+            return _buildErrorView(state.message, _fetchData);
           }
 
           if (state is HomeLoaded) {
@@ -149,70 +175,63 @@ Widget _buildLoadingView() {
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: EdgeInsets.all(getPadding(context, 0.03)),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         DashboardWidgets.buildHeader(state.homeData, context),
-                        const SizedBox(height: 12),
+                        SizedBox(height: getPadding(context, 0.03)),
                         DashboardWidgets.buildCalorieCounter(
                           state.homeData,
                           _calorieController.stream,
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: getPadding(context, 0.03)),
                         DashboardWidgets.buildDailyTargetAndRemaining(
                           state.homeData,
                           context,
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: getPadding(context, 0.03)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Streak Calendar with flex
                             const Expanded(
                               flex: 3,
                               child: StreakCalendar(),
                             ),
-                            const SizedBox(width: 12),
-
-                            // when user tap on this container show the water screen
-                            // Replace the existing GestureDetector with this updated version
+                            SizedBox(width: getPadding(context, 0.03)),
                             Expanded(
                               flex: 2,
                               child: GestureDetector(
                                 onTap: () {
-                                 context.push('/water-intake');
+                                  context.push('/water-intake');
                                 },
                                 child: Container(
-                                  // Use MediaQuery for responsive height
-                                  height: MediaQuery.of(context).size.height *
-                                      0.266,
-                                  // Min height to ensure visibility
-                                  constraints: const BoxConstraints(
-                                    minHeight: 200,
-                                    maxHeight: 300,
+                                  height: MediaQuery.of(context).size.height * 
+                                    (isSmallScreen ? 0.24 : 0.27),
+                                  constraints: BoxConstraints(
+                                    minHeight: screenWidth * 0.5,
+                                    maxHeight: screenWidth * 0.75,
                                   ),
                                   decoration: BoxDecoration(
                                     color: AppColors.tileColor,
                                     borderRadius: BorderRadius.circular(20),
-                                    // Add subtle border for better visibility
                                   ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         LucideIcons.glassWater,
-                                        color: Color(0xFFB4D147),
-                                        size: 64,
+                                        color: const Color(0xFFB4D147),
+                                        size: getIconSize(context, 0.16),
                                       ),
-                                      const SizedBox(height: 12),
+                                      SizedBox(height: getPadding(context, 0.03)),
                                       Text(
                                         'Water Intake',
                                         style: TextStyle(
                                           color: Colors.white.withOpacity(0.9),
-                                          fontSize: 16,
+                                          fontSize: getFontSize(context, 0.04),
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -223,7 +242,7 @@ Widget _buildLoadingView() {
                             )
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: getPadding(context, 0.03)),
                         DashboardWidgets.buildBottomButtons(
                           context,
                           state.homeData,

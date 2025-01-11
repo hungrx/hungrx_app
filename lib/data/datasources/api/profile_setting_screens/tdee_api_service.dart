@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
-import '../../../../core/utils/api_exception.dart';
+import 'package:hungrx_app/core/utils/api_exception.dart';
 
 class TDEEApiService {
   final http.Client _client;

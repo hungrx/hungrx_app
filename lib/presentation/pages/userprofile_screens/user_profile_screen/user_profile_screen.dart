@@ -210,7 +210,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             context.pushNamed(RouteNames.basicInformationScreen);
           },
         ),
-        _buildDetailItem(Icons.flag_outlined, 'Primary Goal', 'Gain weight...',
+        _buildDetailItem(Icons.flag_outlined, 'Primary Goal', 'Target weight,Goal pace...',
             () {
           context.pushNamed(RouteNames.goalSettingsScreen, extra: {
             'userId': userId,

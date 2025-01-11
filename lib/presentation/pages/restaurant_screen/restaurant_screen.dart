@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_event.dart';
 // import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_event.dart';
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_state.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_bloc.dart';
@@ -292,13 +293,13 @@ Widget _buildSearchBar() {
       margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () {},
-        // () {
-        //   setState(() {
-        //     showNearbyRestaurants = true;
-        //   });
-        //   context.read<NearbyRestaurantBloc>().add(FetchNearbyRestaurants());
-        // },
+        onPressed: 
+        () {
+          setState(() {
+            showNearbyRestaurants = true;
+          });
+          context.read<NearbyRestaurantBloc>().add(FetchNearbyRestaurants());
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.buttonColors,
           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -362,7 +363,7 @@ Widget _buildSearchBar() {
                   final restaurant = state.restaurants[index];
                   return RestaurantItem(
                     ontap: () => _onRestaurantTap(restaurant.id),
-                    name: restaurant.name,
+                    name: restaurant.restaurantName,
                     imageUrl: restaurant.id,
                     rating:
                         '${(restaurant.distance / 1000).toStringAsFixed(1)} km',
@@ -412,7 +413,7 @@ Widget _buildSearchBar() {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: state.restaurants.length,
                 itemBuilder: (context, index) {
-                  final restaurant = state.restaurants[index];
+                  final restaurant = state.restaurants[index]; 
                   return RestaurantItem(
                     ontap: () {
                       _onRestaurantTap(restaurant.id);

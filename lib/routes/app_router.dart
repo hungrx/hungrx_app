@@ -48,7 +48,6 @@ import 'package:hungrx_app/presentation/pages/water_intake_screeen/water_intake.
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_picker.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_tracking.dart';
 import 'package:hungrx_app/routes/route_names.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/email_auth_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/splash_screen.dart';
 import 'package:hungrx_app/presentation/pages/onboarding_screen/onboarding_screen.dart';
 
@@ -181,20 +180,20 @@ class AppRouter {
           return const OnboardingPage();
         },
       ),
-      GoRoute(
-        path: '/login',
-        name: RouteNames.login,
-        builder: (BuildContext context, GoRouterState state) {
-          return const EmailAuthScreen();
-        },
-      ),
-      GoRoute(
-        path: '/signup',
-        name: RouteNames.signup,
-        builder: (BuildContext context, GoRouterState state) {
-          return const EmailAuthScreen(isSignUp: true);
-        },
-      ),
+      // GoRoute(
+      //   path: '/login',
+      //   name: RouteNames.login,
+      //   builder: (BuildContext context, GoRouterState state) {
+      //     return const EmailAuthScreen();
+      //   },
+      // ),
+      // GoRoute(
+      //   path: '/signup',
+      //   name: RouteNames.signup,
+      //   builder: (BuildContext context, GoRouterState state) {
+      //     return const EmailAuthScreen(isSignUp: true);
+      //   },
+      // ),
       GoRoute(
         path: '/health-profile',
         name: RouteNames.healthProfile,

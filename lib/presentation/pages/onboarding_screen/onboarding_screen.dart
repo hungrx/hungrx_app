@@ -135,7 +135,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           } else {
             await _onboardingService.setOnboardingAsSeen(); // Add this line
             // ignore: use_build_context_synchronously
-            context.go('/login');
+            context.go('/phoneNumber');
           }
         },
         child: Text(

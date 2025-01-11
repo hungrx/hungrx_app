@@ -67,7 +67,7 @@ class MealData {
 }
 
 class FoodItem {
-  final int servingSize;
+  final dynamic servingSize; // Changed to dynamic to handle both int and String
   final String selectedMeal;
   final String dishId;
   final double totalCalories;
@@ -117,12 +117,16 @@ class FoodItem {
 
 class NutritionFacts {
   final int calories;
-  final NutrientInfo totalFat;
-  final NutrientInfo sodium;
-  final NutrientInfo totalCarbohydrates;
-  final NutrientInfo sugars;
-  final NutrientInfo addedSugars;
-  final NutrientInfo protein;
+  final dynamic totalFat; // Changed to handle both NutrientInfo and num
+  final dynamic sodium;
+  final dynamic totalCarbohydrates;
+  final dynamic sugars;
+  final dynamic protein;
+  final dynamic cholesterol;
+  final dynamic dietaryFiber;
+  final dynamic saturatedFat;
+  final dynamic carbs;
+  final dynamic fat;
 
   NutritionFacts({
     required this.calories,
@@ -130,56 +134,71 @@ class NutritionFacts {
     required this.sodium,
     required this.totalCarbohydrates,
     required this.sugars,
-    required this.addedSugars,
     required this.protein,
+    this.cholesterol,
+    this.dietaryFiber,
+    this.saturatedFat,
+    this.carbs,
+    this.fat,
   });
 
   factory NutritionFacts.fromJson(Map<String, dynamic> json) {
+    dynamic getValue(dynamic field) {
+      if (field is Map) {
+        return field['value'] ?? 0;
+      }
+      return field ?? 0;
+    }
+
     return NutritionFacts(
       calories: json['calories'] ?? 0,
-      totalFat: NutrientInfo.fromJson(json['totalFat'] ?? {}),
-      sodium: NutrientInfo.fromJson(json['sodium'] ?? {}),
-      totalCarbohydrates: NutrientInfo.fromJson(json['totalCabohydrates'] ?? {}),
-      sugars: NutrientInfo.fromJson(json['sugars'] ?? {}),
-      addedSugars: NutrientInfo.fromJson(json['addedSugars'] ?? {}),
-      protein: NutrientInfo.fromJson(json['protein'] ?? {}),
-    );
-  }
-}
-
-class NutrientInfo {
-  final double value;
-  final String unit;
-  final String? dailyValue;
-
-  NutrientInfo({
-    required this.value,
-    required this.unit,
-    this.dailyValue,
-  });
-
-  factory NutrientInfo.fromJson(Map<String, dynamic> json) {
-    return NutrientInfo(
-      value: (json['value'] ?? 0.0).toDouble(),
-      unit: json['unit'] ?? 'g',
-      dailyValue: json['dailyValue'],
+      totalFat: getValue(json['totalFat']),
+      sodium: getValue(json['sodium']),
+      totalCarbohydrates: getValue(json['totalCarbohydrates']) ?? json['carbs'] ?? 0,
+      sugars: getValue(json['sugars']),
+      protein: getValue(json['protein']),
+      cholesterol: getValue(json['cholesterol']),
+      dietaryFiber: getValue(json['dietaryFiber']),
+      saturatedFat: getValue(json['saturatedFat']),
+      carbs: json['carbs'],
+      fat: json['fat'],
     );
   }
 }
 
 class ServingInfo {
-  final double size;
+  final dynamic size; // Changed to dynamic to handle both double and String
   final String unit;
+  final Weight? weight; // Added weight field
 
   ServingInfo({
     required this.size,
     required this.unit,
+    this.weight,
   });
 
   factory ServingInfo.fromJson(Map<String, dynamic> json) {
     return ServingInfo(
-      size: (json['size'] ?? 0.0).toDouble(),
+      size: json['size'] ?? 0,
       unit: json['unit'] ?? '',
+      weight: json['weight'] != null ? Weight.fromJson(json['weight']) : null,
+    );
+  }
+}
+
+class Weight {
+  final String unit;
+  final double value;
+
+  Weight({
+    required this.unit,
+    required this.value,
+  });
+
+  factory Weight.fromJson(Map<String, dynamic> json) {
+    return Weight(
+      unit: json['unit'] ?? '',
+      value: (json['vaule'] ?? 0.0).toDouble(), // Note: handling typo in JSON 'vaule'
     );
   }
 }

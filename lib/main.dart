@@ -38,6 +38,7 @@ import 'package:hungrx_app/data/repositories/cart_screen/delete_dish_cart_reposi
 import 'package:hungrx_app/data/repositories/auth_screen/connectivity_repository.dart';
 import 'package:hungrx_app/data/repositories/daily_insight_screen/daily_insight_repository.dart';
 import 'package:hungrx_app/data/repositories/dashboad_screen/feedback_repository.dart';
+import 'package:hungrx_app/data/repositories/home_meals_screen/common_food_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/goal_settings_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/delete_account_repository.dart';
 import 'package:hungrx_app/data/repositories/daily_insight_screen/delete_consumed_food_repository.dart';
@@ -91,6 +92,7 @@ import 'package:hungrx_app/firebase_options.dart';
 import 'package:hungrx_app/presentation/blocs/add_logscreen_search_history/add_logscreen_search_history_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_meal_log_screen/add_meal_log_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/consume_cart/consume_cart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_bloc.dart';
@@ -271,10 +273,11 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-   BlocProvider<SuggestedRestaurantsBloc>(
-  create: (context) => SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase)
-    ..add(FetchSuggestedRestaurants()), // Initialize with data
-),
+        BlocProvider<SuggestedRestaurantsBloc>(
+          create: (context) =>
+              SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase)
+                ..add(FetchSuggestedRestaurants()), // Initialize with data
+        ),
 
         BlocProvider(
           create: (context) => GetBasicInfoBloc(getBasicInfoUseCase),
@@ -292,11 +295,13 @@ class MyApp extends StatelessWidget {
                 ),
               ),
             ),
+            authService: authService
           ),
+          
         ),
         BlocProvider(
           create: (context) =>
-              LogMealSearchHistoryBloc(addLogMealSearchHistoryUseCase),
+              LogMealSearchHistoryBloc(addLogMealSearchHistoryUseCase,authService),
         ),
         BlocProvider<SearchBloc>(
           create: (context) => SearchBloc(
@@ -419,6 +424,11 @@ class MyApp extends StatelessWidget {
               ),
             ),
             authService,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => CommonFoodSearchBloc(
+            repository: CommonFoodRepository(),
           ),
         ),
         BlocProvider(

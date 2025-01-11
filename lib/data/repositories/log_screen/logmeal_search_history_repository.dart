@@ -15,10 +15,6 @@ class LogMealSearchHistoryRepository {
         userId: userId,
         productId: productId,
       );
-
-      // Print response for debugging
-      // print('Repository response: $response');
-
       if (response['status'] == true && response['data'] != null) {
         return LogMealSearchHistoryModel.fromJson(response['data']);
       } else {

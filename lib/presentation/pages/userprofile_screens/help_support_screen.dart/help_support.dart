@@ -64,16 +64,18 @@ class HelpSupportScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildSocialButton(LucideIcons.instagram,
-                      () => _launchUrl('https://reddit.com/r/hungrx')),
-                  _buildSocialButton(LucideIcons.linkedin,
-                      () => _launchUrl('https://facebook.com/hungrx')),
-                  _buildSocialButton(LucideIcons.x,
-                      () => _launchUrl('https://instagram.com/hungrx')),
+                      () => _launchUrl('https://www.instagram.com/hungr__x/')),
+                  _buildSocialButton(
+                      LucideIcons.linkedin,
+                      () => _launchUrl(
+                          'https://www.linkedin.com/company/hungrx/posts/?feedView=all')),
+                  _buildSocialButton(LucideIcons.twitter,
+                      () => _launchUrl('https://x.com/hungr_x')),
                 ],
               ),
             ),
 
-            const SizedBox(height: 20),
+            // const SizedBox(height: 10),
 
             // Support Options
             Container(
@@ -98,12 +100,6 @@ class HelpSupportScreen extends StatelessWidget {
                   ),
                   _buildDivider(),
                   _buildSupportItem(
-                    icon: Icons.map_outlined,
-                    title: 'Roadmap',
-                    onTap: () => _launchUrl('https://hungrx.com/roadmap'),
-                  ),
-                  _buildDivider(),
-                  _buildSupportItem(
                     icon: Icons.headset_mic_outlined,
                     title: 'Contact Us',
                     onTap: () => Navigator.push(
@@ -118,7 +114,7 @@ class HelpSupportScreen extends StatelessWidget {
 
             // Additional Support Options
             Container(
-              margin: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(left: 16,right: 16),
               decoration: BoxDecoration(
                 color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(12),
@@ -164,14 +160,13 @@ class HelpSupportScreen extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        width: 60,
-        height: 60,
+        width: 50,
+        height: 50,
         decoration: const BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
         ),
-        child:  Icon(
-          
+        child: Icon(
           fill: 1,
           icon,
           color: Colors.black,
