@@ -124,9 +124,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundImage:
-                AssetImage(profileData?.profilephoto ?? 'assets/images/dp.png')
-                    as ImageProvider,
+            backgroundImage: profileData?.profilephoto != null
+                ? NetworkImage(profileData!.profilephoto!)
+                : AssetImage(
+                    profileData?.gender.toLowerCase() == 'female'
+                        ? 'assets/images/dpw.jpg'
+                        : 'assets/images/dp.png',
+                  ) as ImageProvider,
           ),
           const SizedBox(height: 10),
           Text(
@@ -144,9 +148,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Widget _buildUserStats(GetProfileDetailsModel? profileData) {
     String tdee = "0";
-    if (profileData?.tdee != null) {
+    if (profileData?.dailyCalorieGoal != null) {
       try {
-        double value = double.parse(profileData!.tdee);
+        double value = double.parse(profileData!.dailyCalorieGoal);
         tdee = value.round().toString();
       } catch (e) {
         tdee = "0";
@@ -163,10 +167,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem('TDEE', '$tdee cal'),
+          _buildStatItem('Target', '$tdee cal'),
           _buildStatItem(
             'Weight',
-            '${profileData?.weight ?? "0"} ${profileData?.isMetric ?? true ? "Kg" : "lbs"}',
+            '${profileData?.weight.toInt() ?? "0"} ${profileData?.isMetric ?? true ? "Kg" : "lbs"}',
           ),
           _buildStatItem(
             'Goal',
@@ -210,7 +214,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             context.pushNamed(RouteNames.basicInformationScreen);
           },
         ),
-        _buildDetailItem(Icons.flag_outlined, 'Primary Goal', 'Target weight,Goal pace...',
+        _buildDetailItem(
+            Icons.flag_outlined, 'Primary Goal', 'Target weight,Goal pace...',
             () {
           context.pushNamed(RouteNames.goalSettingsScreen, extra: {
             'userId': userId,

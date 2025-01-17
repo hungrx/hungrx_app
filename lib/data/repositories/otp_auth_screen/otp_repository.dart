@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hungrx_app/data/Models/auth_screens/otp_model.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpRepository {
@@ -13,25 +12,21 @@ class OtpRepository {
       headers: {'Content-Type': 'application/json'},
       body: json.encode(otpSendModel.toJson()),
     );
-// print(response.body);
     if (response.statusCode != 200) {
-      // print(response.statusCode);
       throw Exception('Failed to send OTP');
     }
   }
 
   Future<String> verifyOtp(OtpVerifyModel otpVerifyModel) async {
-    // print("reached here");
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/verifyOTP'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(otpVerifyModel.toJson()),
       );
-// print(response.body);
       if (response.statusCode == 200) {
         final responseBody = json.decode(response.body);
-        final userId = responseBody['userId'];
+        final userId = responseBody['data']['userId'];
         if (userId != null) {
           await _saveUserId(userId);
           return userId;
@@ -47,7 +42,6 @@ class OtpRepository {
   }
 
   Future<void> _saveUserId(String userId) async {
-    // print(userId);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_id', userId);
   }

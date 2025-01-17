@@ -104,8 +104,8 @@ class GoalPaceScreen extends StatelessWidget {
                               child: Slider(
                                 value: state.weightPace ?? 2.0,
                                 min: 1,
-                                max: 4,
-                                divisions: 3,
+                                max: 3,
+                                divisions: 2,
                                 activeColor: AppColors.buttonColors,
                                 inactiveColor: Colors.grey[800],
                                 onChanged: (value) {
@@ -217,11 +217,11 @@ class GoalPaceScreen extends StatelessWidget {
       ];
     }
     
-    return ['Mild', 'Moderate', 'Fast', 'Very Fast'].map((e) => Text(
+    return ['Mild', 'Moderate', 'Fast', ].map((e) => Text(
       e,
       style: TextStyle(
         color: Colors.grey,
-        fontSize: isSmallScreen ? 12 : 14,
+        fontSize: isSmallScreen ? 14 : 16,
       ),
     )).toList();
   }

@@ -16,7 +16,7 @@ class CartResponseModel {
       success: json['success'],
       message: json['message'],
       data: (json['data'] as List).map((e) => CartModel.fromJson(e)).toList(),
-      remaining: (json['remaining'] as num).toDouble(), // Handle both int and double
+      remaining: (json['remaining'] as num).toDouble(),
     );
   }
 }
@@ -60,14 +60,14 @@ class OrderItem {
 
 class CartItem {
   final String dishId;
-  final String servingSize;  // Changed from non-final to final
+  final String servingSize;
 
   CartItem({required this.dishId, required this.servingSize});
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
       dishId: json['dishId'],
-      servingSize: json['servingSize'],
+      servingSize: json['servingSize'].toString(), // Convert to string in case it's a number
     );
   }
 }
@@ -76,11 +76,12 @@ class DishDetail {
   final String restaurantId;
   final String restaurantName;
   final String categoryName;
-  final String? subCategoryName;  // Already correctly marked as nullable
+  final String? subCategoryName;
   final String dishId;
   final String dishName;
-  final String servingSize;  // Changed from non-final to final since it's not modified
+  final String servingSize;
   final NutritionInfo nutritionInfo;
+  final String? url;  // Added url field
 
   DishDetail({
     required this.restaurantId,
@@ -91,6 +92,7 @@ class DishDetail {
     required this.dishName,
     required this.servingSize,
     required this.nutritionInfo,
+    this.url,  // Made optional since it might not always be present
   });
 
   factory DishDetail.fromJson(Map<String, dynamic> json) {
@@ -100,9 +102,10 @@ class DishDetail {
       categoryName: json['categoryName'],
       subCategoryName: json['subCategoryName'],
       dishId: json['dishId'],
-      dishName: json['dishName'].toString().trim(), // Add trim() to handle leading/trailing spaces
-      servingSize: json['servingSize'],
+      dishName: json['dishName'].toString().trim(),
+      servingSize: json['servingSize'].toString(),
       nutritionInfo: NutritionInfo.fromJson(json['nutritionInfo']),
+      url: json['url'],  // Added url parsing
     );
   }
 }
@@ -131,14 +134,14 @@ class NutritionInfo {
 }
 
 class NutritionValue {
-  final String value;  // Keeping as String since values like "0" are strings in the API
+  final String value;
   final String unit;
 
   NutritionValue({required this.value, required this.unit});
 
   factory NutritionValue.fromJson(Map<String, dynamic> json) {
     return NutritionValue(
-      value: json['value'].toString(), // Ensure string conversion
+      value: json['value'].toString(),
       unit: json['unit'],
     );
   }

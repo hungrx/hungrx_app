@@ -38,19 +38,19 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
 
   void _handleNextButton(BuildContext context, UserProfileFormState state) {
     if (_formKey.currentState?.validate() ?? false) {
-      final bloc = context.read<UserProfileFormBloc>();
-      if (state.isMetric) {
-        bloc.add(HeightChanged(heightController.text));
-      } else {
-        bloc.add(HeightFeetChanged(heightController.text));
-        bloc.add(HeightInchesChanged(inchesController.text));
-      }
-      bloc.add(WeightChanged(weightController.text));
-         context.pushNamed(
-      RouteNames.goalSelection,
-      queryParameters: {'currentWeight': weightController.text}, // Changed to queryParameters
-      extra: bloc
-    );
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        final bloc = context.read<UserProfileFormBloc>();
+        if (state.isMetric) {
+          bloc.add(HeightChanged(heightController.text));
+        } else {
+          bloc.add(HeightFeetChanged(heightController.text));
+          bloc.add(HeightInchesChanged(inchesController.text));
+        }
+        bloc.add(WeightChanged(weightController.text));
+        context.pushNamed(RouteNames.goalSelection,
+            queryParameters: {'currentWeight': weightController.text},
+            extra: bloc);
+      });
     }
   }
 
@@ -123,26 +123,30 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                   // Slider
                                   SizedBox(
                                     height: size.height * 0.05,
-                                    child: Slider(
-                                        value: state.mealsPerDay ?? sliderValue,
-                                        min: 1,
-                                        max: 4,
-                                        divisions: 3,
-                                        activeColor: AppColors.buttonColors,
-                                        inactiveColor: Colors.grey[800],
-                                        label: state.mealsPerDay?.toString(),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            sliderValue = value;
-                                          });
-
-                                          SchedulerBinding.instance
-                                              .addPostFrameCallback((_) {
-                                            context
-                                                .read<UserProfileFormBloc>()
-                                                .add(MealsPerDayChanged(value));
-                                          });
-                                        }),
+                                    child: ValueListenableBuilder<double>(
+                                      valueListenable: ValueNotifier(
+                                          state.mealsPerDay ?? 1.0),
+                                      builder: (context, value, child) {
+                                        return Slider(
+                                          value: value,
+                                          min: 1,
+                                          max: 4,
+                                          divisions: 3,
+                                          activeColor: AppColors.buttonColors,
+                                          inactiveColor: Colors.grey[800],
+                                          label: value.toString(),
+                                          onChanged: (newValue) {
+                                            SchedulerBinding.instance
+                                                .addPostFrameCallback((_) {
+                                              context
+                                                  .read<UserProfileFormBloc>()
+                                                  .add(MealsPerDayChanged(
+                                                      newValue));
+                                            });
+                                          },
+                                        );
+                                      },
+                                    ),
                                   ),
 
                                   // Slider labels
@@ -212,9 +216,12 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                       hintText: 'Enter Your Height (cm)',
                                       keyboardType: TextInputType.number,
                                       onChanged: (value) {
-                                        context
-                                            .read<UserProfileFormBloc>()
-                                            .add(HeightChanged(value));
+                                        SchedulerBinding.instance
+                                            .addPostFrameCallback((_) {
+                                          context
+                                              .read<UserProfileFormBloc>()
+                                              .add(HeightChanged(value));
+                                        });
                                       },
                                       validator: (value) =>
                                           validateMetricHeight(value),
@@ -286,8 +293,12 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                         ? 'Enter Your Weight (kg)'
                                         : 'Enter Your Weight (lbs)',
                                     keyboardType: TextInputType.number,
-                                    onChanged: (value) =>
-                                        validateWeight(value, state.isMetric),
+                                    onChanged: (value) {
+                                      SchedulerBinding.instance
+                                          .addPostFrameCallback((_) {
+                                        validateWeight(value, state.isMetric);
+                                      });
+                                    },
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return 'Please enter your weight';

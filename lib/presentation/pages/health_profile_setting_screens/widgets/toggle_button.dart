@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
-class UnitToggle extends StatelessWidget {
+class UnitToggle extends StatefulWidget {
   final bool isMetric;
   final ValueChanged<bool> onToggle;
 
@@ -10,6 +11,27 @@ class UnitToggle extends StatelessWidget {
     required this.isMetric,
     required this.onToggle,
   });
+
+  @override
+  State<UnitToggle> createState() => _UnitToggleState();
+}
+
+class _UnitToggleState extends State<UnitToggle> {
+  late bool _isMetric;
+
+  @override
+  void initState() {
+    super.initState();
+    _isMetric = widget.isMetric;
+  }
+
+  @override
+  void didUpdateWidget(UnitToggle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isMetric != widget.isMetric) {
+      _isMetric = widget.isMetric;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +47,10 @@ class UnitToggle extends StatelessWidget {
           final toggleWidth = constraints.maxWidth / 2;
           return Stack(
             children: [
-              // Animated background
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
-                left: isMetric ? toggleWidth : 0,
+                left: _isMetric ? toggleWidth : 0,
                 child: Container(
                   width: toggleWidth,
                   height: constraints.maxHeight,
@@ -39,19 +60,26 @@ class UnitToggle extends StatelessWidget {
                   ),
                 ),
               ),
-              // Touch-sensitive buttons
               Row(
                 children: [
                   _buildToggleButton(
                     label: 'Imperial',
-                    isSelected: !isMetric,
-                    onTap: () => onToggle(false),
+                    isSelected: !_isMetric,
+                    onTap: () {
+                      SchedulerBinding.instance.addPostFrameCallback((_) {
+                        widget.onToggle(false);
+                      });
+                    },
                     constraints: constraints,
                   ),
                   _buildToggleButton(
                     label: 'Metric',
-                    isSelected: isMetric,
-                    onTap: () => onToggle(true),
+                    isSelected: _isMetric,
+                    onTap: () {
+                      SchedulerBinding.instance.addPostFrameCallback((_) {
+                        widget.onToggle(true);
+                      });
+                    },
                     constraints: constraints,
                   ),
                 ],

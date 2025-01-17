@@ -12,6 +12,7 @@ import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/cart_shimmer.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/direction_button.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/meal_button.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 
@@ -290,7 +291,7 @@ class _CartScreenState extends State<CartScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(16),
         border: isExceeded ? Border.all(color: Colors.red, width: 1.0) : null,
       ),
@@ -394,7 +395,7 @@ class _CartScreenState extends State<CartScreen> {
             child: Container(
               padding: const EdgeInsets.only(left: 10, right: 10),
               decoration: BoxDecoration(
-                color: Colors.grey[800],
+                color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -425,12 +426,17 @@ class _CartScreenState extends State<CartScreen> {
           const SizedBox(height: 10),
           GestureDetector(
             onTap: () {
-              context.pushNamed(RouteNames.restaurants);
+              showDialog(
+                context: context,
+                builder: (BuildContext context) => AddressDirectionDialog(
+                  restaurant: widget.restaurant,
+                ),
+              );
             },
             child: Container(
               padding: const EdgeInsets.only(left: 10, right: 10),
               decoration: BoxDecoration(
-                color: Colors.grey[800],
+                color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -451,7 +457,13 @@ class _CartScreenState extends State<CartScreen> {
                       size: 30,
                     ),
                     onPressed: () {
-                      context.pushNamed(RouteNames.restaurants);
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) =>
+                            AddressDirectionDialog(
+                          restaurant: widget.restaurant,
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -512,7 +524,7 @@ class _CartScreenState extends State<CartScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey[900],
+            color: AppColors.tileColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -530,7 +542,7 @@ class _CartScreenState extends State<CartScreen> {
                       BorderRadius.circular(8), // Same radius as container
                   child: dish.servingSize.isNotEmpty
                       ? Image.network(
-                          "https://www.allrecipes.com/thmb/5JVfA7MxfTUPfRerQMdF-nGKsLY=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/25473-the-perfect-basic-burger-DDMFS-4x3-56eaba3833fd4a26a82755bcd0be0c54.jpg",
+                          dish.url??"",
                           fit: BoxFit
                               .cover, // Changed to cover for better image filling
                           errorBuilder: (context, error, stackTrace) {
@@ -598,7 +610,7 @@ class _CartScreenState extends State<CartScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.grey[800],
+                      color: Colors.grey[900],
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -787,7 +799,7 @@ class _CartScreenState extends State<CartScreen> {
       height: 80,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[800],
+        color: Colors.grey[900],
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

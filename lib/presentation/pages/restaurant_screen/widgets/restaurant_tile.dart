@@ -26,7 +26,7 @@ class RestaurantItem extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: AppColors.tileColor,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -137,13 +137,6 @@ class RestaurantItem extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                     const SizedBox(height: 4),
-                    // Text(
-                    //   distance,
-                    //   style: const TextStyle(
-                    //     color: Colors.grey,
-                    //     fontSize: 14,
-                    //   ),
-                    // ),
                   ],
                 ),
               ),

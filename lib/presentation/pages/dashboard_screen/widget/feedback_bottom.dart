@@ -71,7 +71,7 @@ class _FeedbackBottomSheetState extends State<FeedbackBottomSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF1C1C1E),
+        color: Colors.black,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -111,7 +111,7 @@ class _FeedbackBottomSheetState extends State<FeedbackBottomSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C2C2E),
+                    color:  Colors.grey[900],
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected ? AppColors.buttonColors : Colors.transparent,

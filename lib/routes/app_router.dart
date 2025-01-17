@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/food_item_model.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
 import 'package:hungrx_app/data/Models/profile_setting_screen/tdee_result_model.dart';
+import 'package:hungrx_app/data/Models/restuarent_screen/nearby_restaurant_model.dart';
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_update_api.dart';
 import 'package:hungrx_app/data/repositories/weight_screen/weight_update_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
@@ -145,9 +146,9 @@ class AppRouter {
       ),
 
       GoRoute(
-      path: '/water-intake',
-      builder: (context, state) => const WaterIntakeScreen(),
-    ),
+        path: '/water-intake',
+        builder: (context, state) => const WaterIntakeScreen(),
+      ),
 
       GoRoute(
         path: '/feedback',
@@ -370,31 +371,36 @@ class AppRouter {
         path: '/menu',
         name: RouteNames.menu,
         builder: (BuildContext context, GoRouterState state) {
-          final String? restaurantId = state.extra as String?;
+          final Map<String, dynamic>? extras =
+              state.extra as Map<String, dynamic>?;
 
           return RestaurantMenuScreen(
-            restaurantId: restaurantId,
-          ); // Replace with actual MenuScreen
+            restaurantId: extras?['restaurantId'] as String?,
+            restaurant: extras?['restaurant'] as NearbyRestaurantModel?,
+          );
         },
       ),
-GoRoute(
-  path: '/restaurant-search',
-  name: RouteNames.restaurantSearch,
-  builder: (context, state) {
-    return BlocBuilder<SuggestedRestaurantsBloc, SuggestedRestaurantsState>(
-      builder: (context, suggestedState) {
-        if (suggestedState is SuggestedRestaurantsLoaded) {
-          return BlocProvider(
-            create: (context) => RestaurantSearchBloc(suggestedState.restaurants),
-            child: RestaurantSearchScreen(restaurants: suggestedState.restaurants),
+      GoRoute(
+        path: '/restaurant-search',
+        name: RouteNames.restaurantSearch,
+        builder: (context, state) {
+          return BlocBuilder<SuggestedRestaurantsBloc,
+              SuggestedRestaurantsState>(
+            builder: (context, suggestedState) {
+              if (suggestedState is SuggestedRestaurantsLoaded) {
+                return BlocProvider(
+                  create: (context) =>
+                      RestaurantSearchBloc(suggestedState.restaurants),
+                  child: RestaurantSearchScreen(
+                      restaurants: suggestedState.restaurants),
+                );
+              }
+              // Handle loading or error state
+              return const Center(child: CircularProgressIndicator());
+            },
           );
-        }
-        // Handle loading or error state
-        return const Center(child: CircularProgressIndicator());
-      },
-    );
-  },
-),
+        },
+      ),
 
       GoRoute(
         path: '/food-item-details',

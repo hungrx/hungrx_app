@@ -184,7 +184,7 @@ class _CalorieSummaryWidgetState extends State<CalorieSummaryWidget> {
                 ),
                 onPressed: widget.onViewOrderPressed,
                 child: Text(
-                  'View order list (${widget.itemCount} items) >',
+                  'View cart (${widget.itemCount} items) >',
                   style: TextStyle(color: widget.primaryColor),
                 ),
               ),

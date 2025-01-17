@@ -30,7 +30,7 @@ class NearbyRestaurantModel extends Equatable {
   final String restaurantName;
   final String logo;
   final String address;
-  final double distance;
+  final num distance;
   final DateTime createdAt;
   final DateTime updatedAt;
   final int version;
@@ -47,16 +47,26 @@ class NearbyRestaurantModel extends Equatable {
   });
 
   factory NearbyRestaurantModel.fromJson(Map<String, dynamic> json) {
-    return NearbyRestaurantModel(
-      id: json['_id'] as String,
-      restaurantName: json['restaurantName'] as String,
-      logo: json['logo'] as String,
-      address: json['address'] as String,
-      distance: (json['distance'] as num).toDouble(),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-      version: json['__v'] as int,
-    );
+    try {
+      return NearbyRestaurantModel(
+        id: json['_id'] as String? ?? '',
+        restaurantName: json['restaurantName'] as String? ?? '',
+        logo: json['logo'] as String? ?? '',
+        address: json['address'] as String? ?? '',
+        distance: json['distance'] as num? ?? 0,
+        createdAt: json['createdAt'] != null 
+            ? DateTime.parse(json['createdAt'] as String)
+            : DateTime.now(),
+        updatedAt: json['updatedAt'] != null 
+            ? DateTime.parse(json['updatedAt'] as String)
+            : DateTime.now(),
+        version: json['__v'] as int? ?? 0,
+      );
+    } catch (e) {
+      print('Error parsing NearbyRestaurantModel: $e');
+      print('Problematic JSON: $json');
+      rethrow;
+    }
   }
 
   @override

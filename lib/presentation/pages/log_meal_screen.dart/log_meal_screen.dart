@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_event.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_state.dart';
@@ -44,6 +46,7 @@ class _LogMealViewState extends State<LogMealView> {
     context.read<SearchHistoryLogBloc>().add(
           GetSearchHistoryLogRequested(),
         );
+    context.read<ProgressBarBloc>().add(FetchProgressBarData());
   }
 
   @override
@@ -77,11 +80,8 @@ class _LogMealViewState extends State<LogMealView> {
                 ),
               ),
             ),
+            // _buildOrderSummary(context),
             BottomCalorieSearchWidget(
-              currentCalories:
-                  1500, // Replace with actual values from your state
-              remainingDailyCalorie:
-                  2000, // Replace with actual values from your state
               userId: widget.userId,
               onSearchHistoryRefresh: () {
                 context.read<SearchHistoryLogBloc>().add(
@@ -95,6 +95,21 @@ class _LogMealViewState extends State<LogMealView> {
     );
   }
 
+  // Widget _buildOrderSummary(BuildContext context) {
+  //   return     BottomCalorieSearchWidget(
+  //             currentCalories:
+  //                 1500, // Replace with actual values from your state
+  //             remainingDailyCalorie:
+  //                 2000, // Replace with actual values from your state
+  //             userId: widget.userId,
+  //             onSearchHistoryRefresh: () {
+  //               context.read<SearchHistoryLogBloc>().add(
+  //                     GetSearchHistoryLogRequested(),
+  //                   );
+  //             },
+  //           );
+
+  // }
 
   Widget _buildHistoryHeader() {
     return BlocBuilder<SearchHistoryLogBloc, SearchHistoryLogState>(
@@ -242,8 +257,7 @@ class _LogMealViewState extends State<LogMealView> {
                     '${item.nutritionFacts.calories?.toStringAsFixed(1) ?? "N/A"} Cal.',
                 brandName: item.brandName,
                 imageUrl: item.image,
-                onTap: () {
-                },
+                onTap: () {},
               );
             },
           );
@@ -277,105 +291,60 @@ class _LogMealViewState extends State<LogMealView> {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.tileColor,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Row(
-          children: [
-            // Food Image
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.grey[800],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.fastfood,
-                      color: Colors.grey,
-                      size: 30,
-                    );
-                  },
-                ),
-              ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(0),
+          title: Text(
+            name,
+            style: const TextStyle(
+              overflow: TextOverflow.ellipsis,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(width: 16),
-            // Food Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    brandName,
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+          ),
+          subtitle: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'serving size : $description',
+                style: TextStyle(color: Colors.grey[400]),
               ),
-            ),
-            // Calories and Add Button
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  calories,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
+              Text(
+                'Brand Name : $brandName',
+                style: TextStyle(color: Colors.grey[400]),
+              ),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                calories,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(
+                  Icons.add_circle,
+                  color: AppColors.buttonColors,
+                  size: 35,
                 ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () {
-                    _showMealDetailsBottomSheet(
-                      foodItem,
-                      context,
-                      foodItem.name,
-                      '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.add_circle,
-                      color: AppColors.buttonColors,
-                      size: 35,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                onPressed: () {
+                  _showMealDetailsBottomSheet(
+                    foodItem,
+                    context,
+                    foodItem.name,
+                    '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

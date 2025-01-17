@@ -158,8 +158,6 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
 
               Navigator.pop(context);
             } else if (state is AddMealFailure) {
-              // print(state.error);
-              // print("heelo");
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.error),
@@ -294,7 +292,6 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                         onChanged: _updateServings,
                       ),
                       const SizedBox(height: 24),
-                      // !
                       BlocBuilder<MealTypeBloc, MealTypeState>(
                         builder: (context, state) {
                           if (state is MealTypeLoading) {
@@ -443,7 +440,7 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                                Colors.black),
+                                                AppColors.buttonColors,),
                                       ),
                                     )
                                   : Text(

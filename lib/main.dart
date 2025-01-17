@@ -8,6 +8,7 @@ import 'package:hungrx_app/data/datasources/api/cart_screen.dart/consume_cart_ap
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/delete_dish_cart_api.dart';
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/get_cart_api.dart';
 import 'package:hungrx_app/data/datasources/api/daily_insight_screen/daily_insight_datasource.dart';
+import 'package:hungrx_app/data/datasources/api/dashboard_screen/calorie_metrics_api.dart';
 import 'package:hungrx_app/data/datasources/api/dashboard_screen/feedback_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/delete_account_api.dart';
 import 'package:hungrx_app/data/datasources/api/daily_insight_screen/delete_consumed_food_api_service.dart';
@@ -25,10 +26,15 @@ import 'package:hungrx_app/data/datasources/api/dashboard_screen/streak_api_serv
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/tdee_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_basic_info_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/user_profile_api_client.dart';
+import 'package:hungrx_app/data/datasources/api/progress_bar/progress_bar_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/add_to_cart.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/restaurant_menu_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/nearby_restaurant_api.dart';
+import 'package:hungrx_app/data/datasources/api/restaurant_screen/request_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/suggested_restaurants_api.dart';
+import 'package:hungrx_app/data/datasources/api/water_screen/delete_water_api.dart';
+import 'package:hungrx_app/data/datasources/api/water_screen/get_water_entry_api.dart';
+import 'package:hungrx_app/data/datasources/api/water_screen/water_intake_api.dart';
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_history_api.dart';
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_update_api.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/email_signin_repository.dart';
@@ -37,6 +43,7 @@ import 'package:hungrx_app/data/repositories/cart_screen/consume_cart_repository
 import 'package:hungrx_app/data/repositories/cart_screen/delete_dish_cart_repository.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/connectivity_repository.dart';
 import 'package:hungrx_app/data/repositories/daily_insight_screen/daily_insight_repository.dart';
+import 'package:hungrx_app/data/repositories/dashboad_screen/calorie_metrics_repository.dart';
 import 'package:hungrx_app/data/repositories/dashboad_screen/feedback_repository.dart';
 import 'package:hungrx_app/data/repositories/home_meals_screen/common_food_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/goal_settings_repository.dart';
@@ -44,7 +51,6 @@ import 'package:hungrx_app/data/repositories/profile_screen/delete_account_repos
 import 'package:hungrx_app/data/repositories/daily_insight_screen/delete_consumed_food_repository.dart';
 import 'package:hungrx_app/data/repositories/eat_screen/eat_screen_repository.dart';
 import 'package:hungrx_app/data/repositories/eat_screen/eat_search_screen_repository.dart';
-import 'package:hungrx_app/data/repositories/auth_screen/facebook_auth_repository.dart';
 import 'package:hungrx_app/data/repositories/home_meals_screen/food_search_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/get_basic_info_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/get_profile_details_repository.dart';
@@ -53,26 +59,31 @@ import 'package:hungrx_app/data/repositories/log_screen/logmeal_search_history_r
 import 'package:hungrx_app/data/repositories/log_screen/meal_type_repository.dart';
 import 'package:hungrx_app/data/repositories/otp_auth_screen/otp_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/report_bug_repository.dart';
+import 'package:hungrx_app/data/repositories/progress_bar/progress_bar_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_menu_screen/cart_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_menu_screen/restaurant_menu_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_screen/nearby_restaurant_repository.dart';
+import 'package:hungrx_app/data/repositories/restaurant_screen/request_restaurant_repository.dart';
 import 'package:hungrx_app/data/repositories/restaurant_screen/suggested_restaurants_repository.dart';
 import 'package:hungrx_app/data/repositories/log_screen/search_history_log_repository.dart';
 import 'package:hungrx_app/data/repositories/dashboad_screen/streak_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/tdee_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/update_basic_info_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/user_info_profile_repository.dart';
+import 'package:hungrx_app/data/repositories/water_screen/delete_water_repository.dart';
+import 'package:hungrx_app/data/repositories/water_screen/get_water_entry_repository.dart';
+import 'package:hungrx_app/data/repositories/water_screen/water_intake_repository.dart';
 import 'package:hungrx_app/data/repositories/weight_screen/weight_history_repository.dart';
 import 'package:hungrx_app/data/repositories/weight_screen/weight_update_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/login_usecase.dart';
 import 'package:hungrx_app/domain/usecases/cart_screen.dart/consume_cart_usecase.dart';
 import 'package:hungrx_app/domain/usecases/cart_screen.dart/delete_dish_cart_usecase.dart';
+import 'package:hungrx_app/domain/usecases/dashboad_screen/get_calorie_metrics_usecase.dart';
 import 'package:hungrx_app/domain/usecases/home_meals_screen/add_logmeal_search_history_usecase.dart';
 import 'package:hungrx_app/domain/usecases/profile_screen/delete_account_usecase.dart';
 import 'package:hungrx_app/domain/usecases/daily_insight_screen/delete_consumed_food_usecase.dart';
 import 'package:hungrx_app/domain/usecases/eat_screen/eat_screen_search_food_usecase.dart';
-import 'package:hungrx_app/domain/usecases/auth_screens/facebook_auth_usecase.dart';
 import 'package:hungrx_app/domain/usecases/profile_screen/get_basic_info_usecase.dart';
 import 'package:hungrx_app/domain/usecases/eat_screen/get_eat_screen_usecase.dart';
 import 'package:hungrx_app/domain/usecases/home_meals_screen/get_meal_types_usecase.dart';
@@ -82,6 +93,9 @@ import 'package:hungrx_app/domain/usecases/profile_setting_screen/get_goal_setti
 import 'package:hungrx_app/domain/usecases/restaurant_menu.dart/add_to_cart_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_screen/get_suggested_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/dashboad_screen/submit_feedback_usecase.dart';
+import 'package:hungrx_app/domain/usecases/restaurant_screen/request_restaurant_usecase.dart';
+import 'package:hungrx_app/domain/usecases/water_screen/delete_water_entry_usecase.dart';
+import 'package:hungrx_app/domain/usecases/water_screen/get_water_entry_usecase.dart';
 import 'package:hungrx_app/domain/usecases/weight_screen/get_weight_history_usecase.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/google_auth_usecase.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/otp_usecase.dart';
@@ -92,14 +106,15 @@ import 'package:hungrx_app/firebase_options.dart';
 import 'package:hungrx_app/presentation/blocs/add_logscreen_search_history/add_logscreen_search_history_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_meal_log_screen/add_meal_log_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/calorie_metrics_dashboad/calorie_metrics_dashboad_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/consume_cart/consume_cart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/delete_water/delete_water_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/email_login_bloc/login_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/facebook_auth/facebook_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/feedback_bloc/feedback_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_delete_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
@@ -108,6 +123,7 @@ import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_water_entry/get_water_entry_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_bloc.dart';
@@ -118,7 +134,9 @@ import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_me
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_event.dart';
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/otp_verify_bloc/auth_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/request_restaurant/request_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/result_bloc/result_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
@@ -130,6 +148,7 @@ import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_inf
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_event.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/water_intake/water_intake_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
 import 'package:hungrx_app/routes/app_router.dart';
@@ -158,6 +177,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final progressBarApi = ProgressBarApi();
+    final progressBarRepository = ProgressBarRepository(progressBarApi);
+    final waterIntakeApi = GetWaterIntakeApi();
+    final waterIntakeRepository = GetWaterIntakeRepository(waterIntakeApi);
+    final getWaterIntakeUseCase = GetWaterIntakeUseCase(waterIntakeRepository);
     final suggestedRestaurantsApi = SuggestedRestaurantsApi();
     final suggestedRestaurantsRepository =
         SuggestedRestaurantsRepository(suggestedRestaurantsApi);
@@ -219,6 +243,10 @@ class MyApp extends StatelessWidget {
             authService: authService,
           ),
         ),
+        BlocProvider<ProgressBarBloc>(
+          create: (context) =>
+              ProgressBarBloc(progressBarRepository, authService),
+        ),
 
         // !  cart bloc in food menu
         BlocProvider(
@@ -237,18 +265,6 @@ class MyApp extends StatelessWidget {
             authService: authService,
           ),
         ),
-        // BlocProvider<RestaurantSearchBloc>(
-        //   create: (context) {
-        //     final suggestedBloc = context.read<SuggestedRestaurantsBloc>();
-        //     final restaurants =
-        //         suggestedBloc.state is SuggestedRestaurantsLoaded
-        //             ? (suggestedBloc.state as SuggestedRestaurantsLoaded)
-        //                 .restaurants
-        //             : <SuggestedRestaurantModel>[];
-
-        //     return RestaurantSearchBloc(restaurants);
-        //   },
-        // ),
 
         BlocProvider(
           create: (context) => NearbyRestaurantBloc(
@@ -273,6 +289,31 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
+        BlocProvider<GetWaterIntakeBloc>(
+          create: (context) =>
+              GetWaterIntakeBloc(getWaterIntakeUseCase, authService),
+        ),
+        BlocProvider<WaterIntakeBloc>(
+          create: (context) => WaterIntakeBloc(
+            authService: AuthService(),
+            repository: WaterIntakeRepository(
+              api: WaterIntakeApi(
+                client: http.Client(),
+              ),
+            ),
+          ),
+        ),
+
+        BlocProvider<DeleteWaterBloc>(
+          create: (context) => DeleteWaterBloc(
+              DeleteWaterEntryUseCase(
+                DeleteWaterRepository(
+                  DeleteWaterApi(),
+                ),
+              ),
+              authService),
+        ),
+
         BlocProvider<SuggestedRestaurantsBloc>(
           create: (context) =>
               SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase)
@@ -288,20 +329,18 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<SearchHistoryLogBloc>(
           create: (context) => SearchHistoryLogBloc(
-            useCase: GetSearchHistoryLogUseCase(
-              repository: SearchHistoryLogRepository(
-                api: GetSearchHistoryLogApi(
-                  client: http.Client(),
+              useCase: GetSearchHistoryLogUseCase(
+                repository: SearchHistoryLogRepository(
+                  api: GetSearchHistoryLogApi(
+                    client: http.Client(),
+                  ),
                 ),
               ),
-            ),
-            authService: authService
-          ),
-          
+              authService: authService),
         ),
         BlocProvider(
-          create: (context) =>
-              LogMealSearchHistoryBloc(addLogMealSearchHistoryUseCase,authService),
+          create: (context) => LogMealSearchHistoryBloc(
+              addLogMealSearchHistoryUseCase, authService),
         ),
         BlocProvider<SearchBloc>(
           create: (context) => SearchBloc(
@@ -317,14 +356,23 @@ class MyApp extends StatelessWidget {
             // Add your repository/usecase here
           ),
         ),
+        BlocProvider<CalorieMetricsBloc>(
+          create: (context) => CalorieMetricsBloc(
+              GetCalorieMetricsUseCase(
+                CalorieMetricsRepository(
+                  CalorieMetricsApi(),
+                ),
+              ),
+              authService),
+        ),
         BlocProvider<DeleteFoodBloc>(
           create: (context) => DeleteFoodBloc(
-            DeleteConsumedFoodUseCase(
-              DeleteFoodRepository(
-                DeleteFoodApiService(),
+              DeleteConsumedFoodUseCase(
+                DeleteFoodRepository(
+                  DeleteFoodApiService(),
+                ),
               ),
-            ),
-          ),
+              authService),
         ),
         BlocProvider(
           create: (context) => SignUpBloc(
@@ -356,6 +404,15 @@ class MyApp extends StatelessWidget {
               ),
               authService),
         ),
+        BlocProvider(
+          create: (context) => RequestRestaurantBloc(
+              RequestRestaurantUseCase(
+                RequestRestaurantRepository(
+                  RequestRestaurantApi(),
+                ),
+              ),
+              authService),
+        ),
 
         BlocProvider(
           create: (context) => GoalSettingsBloc(
@@ -369,9 +426,10 @@ class MyApp extends StatelessWidget {
         ),
 
         BlocProvider<WeightHistoryBloc>(
-          create: (context) => WeightHistoryBloc(getWeightHistoryUseCase
-              // Add your repository/usecase here
-              ),
+          create: (context) =>
+              WeightHistoryBloc(getWeightHistoryUseCase, authService
+                  // Add your repository/usecase here
+                  ),
         ),
         BlocProvider<MealTypeBloc>(
           create: (context) => MealTypeBloc(
@@ -464,13 +522,6 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        BlocProvider<FacebookAuthBloc>(
-          create: (context) => FacebookAuthBloc(
-            facebookAuthUseCase: FacebookAuthUseCase(
-              FacebookAuthRepository(),
-            ),
-          ),
-        ),
         BlocProvider<CountryCodeBloc>(
           create: (context) => CountryCodeBloc(),
         ),

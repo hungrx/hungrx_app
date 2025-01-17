@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animated_weight_picker/animated_weight_picker.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_event.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
@@ -21,7 +18,6 @@ class WeightPickerScreen extends StatefulWidget {
 }
 
 class WeightPickerScreenState extends State<WeightPickerScreen> {
-  final AuthService _authService = AuthService();
   String selectedValue = ''; // Default weight
   final TextEditingController _weightController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
@@ -29,7 +25,6 @@ class WeightPickerScreenState extends State<WeightPickerScreen> {
   @override
   void initState() {
     super.initState();
-    // Add listener to focus node to handle keyboard dismiss
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
         _validateAndUpdateWeight();
@@ -63,10 +58,8 @@ class WeightPickerScreenState extends State<WeightPickerScreen> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
-    final userState = context.watch<UserBloc>().state;
     return Scaffold(
       backgroundColor: Colors.black,
       body: BlocListener<WeightUpdateBloc, WeightUpdateState>(
@@ -78,6 +71,10 @@ class WeightPickerScreenState extends State<WeightPickerScreen> {
                 backgroundColor: Colors.green,
               ),
             );
+            context.read<WeightHistoryBloc>().add(FetchWeightHistory());
+
+            // Fetch home data
+            context.read<HomeBloc>().add(RefreshHomeData());
             Navigator.of(context).pop(true);
           } else if (state is WeightUpdateError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -188,34 +185,12 @@ class WeightPickerScreenState extends State<WeightPickerScreen> {
                             onPressed: state is WeightUpdateLoading
                                 ? null
                                 : () async {
-                                    if (selectedValue.isNotEmpty &&
-                                        userState is UserLoaded) {
-                                      // Update weight
+                                    if (selectedValue.isNotEmpty) {
                                       context.read<WeightUpdateBloc>().add(
                                             UpdateWeightRequested(
                                               double.parse(selectedValue),
                                             ),
                                           );
-
-                                      // Refresh weight history
-                                      context.read<WeightHistoryBloc>().add(
-                                            FetchWeightHistory(
-                                                userState.userId ?? ""),
-                                          );
-
-                                      // Fetch home data and update
-                                      final homeData =
-                                          await _authService.fetchHomeData();
-                                      if (homeData != null) {
-                                        context
-                                            .read<HomeBloc>()
-                                            .add(InitializeHomeData(homeData));
-                                      }
-
-                                      // Pop back to previous screen after successful update
-                                      if (mounted) {
-                                        Navigator.pop(context, true);
-                                      }
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
@@ -234,7 +209,7 @@ class WeightPickerScreenState extends State<WeightPickerScreen> {
                                     width: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: AppColors.primaryColor,
+                                      color: AppColors.buttonColors,
                                     ),
                                   )
                                 : const Text(

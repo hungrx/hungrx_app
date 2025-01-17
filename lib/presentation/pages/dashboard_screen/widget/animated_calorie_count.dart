@@ -32,9 +32,11 @@ class _AnimatedCalorieDisplayState extends State<AnimatedCalorieDisplay> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             AnimatedFlipCounter(
+              curve: Curves.easeInOut,
+              hideLeadingZeroes: true,
               value: calories,
               wholeDigits: 6,
-              duration: const Duration(milliseconds: 500),
+              duration: const Duration(milliseconds: 3000),
               textStyle: GoogleFonts.stickNoBills(
                 color: Colors.white,
                 fontSize: 80,

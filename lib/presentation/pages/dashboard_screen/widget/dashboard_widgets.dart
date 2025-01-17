@@ -1,4 +1,4 @@
-import 'package:animated_flip_counter/animated_flip_counter.dart';
+// import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,7 +6,7 @@ import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/core/widgets/responsive_text.dart';
 import 'package:hungrx_app/data/Models/dashboad_screen/home_screen_model.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
-import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/animated_calorie_count.dart';
+// import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/animated_calorie_count.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/feedback_bottom.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -48,74 +48,86 @@ class DashboardWidgets {
     );
   }
 
-  static Widget buildCalorieCounter(
-      HomeData data, Stream<double>? calorieStream) {
-    return Builder(builder: (context) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      final isSmallScreen = screenWidth < 360;
+  // static Widget buildCalorieCounter(
+  //     HomeData data, Stream<double>? calorieStream) {
+  //       print(data.goalHeading);
+  //       print(data.caloriesToReachGoal);
+  //   return Builder(builder: (context) {
+  //     final screenWidth = MediaQuery.of(context).size.width;
+  //     final isSmallScreen = screenWidth < 360;
 
-      return Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: getPadding(context, 0.04),
-          vertical: getPadding(context, 0.02),
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.tileColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  data.goalHeading,
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: getFontSize(context, 0.045),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Row(
-                  children: [
-                    AnimatedFlipCounter(
-                      thousandSeparator: ',',
-                      value: data.daysToReachGoal,
-                      textStyle: GoogleFonts.stickNoBills(
-                        color: Colors.white,
-                        fontSize:
-                            getFontSize(context, isSmallScreen ? 0.08 : 0.085),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(
-                        bottom: 0,
-                        left: getPadding(context, 0.01),
-                        top: getPadding(context, 0.025),
-                      ),
-                      child: Text(
-                        ' Days',
-                        style: GoogleFonts.stickNoBills(
-                          color: Colors.grey,
-                          fontSize: getFontSize(context, 0.04),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ],
-            ),
-            AnimatedCalorieDisplay(initialData: data),
-          ],
-        ),
-      );
-    });
-  }
+  //     return Container(
+  //       padding: EdgeInsets.symmetric(
+  //         horizontal: getPadding(context, 0.04),
+  //         vertical: getPadding(context, 0.02),
+  //       ),
+  //       decoration: BoxDecoration(
+  //         color: AppColors.tileColor,
+  //         borderRadius: BorderRadius.circular(20),
+  //       ),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //             children: [
+  //               Text(
+  //                 data.goalHeading,
+  //                 style: TextStyle(
+  //                   color: Colors.grey,
+  //                   fontSize: getFontSize(context, 0.045),
+  //                   fontWeight: FontWeight.w800,
+  //                 ),
+  //               ),
+  //               Row(
+  //                 children: [
+  //                   AnimatedFlipCounter(
+  //                     thousandSeparator: ',',
+  //                     value: data.daysToReachGoal,
+  //                     textStyle: GoogleFonts.stickNoBills(
+  //                       color: Colors.white,
+  //                       fontSize:
+  //                           getFontSize(context, isSmallScreen ? 0.08 : 0.085),
+  //                       fontWeight: FontWeight.bold,
+  //                     ),
+  //                   ),
+  //                   Padding(
+  //                     padding: EdgeInsets.only(
+  //                       bottom: 0,
+  //                       left: getPadding(context, 0.01),
+  //                       top: getPadding(context, 0.025),
+  //                     ),
+  //                     child: Text(
+  //                       ' Days',
+  //                       style: GoogleFonts.stickNoBills(
+  //                         color: Colors.grey,
+  //                         fontSize: getFontSize(context, 0.04),
+  //                       ),
+  //                     ),
+  //                   )
+  //                 ],
+  //               ),
+  //             ],
+  //           ),
+  //           AnimatedCalorieDisplay(initialData: data),
+  //         ],
+  //       ),
+  //     );
+  //   });
+  // }
 
   static Widget buildDailyTargetAndRemaining(
       HomeData data, BuildContext context) {
+    Color getProgressColor(double remainingRatio) {
+      if (remainingRatio >= 0.75) {
+        return Colors.green; // Lots of calories remaining (75-100%)
+      }
+      if (remainingRatio >= 0.25) {
+        return Colors.orange; // Medium calories remaining (25-75%)
+      }
+      return Colors.red; // Low calories remaining (0-25%)
+    }
+
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 360;
     final horizontalPadding = getPadding(context, 0.04);
@@ -198,8 +210,9 @@ class DashboardWidgets {
                     radius: isSmallScreen ? 18 : 22,
                     lineWidth: isSmallScreen ? 3 : 4,
                     percent: data.remaining / data.dailyCalorieGoal,
-                    progressColor: Colors.grey[800]!,
-                    backgroundColor: Colors.green,
+                    progressColor: Colors.grey[700], // Corrected line
+                    backgroundColor: getProgressColor(
+                        data.remaining / data.dailyCalorieGoal),
                     circularStrokeCap: CircularStrokeCap.round,
                   ),
                   Column(

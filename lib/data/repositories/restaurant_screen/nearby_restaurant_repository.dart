@@ -7,7 +7,7 @@ class NearbyRestaurantRepository {
 
   NearbyRestaurantRepository(this._api);
 
-  Future<List<NearbyRestaurantModel>> getNearbyRestaurants() async {
+  Future<List<NearbyRestaurantModel>> getNearbyRestaurants({double radius = 5000}) async {
     try {
       // Request location permission
       LocationPermission permission = await Geolocator.requestPermission();
@@ -17,20 +17,44 @@ class NearbyRestaurantRepository {
 
       // Get current position
       Position position = await Geolocator.getCurrentPosition();
-      
-      final response = await _api.getNearbyRestaurants(
+      print('Current position - Latitude: ${position.latitude}, Longitude: ${position.longitude}');
+
+      // Get API response
+      final Map<String, dynamic> response = await _api.getNearbyRestaurants(
         latitude: position.latitude,
         longitude: position.longitude,
+        radius: radius,
       );
-// print(response['data']);
-      if (response['success'] == true && response['data'] != null) {
-        return List<NearbyRestaurantModel>.from(
-          response['data'].map((x) => NearbyRestaurantModel.fromJson(x)),
-        );
-      } else {
-        throw Exception('Invalid response format');
+
+      print('Repository received response: $response');
+
+      // Validate response structure
+      if (response['success'] != true) {
+        throw Exception('API returned success: false');
       }
+
+      if (response['data'] == null) {
+        throw Exception('API response missing data field');
+      }
+
+      final List<dynamic> restaurantsData = response['data'] as List<dynamic>;
+      print('Number of restaurants received: ${restaurantsData.length}');
+
+      final List<NearbyRestaurantModel> restaurants = restaurantsData
+          .map((restaurantJson) {
+            try {
+              return NearbyRestaurantModel.fromJson(restaurantJson as Map<String, dynamic>);
+            } catch (e) {
+              print('Error parsing restaurant: $e');
+              print('Problematic restaurant data: $restaurantJson');
+              rethrow;
+            }
+          })
+          .toList();
+
+      return restaurants;
     } catch (e) {
+      print('Repository error: $e');
       throw Exception('Failed to get nearby restaurants: $e');
     }
   }

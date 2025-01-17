@@ -1,7 +1,7 @@
+// Modified Event classes
 abstract class WeightHistoryEvent {}
 
+// Remove userId from FetchWeightHistory event
 class FetchWeightHistory extends WeightHistoryEvent {
-  final String userId;
-  
-  FetchWeightHistory(this.userId);
+  FetchWeightHistory(); // No longer needs userId parameter
 }

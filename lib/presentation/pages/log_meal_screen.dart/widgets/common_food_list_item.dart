@@ -4,7 +4,7 @@ import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/common_food_model.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
-import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/common_consume_sheet.dart';
 
 class CommonFoodListItem extends StatelessWidget {
   final CommonFoodModel food;
@@ -40,7 +40,7 @@ class CommonFoodListItem extends StatelessWidget {
               style: TextStyle(color: Colors.grey[400]),
             ),
             Text(
-              'Category : ${food.category.main}',
+              '${food.category.main}',
               style: TextStyle(color: Colors.grey[400]),
             ),
           ],
@@ -93,16 +93,17 @@ class CommonFoodListItem extends StatelessWidget {
                   child: CircularProgressIndicator(),
                 );
               }
-
+print(food.servingInfo);
               return SingleChildScrollView(
                 child: Container(
                   padding: EdgeInsets.only(
                     bottom: MediaQuery.of(context).viewInsets.bottom,
                   ),
-                  child: MealDetailsBottomSheet(
+                  child: CommonFoodConsumeBottomSheet(
+                    servingSize: food.servingInfo.size,
                     productId: food.id,
                     userId: state.userId ??
-                        "", // You'll need to get this from your user bloc
+                        "", 
                     calories: food.nutritionFacts.calories,
                     mealName: name,
                     servingInfo: description,

@@ -6,9 +6,8 @@ import 'package:hungrx_app/data/Models/daily_insight_screen/daily_food_response.
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_state.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/widget/food_delete_dialog.dart';
+import 'package:hungrx_app/presentation/pages/daily_insight_screen/widget/shimmer_effect.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
@@ -59,27 +58,14 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
               },
             ),
           ],
-          child: BlocBuilder<UserBloc, UserState>(
-            builder: (context, userState) {
-              if (userState.userId == null) {
-                return const Center(
-                  child: CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
-                  ),
-                );
-              }
-
-              return Column(
-                children: [
-                  _buildHeader(),
-                  _buildDateSelector(),
-                  Expanded(
-                    child: _buildContent(),
-                  ),
-                ],
-              );
-            },
+          child: Column(
+            children: [
+              _buildHeader(),
+              _buildDateSelector(),
+              Expanded(
+                child: _buildContent(),
+              ),
+            ],
           ),
         ),
       ),
@@ -207,11 +193,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
     return BlocBuilder<DailyInsightBloc, DailyInsightState>(
       builder: (context, state) {
         if (state is DailyInsightLoading) {
-          return const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-            ),
-          );
+          return const DailyInsightShimmer(); 
         }
         if (state is DailyInsightLoaded) {
           return _buildMealList(state.data);
@@ -405,24 +387,6 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
         ),
         child: Row(
           children: [
-            if (food.image != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  food.image!,
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 40,
-                    height: 40,
-                    color: Colors.grey[900],
-                    child: const Icon(Icons.fastfood,
-                        color: AppColors.buttonColors),
-                  ),
-                ),
-              )
-            else
               Container(
                 width: 40,
                 height: 40,

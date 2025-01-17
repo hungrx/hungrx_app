@@ -17,12 +17,12 @@ class ConsumeCartResponse {
 
   factory ConsumeCartResponse.fromJson(Map<String, dynamic> json) {
     return ConsumeCartResponse(
-      status: json['status'],
-      message: json['message'],
-      date: json['date'],
-      updatedMeal: UpdatedMeal.fromJson(json['updatedMeal']),
-      dailyCalories: json['dailyCalories'].toDouble(),
-      updatedCalories: UpdatedCalories.fromJson(json['updatedCalories']),
+      status: json['status'] ?? false,
+      message: json['message'] ?? '',
+      date: json['date'] ?? '',
+      updatedMeal: UpdatedMeal.fromJson(json['updatedMeal'] ?? {}),
+      dailyCalories: (json['dailyCalories']?.toDouble()) ?? 0.0,
+      updatedCalories: UpdatedCalories.fromJson(json['updatedCalories'] ?? {}),
     );
   }
 }
@@ -35,9 +35,8 @@ class UpdatedMeal {
 
   factory UpdatedMeal.fromJson(Map<String, dynamic> json) {
     return UpdatedMeal(
-      mealId: json['mealId'],
-      foods:
-          (json['foods'] as List).map((food) => Food.fromJson(food)).toList(),
+      mealId: json['mealId'] ?? '',
+      foods: (json['foods'] as List?)?.map((food) => Food.fromJson(food)).toList() ?? [],
     );
   }
 }
@@ -72,16 +71,16 @@ class Food {
   factory Food.fromJson(Map<String, dynamic> json) {
     return Food(
       servingSize: json['servingSize'],
-      selectedMeal: json['selectedMeal'],
-      dishId: json['dishId'],
-      totalCalories: json['totalCalories'].toDouble(),
-      timestamp: DateTime.parse(json['timestamp']),
-      name: json['name'],
-      brandName: json['brandName'],
+      selectedMeal: json['selectedMeal'] ?? '',
+      dishId: json['dishId'] ?? '',
+      totalCalories: (json['totalCalories']?.toDouble()) ?? 0.0,
+      timestamp: DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
+      name: json['name'] ?? '',
+      brandName: json['brandName'] ?? '',
       image: json['image'],
-      nutritionFacts: NutritionFacts.fromJson(json['nutritionFacts']),
-      servingInfo: ServingInfo.fromJson(json['servingInfo']),
-      foodId: json['foodId'],
+      nutritionFacts: NutritionFacts.fromJson(json['nutritionFacts'] ?? {}),
+      servingInfo: ServingInfo.fromJson(json['servingInfo'] ?? {}),
+      foodId: json['foodId'] ?? '',
     );
   }
 }
@@ -120,8 +119,8 @@ class NutritionFacts {
     final calories = json['calories']?.toDouble() ?? 0.0;
     
     // Handle the simplified format
-    if ((json.containsKey('protein') && json['protein'] is num) || 
-        (json.containsKey('carbs') && json['carbs'] is num)) {
+    if ((json.containsKey('protein') && json['protein'] != null) || 
+        (json.containsKey('carbs') && json['carbs'] != null)) {
       return NutritionFacts(
         calories: calories,
         protein: json['protein']?.toDouble(),
@@ -132,7 +131,7 @@ class NutritionFacts {
     
     // Handle the detailed format
     return NutritionFacts(
-      calories: json['calories'].toDouble(),
+      calories: calories,
       protein: json['protein'] is Map ? 
         (json['protein'] as Map<String, dynamic>)['value']?.toDouble() : 
         null,
@@ -171,7 +170,7 @@ class NutritionValue {
 
   factory NutritionValue.fromJson(Map<String, dynamic> json) {
     return NutritionValue(
-      value: json['value'].toDouble(),
+      value: json['value']?.toDouble() ?? 0.0,
     );
   }
 }
@@ -191,9 +190,9 @@ class ServingInfo {
 
   factory ServingInfo.fromJson(Map<String, dynamic> json) {
     return ServingInfo(
-      size: json['size']?.toString() ?? '',  // Handle null and convert any type to string
-      unit: json['unit'] ?? '',  // Handle null unit
-      quantity: json['quantity'],  // Keep as dynamic
+      size: json['size']?.toString() ?? '',
+      unit: json['unit'] ?? '',
+      quantity: json['quantity'],
       weight: json['weight'] != null ? Weight.fromJson(json['weight']) : null,
     );
   }
@@ -208,10 +207,10 @@ class Weight {
     required this.value,
   });
 
- factory Weight.fromJson(Map<String, dynamic> json) {
+  factory Weight.fromJson(Map<String, dynamic> json) {
     return Weight(
-      unit: json['unit'] ?? 'g',  // Default to 'g' if null
-      value: json['vaule']?.toDouble() ?? 0.0,  // Handle null value and convert to double
+      unit: json['unit'] ?? 'g',
+      value: (json['value']?.toDouble()) ?? 0.0,  // Fixed typo in 'value' key and added null safety
     );
   }
 }
@@ -229,9 +228,9 @@ class UpdatedCalories {
 
   factory UpdatedCalories.fromJson(Map<String, dynamic> json) {
     return UpdatedCalories(
-      remaining: json['remaining'].toDouble(),
-      consumed: json['consumed'].toDouble(),
-      caloriesToReachGoal: json['caloriesToReachGoal'].toDouble(),
+      remaining: (json['remaining']?.toDouble()) ?? 0.0,
+      consumed: (json['consumed']?.toDouble()) ?? 0.0,
+      caloriesToReachGoal: (json['caloriesToReachGoal']?.toDouble()) ?? 0.0,
     );
   }
 }

@@ -5,9 +5,19 @@ import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restauran
 
 class NearbyRestaurantBloc extends Bloc<NearbyRestaurantEvent, NearbyRestaurantState> {
   final NearbyRestaurantRepository _repository;
+  double _searchRadius = 5000; // Default radius
 
   NearbyRestaurantBloc(this._repository) : super(NearbyRestaurantInitial()) {
     on<FetchNearbyRestaurants>(_onFetchNearbyRestaurants);
+    on<UpdateSearchRadius>(_onUpdateSearchRadius);
+  }
+
+  void _onUpdateSearchRadius(
+    UpdateSearchRadius event,
+    Emitter<NearbyRestaurantState> emit,
+  ) {
+    _searchRadius = event.radius;
+    add(FetchNearbyRestaurants()); // Refresh restaurants with new radius
   }
 
   Future<void> _onFetchNearbyRestaurants(
@@ -16,7 +26,7 @@ class NearbyRestaurantBloc extends Bloc<NearbyRestaurantEvent, NearbyRestaurantS
   ) async {
     emit(NearbyRestaurantLoading());
     try {
-      final restaurants = await _repository.getNearbyRestaurants();
+      final restaurants = await _repository.getNearbyRestaurants(radius: _searchRadius);
       if (restaurants.isEmpty) {
         emit(NearbyRestaurantError('No nearby restaurants found'));
       } else {

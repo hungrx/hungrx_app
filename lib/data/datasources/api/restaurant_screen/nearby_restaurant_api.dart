@@ -7,34 +7,44 @@ class NearbyRestaurantApi {
   Future<Map<String, dynamic>> getNearbyRestaurants({
     required double latitude,
     required double longitude,
-    double radius = 20000, // Changed default to 1000
+    
+    
+    double radius=5000,
     String category = 'all',
   }) async {
+    print('API Request - Latitude: $latitude, Longitude: $longitude');
     try {
       final Uri uri = Uri.parse('$baseUrl/users/nearby').replace(
         queryParameters: {
-          'longitude': "76.205329",
-          'latitude': "10.523626",
+          'longitude': longitude.toString(),
+          'latitude': latitude.toString(),
           'radius': radius.toString(),
           'category': category,
         },
       );
 
+      print('Making request to: ${uri.toString()}');
       final response = await http.get(uri);
 
-      // For debugging
-      print('Request URL: ${uri.toString()}');
       print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      print('Raw response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        // Explicitly decode and verify the response structure
+        final Map<String, dynamic> decodedResponse = json.decode(response.body) as Map<String, dynamic>;
+        
+        // Verify that data is a List
+        if (decodedResponse['data'] is! List) {
+          throw Exception('Expected data to be a List but got ${decodedResponse['data'].runtimeType}');
+        }
+
+        return decodedResponse;
       } else {
-        throw Exception(
-            'Failed to load nearby restaurants: Status ${response.statusCode}');
+        throw Exception('HTTP Error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      throw Exception('Network error: $e');
+      print('Error in API call: $e');
+      rethrow; // Rethrow to preserve the original error
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/eat_screen/eat_screen_model.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_state.dart';
@@ -65,16 +66,10 @@ class _EatScreenState extends State<EatScreen> {
               },
               builder: (context, state) {
                 String value = _cachedData?.dailyCalorieGoal ?? "0";
-                String result = value.split('.')[0];
-
-                // Show loading indicator only if userId is null
-                // if (userId == null) {
-                //   return const Center(
-                //     child: CircularProgressIndicator(
-                //       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                //     ),
-                //   );
-                // }
+                double parsedValue = double.tryParse(value) ?? 0.0;
+                String result = parsedValue.round().toString();
+                // or if you want to keep it as a double with no decimal places:
+                // String result = parsedValue.toStringAsFixed(0);
 
                 return Stack(
                   children: [
@@ -111,7 +106,7 @@ class _EatScreenState extends State<EatScreen> {
 
   Widget _buildErrorOverlay(String message) {
     return Container(
-      color: Colors.black.withOpacity(0.8),
+      color: AppColors.tileColor,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -157,7 +152,7 @@ class _EatScreenState extends State<EatScreen> {
       builder: (context, state) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.grey[900],
+            color: AppColors.tileColor,
             borderRadius: BorderRadius.circular(30),
           ),
           child: TextField(
@@ -248,7 +243,7 @@ class _EatScreenState extends State<EatScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: AppColors.tileColor,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(

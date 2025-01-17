@@ -7,8 +7,8 @@ import 'package:hungrx_app/data/Models/weight_screen/weight_history_model.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_event.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_state.dart';
+import 'package:hungrx_app/presentation/pages/weight_tracking_screen/widget/shimmer_effect.dart';
 import 'package:hungrx_app/routes/route_names.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class WeightTrackingScreen extends StatefulWidget {
@@ -21,8 +21,7 @@ class WeightTrackingScreen extends StatefulWidget {
 }
 
 class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
-  String? userId;
-  bool isLoading = true;
+
 
   @override
   void initState() {
@@ -31,29 +30,12 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
   }
 
   Future<void> _initializeUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userId = prefs.getString('user_id');
-      isLoading = false;
-    });
-
-    // Fetch weight history when screen loads
-    if (userId != null) {
-      // ignore: use_build_context_synchronously
-      context.read<WeightHistoryBloc>().add(FetchWeightHistory(userId!));
-    }
+    context.read<WeightHistoryBloc>().add(FetchWeightHistory());
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
+
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -83,7 +65,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
 
   Widget _buildContent(BuildContext context, WeightHistoryState state) {
     if (state is WeightHistoryLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const WeightTrackingShimmer();
     } else if (state is WeightHistoryLoaded) {
       return SingleChildScrollView(
         child: Column(
@@ -237,9 +219,9 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
       child: ElevatedButton(
         onPressed: () async {
           final result = await context.pushNamed(RouteNames.weightPicker);
-          if (result == true && userId != null) {
+          if (result == true) {
             // ignore: use_build_context_synchronously
-            context.read<WeightHistoryBloc>().add(FetchWeightHistory(userId!));
+            context.read<WeightHistoryBloc>().add(FetchWeightHistory());
           }
         },
         style: ElevatedButton.styleFrom(
@@ -299,7 +281,6 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
             onPressed: () {
               context.goNamed(
                 RouteNames.weightPicker,
-                pathParameters: {'userId': userId!},
               );
             },
             style: ElevatedButton.styleFrom(

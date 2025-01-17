@@ -9,7 +9,11 @@ class HomeDataNotifier {
   static void updateCalories(double newValue) {
     caloriesNotifier.value = newValue;
   }
-  
+  static void updateCaloriesWithDailyChange(double dailyChange) {
+    final currentValue = caloriesNotifier.value;
+    final newValue = currentValue - dailyChange;
+    caloriesNotifier.value = newValue;
+  }
   static void decreaseCalories(double consumedCalories) {
     caloriesNotifier.value = caloriesNotifier.value - 500;
   }

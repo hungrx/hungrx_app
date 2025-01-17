@@ -2,10 +2,10 @@ class HomeData {
   final String username;
   final String goalHeading;
   final String weight;
-  final int caloriesToReachGoal;
-  final int dailyCalorieGoal;
+  final double caloriesToReachGoal;  // Changed to double
+  final double dailyCalorieGoal;     // Changed to double
   final int daysToReachGoal;
-  final int remaining;
+  final double remaining;            // Changed to double
   final int consumed;
 
   HomeData({
@@ -19,40 +19,31 @@ class HomeData {
     required this.consumed,
   });
 
-  // Add copyWith method
-  // HomeData copyWith({
-  //   String? username,
-  //   String? goalHeading,
-  //   String? weight,
-  //   int? caloriesToReachGoal,
-  //   int? dailyCalorieGoal,
-  //   int? daysToReachGoal,
-  //   int? remaining,
-  //   int? consumed,
-  // }) {
-  //   return HomeData(
-  //     username: username ?? this.username,
-  //     goalHeading: goalHeading ?? this.goalHeading,
-  //     weight: weight ?? this.weight,
-  //     caloriesToReachGoal: caloriesToReachGoal ?? this.caloriesToReachGoal,
-  //     dailyCalorieGoal: dailyCalorieGoal ?? this.dailyCalorieGoal,
-  //     daysToReachGoal: daysToReachGoal ?? this.daysToReachGoal,
-  //     remaining: remaining ?? this.remaining,
-  //     consumed: consumed ?? this.consumed,
-  //   );
-  // }
-
   factory HomeData.fromJson(Map<String, dynamic> json) {
     return HomeData(
       username: json['username']?.toString() ?? '',
       goalHeading: json['goalHeading']?.toString() ?? '',
       weight: json['weight']?.toString() ?? '',
-      caloriesToReachGoal: _parseInt(json['caloriesToReachGoal']),
-      dailyCalorieGoal: _parseInt(json['dailyCalorieGoal']),
+      caloriesToReachGoal: _parseDouble(json['caloriesToReachGoal']),
+      dailyCalorieGoal: _parseDouble(json['dailyCalorieGoal']),
       daysToReachGoal: _parseInt(json['daysToReachGoal']),
-      remaining: _parseInt(json['remaining']),
+      remaining: _parseDouble(json['remaining']),
       consumed: _parseInt(json['consumed']),
     );
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      try {
+        return double.parse(value);
+      } catch (e) {
+        return 0.0;
+      }
+    }
+    return 0.0;
   }
 
   static int _parseInt(dynamic value) {
@@ -80,4 +71,28 @@ class HomeData {
       'remaining': remaining,
       'consumed': consumed,
     };
-  }}
+  }
+
+  // Here's the copyWith method if you need it
+  HomeData copyWith({
+    String? username,
+    String? goalHeading,
+    String? weight,
+    double? caloriesToReachGoal,
+    double? dailyCalorieGoal,
+    int? daysToReachGoal,
+    double? remaining,
+    int? consumed,
+  }) {
+    return HomeData(
+      username: username ?? this.username,
+      goalHeading: goalHeading ?? this.goalHeading,
+      weight: weight ?? this.weight,
+      caloriesToReachGoal: caloriesToReachGoal ?? this.caloriesToReachGoal,
+      dailyCalorieGoal: dailyCalorieGoal ?? this.dailyCalorieGoal,
+      daysToReachGoal: daysToReachGoal ?? this.daysToReachGoal,
+      remaining: remaining ?? this.remaining,
+      consumed: consumed ?? this.consumed,
+    );
+  }
+}

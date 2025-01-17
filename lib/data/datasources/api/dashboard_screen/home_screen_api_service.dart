@@ -12,7 +12,7 @@ class HomeApiService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );
-// print(response.body);
+print(response.body);
 // print(userId);
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);

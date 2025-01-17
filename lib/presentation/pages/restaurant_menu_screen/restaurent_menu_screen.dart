@@ -268,7 +268,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     return BlocBuilder<MenuExpansionBloc, MenuExpansionState>(
       builder: (context, state) {
         return CustomExpansionPanel(
-          backgroundColor: Colors.grey[900]!,
+          backgroundColor: AppColors.tileColor,
           key: Key('$parentCategoryId-${subCategory.id}'),
           title: subCategory.subCategoryName,
           isExpanded: state.expandedSubcategoryId == subCategory.id &&
@@ -362,7 +362,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: AppColors.tileColor,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
