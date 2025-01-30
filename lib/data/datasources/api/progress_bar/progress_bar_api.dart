@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 
 class ProgressBarApi {
-  final String baseUrl = 'https://hungrxbackend.onrender.com';
-
   Future<Map<String, dynamic>> fetchProgressBarData(String userId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/progressBar'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.progressBar),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );

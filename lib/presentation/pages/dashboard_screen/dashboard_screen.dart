@@ -17,6 +17,9 @@ import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/dashboard_
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/metric_dialogbox.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/shimmer_effect.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/streak_calendar.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/weight_reminder_dialg.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/weight_reminder_manager.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/welcome_dialog.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,25 +48,167 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   late SharedPreferences _prefs;
   final String _lastDialogDateKey = 'last_dialog_date';
+  bool _isInitialized = false;
+  static const String _firstTimeKey = 'is_first_time_user';
+  static const String _accountCreationDateKey = 'account_creation_date';
 
   @override
   void initState() {
     super.initState();
     // Initialize everything in sequence
     _initializeAndFetch();
+    _checkWeightReminder();
+  }
+
+Future<void> _handleFirstTimeUser(String calculationDate) async {
+  bool isFirstTime = _prefs.getBool(_firstTimeKey) ?? true;
+
+  if (isFirstTime) {
+    await _prefs.setString(_accountCreationDateKey, calculationDate);
+    await _prefs.setBool(_firstTimeKey, false);
+
+    if (mounted) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const WelcomeDialog(),
+      );
+    }
+    return;
+  }
+}
+
+  Future<void> _checkAndShowDialog() async {
+    if (!mounted) return;
+
+    final state = context.read<HomeBloc>().state;
+    if (state is HomeLoaded) {
+      String calculationDate = state.homeData.calculationDate;
+      await _handleFirstTimeUser(calculationDate);
+
+      DateTime accountCreationDate = _parseDate(calculationDate);
+      DateTime now = DateTime.now();
+      String today = now.toIso8601String().split('T')[0];
+      String? lastShownDate = _prefs.getString(_lastDialogDateKey);
+
+      // Don't show metrics dialog on account creation date
+      if (_isSameDay(accountCreationDate, now)) {
+        return;
+      }
+
+      // Show metrics dialog only if it hasn't been shown today and it's not the first day
+      if (lastShownDate != today) {
+        await _prefs.setString(_lastDialogDateKey, today);
+        if (mounted) {
+          _showMetricsDialog();
+        }
+      }
+    }
+  }
+
+  Future<void> _checkWeightReminder() async {
+    // Wait for screen to load
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+
+    final state = context.read<HomeBloc>().state;
+    if (state is HomeLoaded) {
+      String calculationDate = state.homeData.calculationDate;
+      DateTime accountCreationDate = _parseDate(calculationDate);
+      DateTime now = DateTime.now();
+
+      // Don't show weight reminder on the first day
+      if (_isSameDay(accountCreationDate, now)) {
+        return;
+      }
+
+      final shouldShow = await WeightReminderManager.shouldShowReminder();
+      if (shouldShow) {
+        final lastUpdate = await WeightReminderManager.getLastWeightUpdate();
+        _showWeightReminderDialog(lastUpdate);
+      }
+    }
+  }
+
+  DateTime _parseDate(String date) {
+    // Assuming date format is "dd/MM/yyyy"
+    List<String> parts = date.split('/');
+    return DateTime(
+      int.parse(parts  [2]), // year
+      int.parse(parts[1]), // month
+      int.parse(parts[0]), // day
+    );
+  }
+
+  // Helper method to compare dates
+  bool _isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
+  }
+
+  Future<void> _showWeightReminderDialog(DateTime lastUpdate) async {
+    if (!mounted) return;
+
+    // Update last reminder shown time
+    await WeightReminderManager.updateLastReminderShown();
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => WeightReminderDialog(
+        lastWeightUpdate: lastUpdate,
+      ),
+    );
+
+    if (result == true && mounted) {
+      // Navigate to weight picker screen
+      await context.push('/weight-picker');
+
+      // After returning from weight picker, update the last weight update time
+      await WeightReminderManager.updateLastWeightUpdate();
+
+      // Refresh dashboard data
+      if (mounted) {
+        context.read<HomeBloc>().add(RefreshHomeData());
+      }
+    }
   }
 
   Future<void> _initializeAndFetch() async {
+    if (_isInitialized) return;
+
     try {
+      _isInitialized = true;
       await _initializePrefs();
       if (!mounted) return;
 
-      await _fetchMetrics();
-      if (!mounted) return;
-
-      await _fetchData();
+      // Fetch both metrics and home data concurrently
+      await Future.wait([
+        _fetchMetricsAndShowDialog(),
+        _fetchData(),
+      ]);
     } catch (e) {
       print('Initialization error: $e');
+      _isInitialized = false;
+    }
+  }
+
+  Future<void> _fetchMetricsAndShowDialog() async {
+    if (!mounted) return;
+
+    final metricsBloc = context.read<CalorieMetricsBloc>();
+    metricsBloc.add(FetchCalorieMetrics());
+
+    // Wait for metrics to load
+    await for (final state in metricsBloc.stream) {
+      if (state is CalorieMetricsLoaded) {
+        await _checkAndShowDialog();
+        break;
+      }
+      if (state is CalorieMetricsError) {
+        break;
+      }
     }
   }
 
@@ -76,46 +221,23 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _initializePrefs() async {
     _prefs = await SharedPreferences.getInstance();
-  }
-
-  Future<void> _fetchMetrics() async {
-    if (!mounted) return;
-
-    print('Fetching metrics');
-    context.read<CalorieMetricsBloc>().add(FetchCalorieMetrics());
-
-    // Wait for the metrics to be loaded
-    bool metricsLoaded = false;
-    await for (final state in context.read<CalorieMetricsBloc>().stream) {
-      if (state is CalorieMetricsLoaded) {
-        metricsLoaded = true;
-        _checkAndShowDialog();
-        break;
-      }
-    }
-
-    // Add timeout to prevent infinite waiting
-    if (!metricsLoaded) {
-      print('Metrics loading timed out');
+    // Ensure we have the keys initialized
+    if (!_prefs.containsKey(_firstTimeKey)) {
+      await _prefs.setBool(_firstTimeKey, true);
     }
   }
 
-  Future<void> _checkAndShowDialog() async {
-    final String today = DateTime.now().toIso8601String().split('T')[0];
-    final String? lastShownDate = _prefs.getString(_lastDialogDateKey);
+  // Future<void> _checkAndShowDialog() async {
+  //   final String today = DateTime.now().toIso8601String().split('T')[0];
+  //   final String? lastShownDate = _prefs.getString(_lastDialogDateKey);
 
-    print('Checking dialog - Last shown: $lastShownDate, Today: $today');
-
-    // Show dialog if:
-    // 1. Never shown before (lastShownDate is null)
-    // 2. Last shown date is different from today
-    if (lastShownDate == null || lastShownDate != today) {
-      await _prefs.setString(_lastDialogDateKey, today);
-      if (mounted) {
-        _showMetricsDialog();
-      }
-    }
-  }
+  //   if (lastShownDate != today) {
+  //     await _prefs.setString(_lastDialogDateKey, today);
+  //     if (mounted) {
+  //       _showMetricsDialog();
+  //     }
+  //   }
+  // }
 
   void _showMetricsDialog() {
     print('Attempting to show metrics dialog');
@@ -125,10 +247,11 @@ class DashboardScreenState extends State<DashboardScreen> {
     final state = context.read<CalorieMetricsBloc>().state;
     if (state is CalorieMetricsLoaded) {
       print('Showing dialog with metrics: ${state.metrics.consumedCalories}');
-
+print(state.metrics.goal);
       showDialog(
         context: context,
         builder: (context) => MetricsDialog(
+          isMaintain: state.metrics.goal == 'maintain',
           consumedCalories: state.metrics.consumedCalories,
           dailyTargetCalories: state.metrics.dailyTargetCalories,
           remainingCalories: state.metrics.remainingCalories,
@@ -158,7 +281,6 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   // Add this method
   Future<void> resetLastShownDate() async {
-    print("he;;");
     await _prefs.remove(_lastDialogDateKey);
   }
 
@@ -214,6 +336,10 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _handleRefresh() async {
     try {
+      await Future.wait([
+        _fetchMetricsAndShowDialog(),
+        _fetchData(),
+      ]);
       await _fetchData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -294,6 +420,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                           DashboardWidgets.buildHeader(state.homeData, context),
                           SizedBox(height: getPadding(context, 0.03)),
                           buildCalorieCounter(
+                            state.homeData.goalStatus,
                             state.homeData,
                             _calorieController.stream,
                           ),
@@ -307,9 +434,11 @@ class DashboardScreenState extends State<DashboardScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Expanded(
+                              Expanded(
                                 flex: 3,
-                                child: StreakCalendar(),
+                                child: StreakCalendar(
+                                  isMaintain: state.homeData.goalStatus,
+                                ),
                               ),
                               SizedBox(width: getPadding(context, 0.03)),
                               Expanded(
@@ -381,13 +510,36 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   static Widget buildCalorieCounter(
-      HomeData data, Stream<double>? calorieStream) {
-    // print(data.goalHeading);
-    // print(data.caloriesToReachGoal);
+      bool isMaintain, HomeData data, Stream<double>? calorieStream) {
     return Builder(builder: (context) {
       final screenWidth = MediaQuery.of(context).size.width;
       final isSmallScreen = screenWidth < 360;
 
+      if (isMaintain) {
+        // Simple maintain weight tile
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: getPadding(context, 0.04),
+            vertical: getPadding(context, 0.04),
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.tileColor,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Center(
+            child: Text(
+              'Maintain Weight',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: getFontSize(context, 0.08),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Original calorie counter UI for non-maintain mode
       return Container(
         padding: EdgeInsets.symmetric(
           horizontal: getPadding(context, 0.04),

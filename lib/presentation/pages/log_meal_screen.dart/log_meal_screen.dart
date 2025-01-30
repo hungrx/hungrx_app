@@ -11,6 +11,8 @@ import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/bottom_search_bar.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/common_consume_sheet.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/custom_food_dialog.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';
 
 class LogMealScreen extends StatelessWidget {
@@ -49,67 +51,101 @@ class _LogMealViewState extends State<LogMealView> {
     context.read<ProgressBarBloc>().add(FetchProgressBarData());
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
+@override
+Widget build(BuildContext context) {
+  return SafeArea(
+    child: Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => context.pop(),
-          ),
-          title: const Text(
-            'Log your meal',
-            style: TextStyle(color: Colors.white),
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        title: const Text(
+          'Log your meal',
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            color: Colors.grey[900],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'add_custom',
+                child: Row(
                   children: [
-                    // _buildSearchBar(context),
-                    _buildHistoryHeader(),
-                    _buildFoodList(),
-                    //  const SizedBox(height: 180),
+                    const Icon(
+                      Icons.add_circle_outline,
+                      color: AppColors.buttonColors,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Add Custom Food',
+                      style: TextStyle(
+                        color: Colors.grey[200],
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ),
-            // _buildOrderSummary(context),
-            BottomCalorieSearchWidget(
-              userId: widget.userId,
-              onSearchHistoryRefresh: () {
-                context.read<SearchHistoryLogBloc>().add(
-                      GetSearchHistoryLogRequested(),
-                    );
-              },
-            ),
-          ],
-        ),
+            ],
+            onSelected: (String value) {
+              if (value == 'add_custom') {
+                _showCustomFoodDialog(context);
+              }
+            },
+          ),
+        ],
       ),
-    );
-  }
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHistoryHeader(),
+                  _buildFoodList(),
+                ],
+              ),
+            ),
+          ),
+          BottomCalorieSearchWidget(
+            userId: widget.userId,
+            onSearchHistoryRefresh: () {
+              context.read<SearchHistoryLogBloc>().add(
+                    GetSearchHistoryLogRequested(),
+                  );
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
-  // Widget _buildOrderSummary(BuildContext context) {
-  //   return     BottomCalorieSearchWidget(
-  //             currentCalories:
-  //                 1500, // Replace with actual values from your state
-  //             remainingDailyCalorie:
-  //                 2000, // Replace with actual values from your state
-  //             userId: widget.userId,
-  //             onSearchHistoryRefresh: () {
-  //               context.read<SearchHistoryLogBloc>().add(
-  //                     GetSearchHistoryLogRequested(),
-  //                   );
-  //             },
-  //           );
+void _showCustomFoodDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return const CustomFoodDialog();
+    },
+  ).then((value) {
+    if (value != null) {
+      // Refresh the search history after adding custom food
+      context.read<SearchHistoryLogBloc>().add(
+            GetSearchHistoryLogRequested(),
+          );
+    }
+  });
+}
 
-  // }
 
   Widget _buildHistoryHeader() {
     return BlocBuilder<SearchHistoryLogBloc, SearchHistoryLogState>(
@@ -335,12 +371,24 @@ class _LogMealViewState extends State<LogMealView> {
                   size: 35,
                 ),
                 onPressed: () {
+                  print(foodItem.brandName);
+                  if(foodItem.brandName == "Common Food"){
+                       _showCommonFoodMealDetailsBottomSheet(
+                           context,
+                    foodItem,
+                 
+                    foodItem.name,
+                    '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+                  );
+
+                  }else{
                   _showMealDetailsBottomSheet(
                     foodItem,
                     context,
                     foodItem.name,
                     '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
                   );
+                }
                 },
               ),
             ],
@@ -386,5 +434,50 @@ class _LogMealViewState extends State<LogMealView> {
         );
       }
     });
+  }
+
+
+   void _showCommonFoodMealDetailsBottomSheet(
+    BuildContext context,
+    GetSearchHistoryLogItem food,
+    String name,
+    String description,
+  ) {
+    if (context.mounted) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (BuildContext context) {
+          return BlocBuilder<UserBloc, UserState>(
+            builder: (context, state) {
+              if (state is! UserLoaded) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+// print(food.servingInfo);
+              return SingleChildScrollView(
+                child: Container(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: CommonFoodConsumeBottomSheet(
+                    isHistoryScreen: true,
+                    servingSize: food.servingInfo.size?? 0.0,
+                    productId: food.foodId,
+                    userId: state.userId ??
+                        "", 
+                    calories: food.nutritionFacts.calories??0.0,
+                    mealName: name,
+                    servingInfo: description,
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
   }
 }

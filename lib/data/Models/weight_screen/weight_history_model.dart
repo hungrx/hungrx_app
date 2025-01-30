@@ -3,14 +3,18 @@ class WeightHistoryModel {
   final String message;
   final bool isMetric;
   final double currentWeight;
+  final double initialWeight;
   final List<WeightEntry> history;
+  final DateTime lastUpdated;
 
   WeightHistoryModel({
     required this.status,
     required this.message,
     required this.isMetric,
     required this.currentWeight,
+    required this.initialWeight,
     required this.history,
+    required this.lastUpdated,
   });
 
   factory WeightHistoryModel.fromJson(Map<String, dynamic> json) {
@@ -19,78 +23,48 @@ class WeightHistoryModel {
       message: json['message'] ?? '',
       isMetric: json['isMetric'] ?? true,
       currentWeight: (json['currentWeight'] ?? 0).toDouble(),
+      initialWeight: (json['initialWeight'] ?? 0).toDouble(),
       history: (json['history'] as List<dynamic>?)
               ?.map((e) => WeightEntry.fromJson(e))
               .toList() ??
           [],
+      lastUpdated: DateTime.parse(json['lastUpdated'] ?? DateTime.now().toIso8601String()),
     );
   }
 }
 
 class WeightEntry {
   final double weight;
-  final String date;
+  final DateTime date;
 
   WeightEntry({required this.weight, required this.date});
 
   factory WeightEntry.fromJson(Map<String, dynamic> json) {
     return WeightEntry(
       weight: (json['weight'] ?? 0).toDouble(),
-      date: json['date'] ?? '',
+      date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
     );
   }
 
   String getFormattedDate() {
-    // Return original string if it's "Current Weight"
-    if (date == "Current Weight") return date;
+    if (date == DateTime(1970, 1, 1)) return "Initial weight";
 
-    try {
-      // Split the date string by '-'
-      final parts = date.split('-');
-      if (parts.length != 3) return date;
-
-      final day = int.parse(parts[0]);
-      final month = int.parse(parts[1]);
-      final year = int.parse(parts[2]);
-
-      final List<String> months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ];
-      
-      // Add leading zero to day if needed
-      String formattedDay = day.toString().padLeft(2, '0');
-      
-      return "$formattedDay-${months[month - 1]}-$year";
-    } catch (e) {
-      // print('Date parsing error: $e for date: $date');
-      return date;
-    }
+    final List<String> months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    
+    String formattedDay = date.day.toString().padLeft(2, '0');
+    return "$formattedDay-${months[date.month - 1]}-${date.year}";
   }
 
   String getGraphDate() {
-    // Return empty string if it's "Current Weight" to skip in graph
-    if (date == "Current Weight") return "";
-
-    try {
-      final parts = date.split('-');
-      if (parts.length != 3) return date;
-
-      final day = int.parse(parts[0]);
-      final month = int.parse(parts[1]);
-
-      final List<String> months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ];
-      
-      // Add leading zero to day if needed
-      String formattedDay = day.toString().padLeft(2, '0');
-      
-      return "$formattedDay-${months[month - 1]}";
-    } catch (e) {
-      // print('Date parsing error: $e for date: $date');
-      return date;
-    }
+    final List<String> months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    
+    String formattedDay = date.day.toString().padLeft(2, '0');
+    return "$formattedDay-${months[date.month - 1]}";
   }
 }

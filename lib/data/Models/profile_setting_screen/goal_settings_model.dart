@@ -5,7 +5,7 @@ class GoalSettingsModel {
   final String activityLevel;
   final int mealsPerDay;
   final bool isMetric;       // Added new field
-  final int currentWeight;   // Added new field
+  final double currentWeight;   // Added new field
 
   GoalSettingsModel({
     required this.goal,
@@ -25,7 +25,7 @@ class GoalSettingsModel {
       activityLevel: json['activityLevel'] as String,
       mealsPerDay: json['mealsPerDay'] as int,
       isMetric: json['isMetric'] as bool,
-      currentWeight: json['currentWeight'] as int,
+      currentWeight: json['currentWeight'].toDouble(),
     );
   }
 }

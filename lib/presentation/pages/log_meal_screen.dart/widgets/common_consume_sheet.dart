@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/Models/home_meals_screen/add_meal_request.dart';
-import 'package:hungrx_app/presentation/blocs/add_logscreen_search_history/add_logscreen_search_history_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/add_logscreen_search_history/add_logscreen_search_history_event.dart';
-import 'package:hungrx_app/presentation/blocs/add_logscreen_search_history/add_logscreen_search_history_state.dart';
-import 'package:hungrx_app/presentation/blocs/add_meal_log_screen/add_meal_log_screen_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/add_meal_log_screen/add_meal_log_screen_event.dart';
-import 'package:hungrx_app/presentation/blocs/add_meal_log_screen/add_meal_log_screen_state.dart';
+import 'package:hungrx_app/data/Models/home_meals_screen/common_food/common_food_request.dart';
+import 'package:hungrx_app/presentation/blocs/add_common_food_history/add_common_food_history_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/add_common_food_history/add_common_food_history_event.dart';
+import 'package:hungrx_app/presentation/blocs/add_common_food_history/add_common_food_history_state.dart';
+import 'package:hungrx_app/presentation/blocs/consume_common_food/consume_common_food_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/consume_common_food/consume_common_food_event.dart';
+import 'package:hungrx_app/presentation/blocs/consume_common_food/consume_common_food_state.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_event.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_state.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
-import 'package:hungrx_app/presentation/controller/home_data_notifier.dart';
 
 class ServingUnit {
   final String name;
@@ -95,12 +94,14 @@ class _CommonFoodConsumeBottomSheetState
       context.read<MealTypeBloc>().add(SelectMealType(mealId: 'breakfast_id'));
     });
   }
-    void _handleServingUnitChange(String? newValue) {
+
+  void _handleServingUnitChange(String? newValue) {
     if (newValue != null) {
       setState(() {
         selectedServingUnit = newValue;
         // Reset quantity to 1 for all units except initial grams selection
-        if (selectedServingUnit != 'g' || numberOfServings != widget.servingSize) {
+        if (selectedServingUnit != 'g' ||
+            numberOfServings != widget.servingSize) {
           _servingsController.text = '1';
           _updateCalories('1');
         }
@@ -151,7 +152,7 @@ class _CommonFoodConsumeBottomSheetState
       // Calculate relative serving size compared to base serving
       // Example: if base is 82.5g and user selects 90g serving:
       // servingRatio = 90g / 82.5g = 1.09
-    if (selectedServingUnit == 'g') {
+      if (selectedServingUnit == 'g') {
         // For grams, directly calculate based on calories per gram
         totalCalories = caloriesPerGram * servings;
       } else {
@@ -193,8 +194,16 @@ class _CommonFoodConsumeBottomSheetState
       );
       return;
     }
+    if (!widget.isHistoryScreen) {
+      context.read<AddCommonFoodHistoryBloc>().add(
+            AddCommonFoodHistorySubmitted(
+              userId: widget.userId,
+              dishId: widget.productId,
+            ),
+          );
+    }
 
-    final request = AddMealRequest(
+    final request = CommonFoodRequest(
       userId: widget.userId,
       mealType: selectedMealType.toLowerCase(),
       servingSize: numberOfServings,
@@ -202,40 +211,27 @@ class _CommonFoodConsumeBottomSheetState
       dishId: widget.productId,
       totalCalories: totalCalories,
     );
-    // ! for animating the calorie count
-    HomeDataNotifier.decreaseCalories(totalCalories);
-    context.read<AddMealBloc>().add(AddMealSubmitted(request));
 
-    if (!widget.isHistoryScreen) {
-      context.read<LogMealSearchHistoryBloc>().add(
-            AddToLogMealSearchHistory(
-              productId: widget.productId,
-            ),
-          );
-    }
+    context.read<CommonFoodBloc>().add(CommonFoodSubmitted(request));
+
+    // ! for animating the calorie count
   }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-        BlocListener<AddMealBloc, AddMealState>(
+        BlocListener<CommonFoodBloc, CommonFoodState>(
           listener: (context, state) {
-            if (state is AddMealSuccess) {
-              context.read<SearchHistoryLogBloc>().add(
-                    GetSearchHistoryLogRequested(),
-                  );
+            if (state is CommonFoodSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.response.message),
                   backgroundColor: Colors.green,
                 ),
               );
-
               Navigator.pop(context);
-            } else if (state is AddMealFailure) {
-              // print(state.error);
-              // print("heelo");
+            } else if (state is CommonFoodFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.error),
@@ -245,16 +241,16 @@ class _CommonFoodConsumeBottomSheetState
             }
           },
         ),
-        BlocListener<LogMealSearchHistoryBloc, LogMealSearchHistoryState>(
+        BlocListener<AddCommonFoodHistoryBloc, AddCommonFoodHistoryState>(
           listener: (context, state) {
-            if (state is LogMealSearchHistorySuccess) {
+            if (state is AddCommonFoodHistorySuccess) {
               context.read<SearchHistoryLogBloc>().add(
                     GetSearchHistoryLogRequested(),
                   );
-            } else if (state is LogMealSearchHistoryError) {
+            } else if (state is AddCommonFoodHistoryFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
+                  content: Text(state.error),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -402,7 +398,7 @@ class _CommonFoodConsumeBottomSheetState
                                           ),
                                         );
                                       }).toList(),
-                                       onChanged: _handleServingUnitChange,
+                                      onChanged: _handleServingUnitChange,
                                       // onChanged: (String? newValue) {
                                       //   if (newValue != null) {
                                       //     setState(() {
@@ -546,14 +542,15 @@ class _CommonFoodConsumeBottomSheetState
                           return const SizedBox.shrink();
                         },
                       ),
+
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         height: 50,
-                        child: BlocBuilder<AddMealBloc, AddMealState>(
+                        child: BlocBuilder<CommonFoodBloc, CommonFoodState>(
                           builder: (context, state) {
                             return ElevatedButton(
-                              onPressed: state is AddMealLoading
+                              onPressed: state is CommonFoodLoading
                                   ? null
                                   : _handleAddToMeal,
                               style: ElevatedButton.styleFrom(
@@ -563,7 +560,7 @@ class _CommonFoodConsumeBottomSheetState
                                 ),
                                 elevation: 2,
                               ),
-                              child: state is AddMealLoading
+                              child: state is CommonFoodLoading
                                   ? const SizedBox(
                                       height: 20,
                                       width: 20,
@@ -571,7 +568,7 @@ class _CommonFoodConsumeBottomSheetState
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                                Colors.black),
+                                                AppColors.buttonColors),
                                       ),
                                     )
                                   : Text(

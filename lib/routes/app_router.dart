@@ -6,21 +6,16 @@ import 'package:hungrx_app/data/Models/home_meals_screen/food_item_model.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
 import 'package:hungrx_app/data/Models/profile_setting_screen/tdee_result_model.dart';
 import 'package:hungrx_app/data/Models/restuarent_screen/nearby_restaurant_model.dart';
-import 'package:hungrx_app/data/datasources/api/weight_screen/weight_update_api.dart';
-import 'package:hungrx_app/data/repositories/weight_screen/weight_update_repository.dart';
-import 'package:hungrx_app/data/services/auth_service.dart';
-import 'package:hungrx_app/domain/usecases/weight_screen/update_weight_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_state.dart';
-import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
 import 'package:hungrx_app/presentation/layout/root_layout.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
-import 'package:hungrx_app/presentation/pages/basic_information_screen/basic_informaion_screen.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/basic_information_screen/basic_informaion_screen.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
-import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/feedbacks_widget.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/widgets/feedbacks_widget.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/widgets/search_widget.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
@@ -105,10 +100,11 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>;
           return GoalSettingsEditScreen(
+            isMaintain: extra['isMaintain'] as bool,
             goal: extra['goal'] as String,
             targetWeight: extra['targetWeight'] as String,
             isMetric: extra['isMetric'] as bool,
-            currentWeight: extra['currentWeight'] as int,
+            currentWeight: extra['currentWeight'] as double,
             weightGainRate: extra['weightGainRate'] as double,
             activityLevel: extra['activityLevel'] as String,
             mealsPerDay: extra['mealsPerDay'] as int,
@@ -119,16 +115,10 @@ class AppRouter {
         path: '/weight-picker',
         name: RouteNames.weightPicker,
         builder: (context, state) {
-          return BlocProvider(
-            create: (context) => WeightUpdateBloc(
-              UpdateWeightUseCase(
-                WeightUpdateRepository(
-                  WeightUpdateApiService(),
-                ),
-              ),
-              AuthService(),
-            ),
-            child: const WeightPickerScreen(),
+          final args = state.extra as Map<String, dynamic>;
+          return WeightPickerScreen(
+            currentWeight: args['currentWeight'] as double,
+            isMaintain: args['isMaintain'] as bool,
           );
         },
       ),
@@ -165,7 +155,9 @@ class AppRouter {
       GoRoute(
         path: '/weight-tracking',
         name: RouteNames.weightTracking,
-        builder: (context, state) => const WeightTrackingScreen(),
+        builder: (context, state) => WeightTrackingScreen(
+          isMaintain: state.extra as bool? ?? false, // Provide a default value
+        ),
       ),
       GoRoute(
         path: '/',

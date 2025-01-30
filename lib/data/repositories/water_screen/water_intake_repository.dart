@@ -1,5 +1,3 @@
-
-
 import 'package:hungrx_app/data/Models/water_screen/add_water_response.dart';
 import 'package:hungrx_app/data/datasources/api/water_screen/water_intake_api.dart';
 
@@ -19,6 +17,7 @@ class WaterIntakeRepository {
       );
     } catch (e) {
       throw Exception('Repository Error: $e');
+      
     }
   }
 }

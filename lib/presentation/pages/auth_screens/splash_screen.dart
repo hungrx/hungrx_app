@@ -32,6 +32,7 @@ class SplashScreenState extends State<SplashScreen> {
     _initializeApp();
     // _checkConnectivityAndNavigate();
   }
+
   Future<void> _initializeApp() async {
     // Initialize auth service first
     await _authService.initialize();
@@ -41,6 +42,8 @@ class SplashScreenState extends State<SplashScreen> {
   Future<void> _checkConnectivityAndNavigate() async {
     context.read<ConnectivityBloc>().add(CheckConnectivity());
   }
+
+// Inside SplashScreenState class, update the _navigateToNextScreen method:
 
   Future<void> _navigateToNextScreen() async {
     await Future.delayed(const Duration(seconds: 4));
@@ -54,33 +57,94 @@ class SplashScreenState extends State<SplashScreen> {
     if (isLoggedIn) {
       try {
         final userId = await _authService.getUserId();
+        print("splash :$userId");
         if (userId != null) {
-          // Check profile completion
-          // print("user id is ${userId}");
-          final bool isProfileComplete =
+          // Check profile completion with improved error handling
+          final bool? isProfileComplete =
               await _authService.checkProfileCompletion(userId);
 
-          // Fetch home data if needed
-          final homeData = await _authService.fetchHomeData();
-          if (homeData != null && mounted) {
-            context.read<HomeBloc>().add(InitializeHomeData(homeData));
+          if (isProfileComplete == null) {
+            // Handle server error case
+            if (mounted) {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => AlertDialog(
+                  title: const Text('Connection Error'),
+                  content: const Text(
+                      'Unable to verify your profile status. Please check your connection and try again.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // Retry connectivity check
+                        context
+                            .read<ConnectivityBloc>()
+                            .add(CheckConnectivity());
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return; // Stop navigation until error is resolved
           }
 
-          // Update streaks
+          // Try to fetch home data
+          try {
+            final homeData = await _authService.fetchHomeData();
+            if (homeData != null && mounted) {
+              context.read<HomeBloc>().add(InitializeHomeData(homeData));
+            }
+          } catch (e) {
+            print('Error fetching home data: $e');
+            // Continue navigation even if home data fetch fails
+          }
+
+          // Try to update streaks
           if (mounted) {
             context.read<StreakBloc>().add(FetchStreakData());
           }
-          // print(isProfileComplete);
+
+          // Determine route based on profile completion
           route = isProfileComplete ? '/home' : '/user-info-one';
         }
       } catch (e) {
-        // print('Error during navigation checks: $e');
-        // Show error to user
+        print('Error during navigation checks: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content:
-                    Text('Error checking profile status. Please try again.')),
+              content: Text('Error checking profile status. Please try again.'),
+              duration: Duration(seconds: 3),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+
+          // Add retry option for better UX
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Error'),
+              content: const Text(
+                  'There was an error checking your profile. Would you like to try again?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    GoRouter.of(context).go('/phoneNumber');
+                  },
+                  child: const Text('Login Again'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _checkConnectivityAndNavigate();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
           );
         }
         route = '/phoneNumber'; // Fallback to login on error

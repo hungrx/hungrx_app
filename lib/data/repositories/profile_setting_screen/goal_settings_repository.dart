@@ -11,6 +11,7 @@ class GoalSettingsRepository {
       final data = await _api.fetchGoalSettings(userId);
       return GoalSettingsModel.fromJson(data);
     } catch (e) {
+      print(e);
       throw Exception('Repository error: $e');
     }
   }

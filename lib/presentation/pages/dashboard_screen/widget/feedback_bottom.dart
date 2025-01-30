@@ -33,10 +33,7 @@ class _FeedbackBottomSheetState extends State<FeedbackBottomSheet> {
   final List<FeedbackOption> feedbackOptions = [
     FeedbackOption(
       title: 'Report a problem',
-      additionalOptions: [
-        'Share logs to help us debug the issue',
-        'Include Screenshot',
-      ],
+  
       whatsappMessage: 'Hello HungrX team, I would like to report a problem: ',
     ),
     FeedbackOption(
@@ -137,7 +134,7 @@ class _FeedbackBottomSheetState extends State<FeedbackBottomSheet> {
                             color: isSelected ? AppColors.buttonColors : Colors.transparent,
                           ),
                           child: isSelected
-                              ? const Icon(Icons.check, size: 16, color: Colors.white)
+                              ? const Icon(Icons.check, size: 16, color: Colors.black)
                               : null,
                         ),
                         title: Text(

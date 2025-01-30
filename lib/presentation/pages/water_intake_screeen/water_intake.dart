@@ -219,62 +219,62 @@ class _WaterIntakeScreenState extends State<WaterIntakeScreen> {
     );
   }
 
-  Widget _buildWaterProgress(WaterIntakeData data) {
-    final dailyGoal = double.parse(data.dailyWaterIntake) * 1000;
-    final consumedAmount = data.dateStats.totalIntake.toDouble();
-    final progress =
-        dailyGoal > 0 ? (consumedAmount / dailyGoal).clamp(0.0, 1.0) : 0.0;
+Widget _buildWaterProgress(WaterIntakeData data) {
+  // Convert daily goal from L to ml
+  final dailyGoal = double.parse(data.dailyWaterIntake) * 1000;
+  final consumedAmount = data.dateStats.totalIntake.toDouble();
+  final progress = dailyGoal > 0 ? (consumedAmount / dailyGoal).clamp(0.0, 1.0) : 0.0;
 
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.tileColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          CircularPercentIndicator(
-            radius: 80,
-            lineWidth: 10,
-            percent: progress,
-            center: const Icon(
-              Icons.water_drop,
-              color: Colors.lightBlueAccent,
-              size: 40,
-            ),
-            progressColor: Colors.lightBlueAccent,
-            backgroundColor: Colors.lightBlueAccent.withOpacity(0.2),
+  return Container(
+    margin: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: AppColors.tileColor,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      children: [
+        CircularPercentIndicator(
+          radius: 80,
+          lineWidth: 10,
+          percent: progress,
+          center: const Icon(
+            Icons.water_drop,
+            color: Colors.lightBlueAccent,
+            size: 40,
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildProgressItem(
-                  Icons.flag,
-                  'Goal',
-                  '${data.dailyWaterIntake} Liter',
-                ),
-                const SizedBox(height: 12),
-                _buildProgressItem(
-                  Icons.water_drop_outlined,
-                  'Remaining',
-                  '${(data.dateStats.remaining / 1000).toStringAsFixed(2)} L',
-                ),
-                const SizedBox(height: 12),
-                _buildProgressItem(
-                  Icons.check_circle_outline,
-                  'Consumed',
-                  '${data.dateStats.totalIntake} ml',
-                ),
-              ],
-            ),
+          progressColor: Colors.lightBlueAccent,
+          backgroundColor: Colors.lightBlueAccent.withOpacity(0.2),
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildProgressItem(
+                Icons.flag,
+                'Goal',
+                '${dailyGoal.toInt()} ml', // Changed from L to ml
+              ),
+              const SizedBox(height: 12),
+              _buildProgressItem(
+                Icons.water_drop_outlined,
+                'Remaining',
+                '${data.dateStats.remaining} ml', // Changed from L to ml
+              ),
+              const SizedBox(height: 12),
+              _buildProgressItem(
+                Icons.check_circle_outline,
+                'Consumed',
+                '${data.dateStats.totalIntake} ml',
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildProgressItem(IconData icon, String label, String value) {
     return Row(

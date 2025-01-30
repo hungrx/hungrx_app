@@ -10,11 +10,11 @@ class EatScreenApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'userId': userId}),
       );
-// print(response.body);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception('Failed to fetch eat screen data: ${response.statusCode}');
+        throw Exception(
+            'Failed to fetch eat screen data: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Error fetching eat screen data: $e');

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class PremiumContainer extends StatelessWidget {
-  const PremiumContainer({super.key});
+ final void Function()? onpress ;
+
+  const PremiumContainer({super.key, this.onpress});
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +54,7 @@ class PremiumContainer extends StatelessWidget {
             Align(
               alignment: Alignment.bottomRight,
               child: ElevatedButton(
-                onPressed: () {
-                  // Add your premium subscription logic here
-                },
+               onPressed: () => onpress!(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple.shade900,
                   foregroundColor: Colors.white,

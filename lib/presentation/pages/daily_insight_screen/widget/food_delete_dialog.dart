@@ -150,22 +150,13 @@ class FoodDetailsDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         color: Colors.grey[900],
       ),
-      child: food.image != null
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                food.image!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _buildFallbackIcon(),
-              ),
-            )
-          : _buildFallbackIcon(),
+      child: _buildFallbackIcon(),
     );
   }
 
   Widget _buildFallbackIcon() {
     return const Icon(
-      Icons.restaurant,
+      Icons.fastfood,
       color: AppColors.primaryColor,
       size: 40,
     );

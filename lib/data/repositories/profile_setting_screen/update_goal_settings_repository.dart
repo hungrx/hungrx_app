@@ -9,12 +9,14 @@ class UpdateGoalSettingsRepository {
   Future<UpdateGoalSettingsModel> updateGoalSettings(UpdateGoalSettingsModel settings) async {
     try {
       final response = await _api.updateGoalSettings(settings);
+      print(response);
       if (response['status'] == true) {
         return UpdateGoalSettingsModel.fromJson(response['data']);
       } else {
         throw Exception(response['message'] ?? 'Failed to update goal settings');
       }
     } catch (e) {
+      print(e);
       throw Exception('Repository error: $e');
     }
   }

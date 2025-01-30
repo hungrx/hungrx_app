@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -14,7 +16,7 @@ import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_conta
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/header_text.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_botton.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/social_login_btn.dart';
-import 'package:pinput/pinput.dart';
+import 'package:sms_autofill/sms_autofill.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -25,9 +27,80 @@ class OtpScreen extends StatefulWidget {
   State<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen> {
+class _OtpScreenState extends State<OtpScreen> with CodeAutoFill {
   final TextEditingController _otpController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String? appSignature;
+  Timer? _timer;
+  int _remainingTime = 30; // 30 seconds cooldown
+  bool _canResend = false;
+
+  @override
+  void codeUpdated() {
+    setState(() {
+      _otpController.text = code ?? '';
+      if (code?.length == 4) {
+        context.read<OtpAuthBloc>().add(
+              VerifyOtpEvent(widget.phoneNumber, code!),
+            );
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    listenForCode();
+    SmsAutoFill().getAppSignature.then((signature) {
+      setState(() {
+        appSignature = signature;
+      });
+    });
+    _startTimer();
+  }
+
+  void _startTimer() {
+    if (!mounted) return;
+
+    setState(() {
+      _remainingTime = 30;
+      _canResend = false;
+    });
+
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_remainingTime > 0) {
+        setState(() {
+          _remainingTime--;
+        });
+      } else {
+        setState(() {
+          _canResend = true;
+        });
+        timer.cancel();
+      }
+    });
+  }
+
+  void _handleResendOtp() {
+    if (_canResend) {
+      context.read<OtpAuthBloc>().add(SendOtpEvent(widget.phoneNumber));
+      _startTimer();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    super.dispose();
+    cancel();
+  }
 
   void _handleGoogleAuthError(BuildContext context, String error) {
     _hideLoadingOverlay(context);
@@ -59,18 +132,18 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final defaultPinTheme = PinTheme(
-      width: 50,
-      height: 50,
-      textStyle: const TextStyle(
-        fontSize: 22,
-        color: Colors.white,
-      ),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.buttonColors),
-        borderRadius: BorderRadius.circular(8),
-      ),
-    );
+    // final defaultPinTheme = PinTheme(
+    //   width: 50,
+    //   height: 50,
+    //   textStyle: const TextStyle(
+    //     fontSize: 22,
+    //     color: Colors.white,
+    //   ),
+    //   decoration: BoxDecoration(
+    //     border: Border.all(color: AppColors.buttonColors),
+    //     borderRadius: BorderRadius.circular(8),
+    //   ),
+    // );
 
     Size size = MediaQuery.of(context).size;
     return BlocConsumer<OtpAuthBloc, OtpAuthState>(
@@ -93,15 +166,38 @@ class _OtpScreenState extends State<OtpScreen> {
                   await authService.checkProfileCompletion(userId);
               if (!mounted) return;
 
-              if (isProfileComplete) {
-                // Existing user - navigate to home
+              // Handle different cases
+              if (isProfileComplete == true) {
+                // Confirmed existing user - navigate to home
                 if (mounted) {
                   GoRouter.of(currentContext).go('/home');
                 }
-              } else {
-                // New user - navigate to user info screen
+              } else if (isProfileComplete == false) {
+                // Confirmed new user - navigate to user info screen
                 if (mounted) {
                   GoRouter.of(currentContext).go('/user-info-one');
+                }
+              } else {
+                // Server error case (isProfileComplete is null)
+                if (mounted) {
+                  // Show error dialog
+                  showDialog(
+                    context: currentContext,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Connection Error'),
+                      content: const Text(
+                          'Unable to verify your profile status. Please check your internet connection and try again.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            // Optionally, you could add a retry mechanism here
+                          },
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
                 }
               }
             } catch (e) {
@@ -118,9 +214,14 @@ class _OtpScreenState extends State<OtpScreen> {
             }
           }
         } else if (state is OtpVerifyFailure) {
-          print(state.error);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error)),
+            SnackBar(
+              content: Text(
+                "Otp verification failed Try again",
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       },
@@ -145,15 +246,37 @@ class _OtpScreenState extends State<OtpScreen> {
                       await authService.checkProfileCompletion(userId);
                   if (!mounted) return;
 
-                  if (isProfileComplete) {
+                  if (isProfileComplete == true) {
                     // Existing user - navigate to home
                     if (mounted) {
                       GoRouter.of(currentContext).go('/home');
                     }
-                  } else {
+                  } else if (isProfileComplete == false) {
                     // New user - navigate to user info screen
                     if (mounted) {
                       GoRouter.of(currentContext).go('/user-info-one');
+                    }
+                  } else {
+                    // Server error case (isProfileComplete is null)
+                    if (mounted) {
+                      // Show error dialog
+                      showDialog(
+                        context: currentContext,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Connection Error'),
+                          content: const Text(
+                              'Unable to verify your profile status. Please check your internet connection and try again.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                // Optionally, you could add a retry mechanism here
+                              },
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
                     }
                   }
                 } catch (e) {
@@ -223,27 +346,63 @@ class _OtpScreenState extends State<OtpScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        Pinput(
-                          length: 4,
+                        PinFieldAutoFill(
+                          codeLength: 4,
                           controller: _otpController,
-                          defaultPinTheme: defaultPinTheme,
-                          focusedPinTheme: defaultPinTheme.copyWith(
-                            decoration: defaultPinTheme.decoration!.copyWith(
-                              border: Border.all(color: AppColors.buttonColors),
+                          decoration: BoxLooseDecoration(
+                            strokeColorBuilder: PinListenColorBuilder(
+                              AppColors.buttonColors,
+                              AppColors.buttonColors,
+                            ),
+                            bgColorBuilder:
+                                const FixedColorBuilder(Colors.transparent),
+                            textStyle: const TextStyle(
+                              fontSize: 22,
+                              color: Colors.white,
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter the OTP';
-                            }
-                            if (value.length != 4) {
-                              return 'OTP must be 4 digits';
-                            }
-                            return null;
+                          currentCode: _otpController.text,
+                          onCodeSubmitted: (code) {
+                            context.read<OtpAuthBloc>().add(
+                                  VerifyOtpEvent(widget.phoneNumber, code),
+                                );
                           },
-                          onCompleted: (pin) {
-                            // print("enter:$pin");
+                          onCodeChanged: (code) {
+                            if (code?.length == 4) {
+                              context.read<OtpAuthBloc>().add(
+                                    VerifyOtpEvent(widget.phoneNumber, code!),
+                                  );
+                            }
                           },
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _canResend
+                                  ? "Didn't receive OTP?"
+                                  : "Resend OTP in $_remainingTime seconds",
+                              style: TextStyle(
+                                color: AppColors.fontColor,
+                                fontSize: 14,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _canResend ? _handleResendOtp : null,
+                              child: Text(
+                                "Resend OTP",
+                                style: TextStyle(
+                                  color: _canResend
+                                      ? AppColors.buttonColors
+                                      : AppColors.fontColor.withOpacity(0.5),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const Spacer(),
                         CustomButton(

@@ -93,13 +93,14 @@ class CommonFoodListItem extends StatelessWidget {
                   child: CircularProgressIndicator(),
                 );
               }
-print(food.servingInfo);
+// print(food.servingInfo);
               return SingleChildScrollView(
                 child: Container(
                   padding: EdgeInsets.only(
                     bottom: MediaQuery.of(context).viewInsets.bottom,
                   ),
                   child: CommonFoodConsumeBottomSheet(
+                    isHistoryScreen: false,
                     servingSize: food.servingInfo.size,
                     productId: food.id,
                     userId: state.userId ??

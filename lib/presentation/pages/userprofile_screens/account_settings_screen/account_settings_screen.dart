@@ -5,13 +5,17 @@ import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_event.dart';
 import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_state.dart';
+import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_event.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_state.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_textfield.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
-  const AccountSettingsScreen({super.key,});
+  const AccountSettingsScreen({
+    super.key,
+  });
 
   @override
   State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
@@ -21,6 +25,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   final TextEditingController reportController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+
   Future<void> _showDeleteConfirmationDialog() async {
     if (!mounted) return;
 
@@ -79,6 +84,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     if (shouldDelete == true && mounted) {
       // Get user ID from your auth service or state management
       // final userId = await _authService.getCurrentUserId();
+
       context.read<DeleteAccountBloc>().add(
             DeleteAccountRequested(),
           );
@@ -174,22 +180,34 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Widget _buildExpansionTile(String title, List<Widget> children) {
-    return ExpansionTile(
-      title: Text(title, style: const TextStyle(color: Colors.white)),
-      backgroundColor: Colors.grey[900],
-      collapsedBackgroundColor: Colors.grey[900],
-      iconColor: Colors.white,
-      collapsedIconColor: Colors.white,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: children,
+    return Card(
+      color: Colors.grey[900],
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ExpansionTile(
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
         ),
-      ],
+        backgroundColor: Colors.grey[900],
+        collapsedBackgroundColor: Colors.grey[900],
+        iconColor: Colors.white,
+        collapsedIconColor: Colors.white,
+        childrenPadding: const EdgeInsets.all(16),
+        children: children,
+      ),
     );
+  }
+    @override
+  void dispose() {
+    reportController.dispose();
+    super.dispose();
   }
 
   @override
@@ -197,10 +215,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     return MultiBlocListener(
       listeners: [
         BlocListener<DeleteAccountBloc, DeleteAccountState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is DeleteAccountSuccess) {
+              await _authService.handleAccountDeletion();
+              context.read<GoalSettingsBloc>().add(ClearGoalSettings());
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
+                const SnackBar(
+                    backgroundColor: Colors.redAccent,
+                    content:
+                        Text("Your account has been successfully deleted")),
               );
               Navigator.of(context).popUntil((route) => route.isFirst);
               // Navigate to login screen
@@ -219,6 +242,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         BlocListener<ReportBugBloc, ReportBugState>(
           listener: (context, state) {
             if (state is ReportBugSuccess) {
+               reportController.clear();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message)),
               );
@@ -261,11 +285,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     BlocBuilder<ReportBugBloc, ReportBugState>(
                       builder: (context, state) {
                         return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             CustomTextFormField(
                               controller: reportController,
-                              hintText: 'Describe the bug',
+                              hintText: 'Describe the bug in detail',
                               enabled: state is! ReportBugLoading,
+                              maxLine: 5,
+                              maxLength: 500,
+                              textInputAction: TextInputAction.newline,
+                              keyboardType: TextInputType.multiline,
                             ),
                             const SizedBox(height: 20),
                             ElevatedButton(
@@ -274,7 +303,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   : () {
                                       if (reportController.text.isNotEmpty) {
                                         context.read<ReportBugBloc>().add(
-                                              ReportBugSubmitted( // Get from auth service
+                                              ReportBugSubmitted(
                                                 report: reportController.text,
                                               ),
                                             );
@@ -282,6 +311,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                     },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
+                                padding: const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                               child: state is ReportBugLoading
                                   ? const SizedBox(
@@ -289,14 +322,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                Colors.white),
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                            Colors.white),
                                       ),
                                     )
                                   : const Text(
                                       'Submit Report',
-                                      style: TextStyle(color: Colors.white),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                             ),
                           ],

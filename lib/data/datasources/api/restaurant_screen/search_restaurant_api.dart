@@ -2,14 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 
 class SearchRestaurantApi {
-  static const baseUrl = 'https://hungrxbackend.onrender.com';
-
   Future<Map<String, dynamic>> searchRestaurants(String query) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/searchRestaurant'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.searchRestaurant),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'name': query}),
       ).timeout(

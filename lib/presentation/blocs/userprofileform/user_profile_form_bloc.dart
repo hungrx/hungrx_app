@@ -152,8 +152,8 @@ class UserProfileFormBloc
     if (pace == 1) return 0.25;
     if (pace == 2) return 0.5;
     if (pace == 3) return 0.75;
-    if (pace == 4) return 1;
-    return 0.25;
+    if (pace == null) return 0.5;
+    return 0.5;
   }
 
   String _mapActivityLevelToString(ActivityLevel? level) {

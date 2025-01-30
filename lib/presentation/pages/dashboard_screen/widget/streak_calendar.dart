@@ -9,14 +9,39 @@ import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_state.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class StreakCalendar extends StatefulWidget {
+ final bool isMaintain ;
   
-  const StreakCalendar({super.key});
+  const StreakCalendar({super.key, required this.isMaintain});
 
   @override
   State<StreakCalendar> createState() => _StreakCalendarState();
 }
 
 class _StreakCalendarState extends State<StreakCalendar> {
+
+  double getResponsiveSize(BuildContext context, {
+    required double small,
+    required double medium,
+    required double large
+  }) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 360) return small;
+    if (width < 600) return medium;
+    return large;
+  }
+
+  // Simplified padding calculation
+  EdgeInsets getResponsivePadding(BuildContext context) {
+    return EdgeInsets.all(
+      getResponsiveSize(
+        context,
+        small: 8,
+        medium: 12,
+        large: 16,
+      ),
+    );
+  }
+
   double getFontSize(BuildContext context, double factor) {
     return MediaQuery.of(context).size.width * factor;
   }
@@ -50,7 +75,7 @@ Widget _buildLoadingView() {
     return _buildContainer(
       context,
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.6,
+        width: MediaQuery.of(context).size.width * 0.8,
         height: MediaQuery.of(context).size.height * 0.25,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -156,7 +181,11 @@ Widget _buildLoadingView() {
           final streakData = state.streakData;
           final streakMap = streakData.getStreakMap();
           final startingDate = streakData.startDate();
-          final endingDate = streakData.endDate();
+          final endingDate = widget.isMaintain 
+              ? DateTime.now().add(const Duration(days: 365)) // Show one year ahead for unlimited
+              : streakData.endDate();
+
+          // final endingDate = streakData.endDate();
 
           return _buildContainer(
             context,
@@ -199,9 +228,12 @@ Widget _buildLoadingView() {
     );
   }
 
-  Widget _buildContainer(BuildContext context, {required Widget child}) {
+    Widget _buildContainer(BuildContext context, {required Widget child}) {
     return Container(
-      padding: EdgeInsets.all(getPadding(context, 0.025)),
+      padding: getResponsivePadding(context),
+      constraints: const BoxConstraints(
+        maxWidth: 600, // Prevent excessive width on large screens
+      ),
       decoration: BoxDecoration(
         color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(20),
@@ -292,7 +324,7 @@ Widget _buildLoadingView() {
           showColorTip: false,
           showText: false,
           scrollable: true,
-          size: screenSize.width * (isSmallScreen ? 0.01 : 0.032),
+          size: screenSize.width * (isSmallScreen ? 0.01 : 0.030),
           colorsets: const {
             1: Color(0xFFB4D147),
           },
@@ -309,11 +341,19 @@ Widget _buildLoadingView() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildStatContainer(
-          text: '${streakData.daysLeft}',
-          isSmallScreen: isSmallScreen,
-          showIcon: false,
-        ),
+         if (!widget.isMaintain) ...[
+          _buildStatContainer(
+            text: '${streakData.daysLeft}',
+            isSmallScreen: isSmallScreen,
+            showIcon: false,
+          ),
+          SizedBox(width: isSmallScreen ? 6 : 8),
+        ],
+        // _buildStatContainer(
+        //   text: '${streakData.daysLeft}',
+        //   isSmallScreen: isSmallScreen,
+        //   showIcon: false,
+        // ),
         SizedBox(width: isSmallScreen ? 6 : 8),
         _buildStatContainer(
           icon: LucideIcons.flame,

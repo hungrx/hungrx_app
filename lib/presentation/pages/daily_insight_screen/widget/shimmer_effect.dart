@@ -5,13 +5,20 @@ class DailyInsightShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildCalorieProgressShimmer(),
-        _buildMealSectionShimmer('Breakfast'),
-        _buildMealSectionShimmer('Lunch'),
-      ],
+    // Wrap the entire content in SingleChildScrollView to handle overflow
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildCalorieProgressShimmer(),
+            _buildMealSectionShimmer('Breakfast'),
+            _buildMealSectionShimmer('Lunch'),
+            _buildMealSectionShimmer('Dinner'),
+          ],
+        ),
+      ),
     );
   }
 
@@ -23,41 +30,62 @@ class DailyInsightShimmer extends StatelessWidget {
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        children: [
-          const ShimmerBox(width: 160, height: 160, borderRadius: 80),
-          const SizedBox(width: 24),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildCalorieInfoShimmer(),
-                const SizedBox(height: 16),
-                _buildCalorieInfoShimmer(),
-                const SizedBox(height: 16),
-                _buildCalorieInfoShimmer(),
-              ],
+      child: LayoutBuilder(builder: (context, constraints) {
+        // Calculate responsive sizes based on available width
+        final circleSize = constraints.maxWidth * 0.35;
+        return Row(
+          children: [
+            ShimmerBox(
+              width: circleSize,
+              height: circleSize,
+              borderRadius: circleSize / 2,
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 24),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildCalorieInfoShimmer(),
+                  const SizedBox(height: 16),
+                  _buildCalorieInfoShimmer(),
+                  const SizedBox(height: 16),
+                  _buildCalorieInfoShimmer(),
+                ],
+              ),
+            ),
+          ],
+        );
+      }),
     );
   }
 
   Widget _buildCalorieInfoShimmer() {
-    return const Row(
-      children: [
-        ShimmerBox(width: 24, height: 24, borderRadius: 12),
-        SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        return Row(
           children: [
-            ShimmerBox(width: 80, height: 12, borderRadius: 6),
-            SizedBox(height: 4),
-            ShimmerBox(width: 60, height: 16, borderRadius: 6),
+            const ShimmerBox(width: 24, height: 24, borderRadius: 12),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShimmerBox(
+                  width: maxWidth * 0.6, // 60% of available width
+                  height: 12,
+                  borderRadius: 6,
+                ),
+                const SizedBox(height: 4),
+                ShimmerBox(
+                  width: maxWidth * 0.4, // 40% of available width
+                  height: 16,
+                  borderRadius: 6,
+                ),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -84,35 +112,60 @@ class DailyInsightShimmer extends StatelessWidget {
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Row(
-        children: [
-          ShimmerBox(width: 40, height: 40, borderRadius: 8),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ShimmerBox(width: 120, height: 16, borderRadius: 6),
-                SizedBox(height: 8),
-                Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth;
+          return Row(
+            children: [
+              const ShimmerBox(width: 40, height: 40, borderRadius: 8),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ShimmerBox(width: 80, height: 12, borderRadius: 6),
-                    SizedBox(width: 8),
-                    ShimmerBox(width: 60, height: 12, borderRadius: 6),
+                    ShimmerBox(
+                      width: maxWidth * 0.4, // 40% of available width
+                      height: 16,
+                      borderRadius: 6,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ShimmerBox(
+                          width: maxWidth * 0.25, // 25% of available width
+                          height: 12,
+                          borderRadius: 6,
+                        ),
+                        const SizedBox(width: 8),
+                        ShimmerBox(
+                          width: maxWidth * 0.2, // 20% of available width
+                          height: 12,
+                          borderRadius: 6,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              ShimmerBox(width: 60, height: 16, borderRadius: 6),
-              SizedBox(height: 4),
-              ShimmerBox(width: 80, height: 12, borderRadius: 6),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  ShimmerBox(
+                    width: maxWidth * 0.15, // 15% of available width
+                    height: 16,
+                    borderRadius: 6,
+                  ),
+                  const SizedBox(height: 4),
+                  ShimmerBox(
+                    width: maxWidth * 0.2, // 20% of available width
+                    height: 12,
+                    borderRadius: 6,
+                  ),
+                ],
+              ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }

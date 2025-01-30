@@ -178,7 +178,7 @@ class _BottomCalorieSearchWidgetState extends State<BottomCalorieSearchWidget> {
                     ),
                     suffixIcon: Container(
                       margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.buttonColors,
                         shape: BoxShape.circle,
                       ),

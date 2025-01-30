@@ -8,6 +8,9 @@ class TDEEResultModel {
   final String caloriesToReachGoal;
   final String daysToReachGoal;
   final String goalPace;
+  final String goal;
+  final String activityLevel;
+  final String dailyWaterIntake;
 
   TDEEResultModel({
     required this.height,
@@ -19,19 +22,43 @@ class TDEEResultModel {
     required this.caloriesToReachGoal,
     required this.daysToReachGoal,
     required this.goalPace,
+    required this.goal,
+    required this.activityLevel,
+    required this.dailyWaterIntake,
   });
 
   factory TDEEResultModel.fromJson(Map<String, dynamic> json) {
     // Helper function to format values
-    String formatValue(dynamic value, {String suffix = ''}) {
+    String formatValue(dynamic value, {String suffix = '', bool isHeight = false}) {
       if (value == null || value.toString() == 'NaN') {
         return 'Not calculated';
       }
+
+      // Special handling for height
+      if (isHeight) {
+        try {
+          double numValue = double.parse(value.toString().replaceAll(' cm', ''));
+          return '${numValue.round()}$suffix';
+        } catch (e) {
+          return '$value$suffix';
+        }
+      }
+      
+      // Handle calories (kcal)
+      if (suffix == ' kcal') {
+        try {
+          double numValue = double.parse(value.toString());
+          return '${numValue.round()}$suffix';
+        } catch (e) {
+          return '$value$suffix';
+        }
+      }
+
       return '$value$suffix';
     }
 
     return TDEEResultModel(
-      height: formatValue(json['height']),
+      height: formatValue(json['height'], suffix: ' cm', isHeight: true),
       weight: formatValue(json['weight']),
       bmi: formatValue(json['BMI']),
       bmr: formatValue(json['BMR'], suffix: ' kcal'),
@@ -40,19 +67,21 @@ class TDEEResultModel {
       caloriesToReachGoal: formatValue(json['caloriesToReachGoal'], suffix: ' kcal'),
       daysToReachGoal: formatValue(json['daysToReachGoal'], suffix: ' days'),
       goalPace: formatValue(json['goalPace']),
+      goal: formatValue(json['goal']),
+      activityLevel: formatValue(json['activityLevel']),
+      dailyWaterIntake: formatValue(json['dailyWaterIntake'])
     );
   }
 
-  // Method to check if model has valid data
   bool isValid() {
     return ![
       height, weight, bmi, bmr, tdee,
       dailyCaloriesGoal, caloriesToReachGoal,
-      daysToReachGoal, goalPace
+      daysToReachGoal, goalPace, goal,
+      activityLevel, dailyWaterIntake
     ].every((value) => value == 'Not calculated');
   }
 
-  // For debugging
   @override
   String toString() {
     return '''TDEEResultModel(
@@ -64,7 +93,10 @@ class TDEEResultModel {
       dailyCaloriesGoal: $dailyCaloriesGoal,
       caloriesToReachGoal: $caloriesToReachGoal,
       daysToReachGoal: $daysToReachGoal,
-      goalPace: $goalPace
+      goalPace: $goalPace,
+      goal: $goal,
+      activityLevel: $activityLevel,
+      dailyWaterIntake: $dailyWaterIntake
     )''';
   }
 }

@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/custom_food_entry_response.dart';
 
 class CustomFoodEntryApi {
-  static const String _baseUrl = 'https://hungrxbackend.onrender.com';
-
   Future<CustomFoodEntryResponse> addCustomFood({
     required String userId,
     required String mealType,
@@ -14,7 +13,7 @@ class CustomFoodEntryApi {
     try {
       
       final response = await http.post(
-        Uri.parse('$_baseUrl/users/addUnknown'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.addUnknown),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'userId': userId,
@@ -23,7 +22,7 @@ class CustomFoodEntryApi {
           'calories': calories,
         }),
       );
-print(response.body);
+// print(response.body);
       if (response.statusCode == 200) {
         return CustomFoodEntryResponse.fromJson(jsonDecode(response.body));
       } else {

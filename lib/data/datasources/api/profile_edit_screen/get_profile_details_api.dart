@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 
 class GetProfileDetailsApi {
   Future<Map<String, dynamic>> getProfileDetails(String userId) async {
     try {
       final response = await http.post(
-        Uri.parse('https://hungrxbackend.onrender.com/users/profileScreen'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.profileScreen),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'userId': userId}),
       );
-print(response.body);
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         if (data['status'] == true && data['data'] != null) {

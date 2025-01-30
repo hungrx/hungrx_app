@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
 
 class GetSearchHistoryLogApi {
@@ -12,7 +13,7 @@ class GetSearchHistoryLogApi {
   Future<GetSearchHistoryLogResponse> getSearchHistory(String userId) async {
     try {
       final response = await client.post(
-        Uri.parse('$baseUrl/users/getUserhistory'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.getUserhistory),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'userId': userId}),
       );

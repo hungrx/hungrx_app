@@ -1,18 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/data/Models/daily_insight_screen/delete_consumed_food_request.dart';
 
 class DeleteFoodApiService {
-  static const String baseUrl = 'https://hungrxbackend.onrender.com';
-
-  Future<DeleteFoodResponse> deleteConsumedFood(DeleteFoodRequest request) async {
-    print(request.dishId);
-    print(request.date);
-    print(request.mealId);
-    print(request.userId);
+  Future<DeleteFoodResponse> deleteConsumedFood(
+      DeleteFoodRequest request) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/deleteDishFromMeal'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.deleteDishFromMeal),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(request.toJson()),
       );

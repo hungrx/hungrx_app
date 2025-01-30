@@ -155,11 +155,9 @@ class _BrandedFoodsTab extends StatelessWidget {
         } else if (state is SearchError) {
           return _buildErrorState(context);
         }
-        return const Center(
-          child: Text(
-            'Search for branded foods...',
-            style: TextStyle(color: Colors.white),
-          ),
+        return EmptySearchState(
+          icon: Icon(Icons.search, size: 48, color: Colors.grey[400]),
+          message: 'Search for branded foods',
         );
       },
     );
@@ -178,13 +176,50 @@ class _CommonFoodsTab extends StatelessWidget {
         } else if (state is CommonFoodSearchError) {
           return _buildErrorState(context);
         }
-        return const Center(
-          child: Text(
-            'Search for common foods...',
-            style: TextStyle(color: Colors.white),
-          ),
+        return EmptySearchState(
+          icon: Icon(Icons.search, size: 48, color: Colors.grey[400]),
+          message: 'Search for common foods',
         );
       },
+    );
+  }
+}
+
+// Add this reusable widget
+class EmptySearchState extends StatelessWidget {
+  final Icon icon;
+  final String message;
+
+  const EmptySearchState({
+    Key? key,
+    required this.icon,
+    required this.message,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: icon,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(
+              color: Colors.grey[300],
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -394,7 +429,7 @@ void _showMealDetailsBottomSheet(
               child: CircularProgressIndicator(),
             );
           }
-
+// ! changeaeeeeeee
           return SingleChildScrollView(
             child: Container(
               padding: EdgeInsets.only(

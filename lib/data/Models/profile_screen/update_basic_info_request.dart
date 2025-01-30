@@ -1,7 +1,7 @@
 class UpdateBasicInfoRequest {
   final String userId;
   final String name;
-  final String email;
+  final String? email;
   final String gender;
   final String mobile;
   final String age;
@@ -10,13 +10,13 @@ class UpdateBasicInfoRequest {
   final String? heightInInches;
   final String? weightInKg;
   final String? weightInLbs;
-  final String targetWeight;
+  final String? targetWeight;
   final bool isMetric;
 
   UpdateBasicInfoRequest({
     required this.userId,
     required this.name,
-    required this.email,
+    this.email,
     required this.gender,
     required this.mobile,
     required this.age,
@@ -25,7 +25,7 @@ class UpdateBasicInfoRequest {
     this.heightInInches,
     this.weightInKg,
     this.weightInLbs,
-    required this.targetWeight,
+    this.targetWeight,
     required this.isMetric,
   });
 
@@ -59,16 +59,17 @@ class UpdateBasicInfoResponse {
 
   factory UpdateBasicInfoResponse.fromJson(Map<String, dynamic> json) {
     return UpdateBasicInfoResponse(
-      status: json['status'],
-      message: json['message'],
-      data: UpdateBasicInfoData.fromJson(json['data']),
+      status: json['status'] as bool? ?? false,
+      message: json['message'] as String? ?? '',
+      data: UpdateBasicInfoData.fromJson(
+          json['data'] as Map<String, dynamic>? ?? {}),
     );
   }
 }
 
 class UpdateBasicInfoData {
   final String name;
-  final String email;
+  final String? email; // Made nullable
   final String gender;
   final String mobile;
   final String age;
@@ -77,10 +78,17 @@ class UpdateBasicInfoData {
   final String targetWeight;
   final String goal;
   final bool isMetric;
+  final String? bmi; // Added optional fields
+  final String? bmr;
+  final String? tdee;
+  final String? dailyCalorieGoal;
+  final String? caloriesToReachGoal;
+  final int? daysToReachGoal;
+  final String? dailyWaterIntake;
 
   UpdateBasicInfoData({
     required this.name,
-    required this.email,
+    this.email, // Made optional
     required this.gender,
     required this.mobile,
     required this.age,
@@ -89,20 +97,34 @@ class UpdateBasicInfoData {
     required this.targetWeight,
     required this.goal,
     required this.isMetric,
+    this.bmi,
+    this.bmr,
+    this.tdee,
+    this.dailyCalorieGoal,
+    this.caloriesToReachGoal,
+    this.daysToReachGoal,
+    this.dailyWaterIntake,
   });
 
   factory UpdateBasicInfoData.fromJson(Map<String, dynamic> json) {
     return UpdateBasicInfoData(
-      name: json['name'],
-      email: json['email'],
-      gender: json['gender'],
-      mobile: json['mobile'],
-      age: json['age'],
-      height: json['height'],
-      weight: json['weight'],
-      targetWeight: json['targetWeight'],
-      goal: json['goal'],
-      isMetric: json['isMetric'],
+      name: json['name'] as String? ?? '',
+      email: json['email'] as String?, // Handle null email
+      gender: json['gender'] as String? ?? '',
+      mobile: json['mobile'] as String? ?? '',
+      age: json['age'] as String? ?? '',
+      height: json['height'] as String? ?? '',
+      weight: json['weight'] as String? ?? '',
+      targetWeight: json['targetWeight'] as String? ?? '',
+      goal: json['goal'] as String? ?? '',
+      isMetric: json['isMetric'] as bool? ?? true,
+      bmi: json['BMI'] as String?,
+      bmr: json['BMR'] as String?,
+      tdee: json['TDEE'] as String?,
+      dailyCalorieGoal: json['dailyCalorieGoal'] as String?,
+      caloriesToReachGoal: json['caloriesToReachGoal'] as String?,
+      daysToReachGoal: json['daysToReachGoal'] as int?, 
+      dailyWaterIntake: json['dailyWaterIntake'] as String?,
     );
   }
 }

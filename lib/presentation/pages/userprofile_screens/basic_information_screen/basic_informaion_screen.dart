@@ -6,11 +6,14 @@ import 'package:hungrx_app/data/Models/profile_screen/update_basic_info_request.
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_state.dart';
+import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_state.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/basic_information_screen/widget/formvalidator.dart';
 
 class BasicInformationScreen extends StatefulWidget {
   const BasicInformationScreen({super.key});
@@ -20,25 +23,33 @@ class BasicInformationScreen extends StatefulWidget {
 }
 
 class BasicInformationScreenState extends State<BasicInformationScreen> {
-   String? userId;
+  String? userId;
   late bool isMetric = true;
   late TextEditingController nameController;
   late TextEditingController phoneController;
   late TextEditingController emailController;
   late TextEditingController ageController;
-  late TextEditingController weightController;
-  late TextEditingController targetWeightController;
   late TextEditingController heightController;
   late TextEditingController heightInchController;
   late TextEditingController heightInFeetController;
   String gender = '';
+   final _formKey = GlobalKey<FormState>();
+
+bool _validateFields() {
+    if (!_formKey.currentState!.validate()) {
+      return false;
+    }
+    return true;
+  }
+  // Store weight values from GetBasicInfoBloc
+  String? weightValue;
+  String? targetWeightValue;
 
   @override
   void initState() {
     super.initState();
     _initializeControllers();
-    
-    // Add post-frame callback to ensure context is available
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userState = context.read<UserBloc>().state;
       if (userState.userId != null) {
@@ -55,17 +66,13 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
     phoneController = TextEditingController();
     emailController = TextEditingController();
     ageController = TextEditingController();
-    weightController = TextEditingController();
-    targetWeightController = TextEditingController();
     heightController = TextEditingController();
     heightInchController = TextEditingController();
     heightInFeetController = TextEditingController();
   }
 
- void _fetchUserBasicInfo() {
-    if (userId != null) {
-      context.read<GetBasicInfoBloc>().add(GetBasicInfoRequested(userId??""));
-    }
+  void _fetchUserBasicInfo() {
+    context.read<GetBasicInfoBloc>().add(GetBasicInfoRequested());
   }
 
   void _updateControllers(UserBasicInfo info) {
@@ -75,23 +82,32 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
       phoneController.text = info.phone ?? '';
       emailController.text = info.email;
       ageController.text = info.age.replaceAll(' years', '');
-      weightController.text = info.isMetric
-          ? info.weightInKg?.replaceAll(' kg', '') ?? ""
-          : info.weightInLbs?.replaceAll(' lbs', '') ?? "";
-      targetWeightController.text = info.targetWeight.replaceAll(' kg', '');
       heightController.text = info.heightInCm?.replaceAll(' cm', '') ?? "";
       heightInchController.text =
           info.heightInInches?.replaceAll(' in', '') ?? "";
       heightInFeetController.text =
           info.heightInFeet?.replaceAll(' feet', '') ?? "";
       gender = info.gender;
+
+      // Store weight values
+      weightValue = info.isMetric
+          ? info.weightInKg?.replaceAll(' kg', '')
+          : info.weightInLbs?.replaceAll(' lbs', '');
+      targetWeightValue = info.targetWeight.replaceAll(' kg', '');
     });
   }
 
   void _handleUpdateBasicInfo() {
+     if (!_validateFields()) return;
     if (userId == null) return;
+
+    // Get the current state of GetBasicInfoBloc
+    final basicInfoState = context.read<GetBasicInfoBloc>().state;
+
+    if (basicInfoState is GetBasicInfoSuccess) {}
+
     final request = UpdateBasicInfoRequest(
-      userId: userId??"",
+      userId: userId ?? "",
       name: nameController.text,
       email: emailController.text,
       gender: gender.toLowerCase(),
@@ -100,29 +116,13 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
       heightInCm: isMetric ? heightController.text : null,
       heightInFeet: !isMetric ? heightInFeetController.text : null,
       heightInInches: !isMetric ? heightInchController.text : null,
-      weightInKg: isMetric ? weightController.text : null,
-      weightInLbs: !isMetric ? weightController.text : null,
-      targetWeight: targetWeightController.text,
+      weightInKg: isMetric ? weightValue : null,
+      weightInLbs: !isMetric ? weightValue : null,
+      targetWeight: targetWeightValue,
       isMetric: isMetric,
     );
 
     context.read<UpdateBasicInfoBloc>().add(UpdateBasicInfoSubmitted(request));
-  }
-
-  bool _validateFields() {
-    if (nameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        phoneController.text.isEmpty ||
-        ageController.text.isEmpty ||
-        weightController.text.isEmpty ||
-        targetWeightController.text.isEmpty ||
-        gender.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
-      );
-      return false;
-    }
-    return true;
   }
 
   @override
@@ -131,8 +131,6 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
     phoneController.dispose();
     emailController.dispose();
     ageController.dispose();
-    weightController.dispose();
-    targetWeightController.dispose();
     heightController.dispose();
     heightInchController.dispose();
     heightInFeetController.dispose();
@@ -166,9 +164,9 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
         ),
         BlocListener<UpdateBasicInfoBloc, UpdateBasicInfoState>(
           listener: (context, state) {
-            if (state is UpdateBasicInfoLoading) {
-              // Show loading indicator if needed
-            } else if (state is UpdateBasicInfoSuccess) {
+            if (state is UpdateBasicInfoSuccess) {
+              
+              context.read<GetProfileDetailsBloc>().add(FetchProfileDetails());
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.response.message)),
               );
@@ -197,7 +195,7 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
             BlocBuilder<UpdateBasicInfoBloc, UpdateBasicInfoState>(
               builder: (context, state) {
                 return TextButton(
-                  onPressed:userId == null || state is UpdateBasicInfoLoading
+                  onPressed: userId == null || state is UpdateBasicInfoLoading
                       ? null
                       : () {
                           if (_validateFields()) {
@@ -223,72 +221,61 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
             ),
           ],
         ),
-        body: BlocBuilder<GetBasicInfoBloc, GetBasicInfoState>(
-          builder: (context, state) {
-            if (userId == null ||state is GetBasicInfoLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildInputField(Icons.person, 'Name', nameController),
-                  const SizedBox(height: 16),
-                  _buildGenderSelector(),
-                  const SizedBox(height: 16),
-                  _buildInputField(
-                      Icons.phone, 'Phone number', phoneController),
-                  const SizedBox(height: 16),
-                  _buildInputField(Icons.email, 'Email', emailController),
-                  const SizedBox(height: 16),
-                  _buildInputField(Icons.cake, 'Age', ageController),
-                  const SizedBox(height: 16),
-                  _buildInputField(
-                    Icons.monitor_weight,
-                    'Weight',
-                    weightController,
-                    suffix: isMetric ? "kg" : "lbs",
-                  ),
-                  const SizedBox(height: 16),
-                  _buildInputField(
-                    Icons.monitor_weight_outlined,
-                    'Target Weight',
-                    targetWeightController,
-                    suffix: isMetric ? "kg" : "lbs",
-                  ),
-                  const SizedBox(height: 16),
-                  if (isMetric)
-                    _buildInputField(
-                      Icons.height,
-                      'Height',
-                      heightController,
-                      suffix: "cm",
-                    ),
-                  if (!isMetric) ...[
-                    _buildInputField(
-                      Icons.height,
-                      'Height (feet)',
-                      heightInFeetController,
-                      suffix: "feet",
-                    ),
+        body: Form(
+          key: _formKey,
+          child: BlocBuilder<GetBasicInfoBloc, GetBasicInfoState>(
+            builder: (context, state) {
+              if (userId == null || state is GetBasicInfoLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildInputField(Icons.person, 'Name', nameController),
+                    const SizedBox(height: 16),
+                    _buildGenderSelector(),
                     const SizedBox(height: 16),
                     _buildInputField(
-                      Icons.height,
-                      'Height (inches)',
-                      heightInchController,
-                      suffix: "inch",
-                    ),
+                        Icons.phone, 'Phone number', phoneController),
+                    const SizedBox(height: 16),
+                    _buildInputField(Icons.email, 'Email', emailController),
+                    const SizedBox(height: 16),
+                    _buildInputField(Icons.cake, 'Age', ageController),
+                    const SizedBox(height: 16),
+                    if (isMetric)
+                      _buildInputField(
+                        Icons.height,
+                        'Height',
+                        heightController,
+                        suffix: "cm",
+                      ),
+                    if (!isMetric) ...[
+                      _buildInputField(
+                        Icons.height,
+                        'Height (feet)',
+                        heightInFeetController,
+                        suffix: "feet",
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInputField(
+                        Icons.height,
+                        'Height (inches)',
+                        heightInchController,
+                        suffix: "inch",
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            );
-          },
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildInputField(
+   Widget _buildInputField(
     IconData icon,
     String label,
     TextEditingController controller, {
@@ -306,21 +293,73 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
           Icon(icon, color: Colors.white),
           const SizedBox(width: 16),
           Expanded(
-            child: TextField(
+            child: TextFormField(
               controller: controller,
               style: const TextStyle(color: Colors.white),
+              keyboardType: _getKeyboardType(label),
+              validator: (value) => _getValidator(label, value),
+              onChanged: (value) {
+                _handleOnChanged(label, value, controller);
+              },
               decoration: InputDecoration(
                 border: InputBorder.none,
                 labelText: label,
                 labelStyle: const TextStyle(color: Colors.grey),
                 suffixText: suffix,
                 suffixStyle: const TextStyle(color: AppColors.buttonColors),
+                errorStyle: const TextStyle(color: Colors.red),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  TextInputType _getKeyboardType(String label) {
+    switch (label.toLowerCase()) {
+      case 'phone number':
+        return TextInputType.phone;
+      case 'email':
+        return TextInputType.emailAddress;
+      case 'age':
+      case 'height':
+      case 'height (feet)':
+      case 'height (inches)':
+        return TextInputType.number;
+      default:
+        return TextInputType.text;
+    }
+  }
+
+  String? _getValidator(String label, String? value) {
+    switch (label.toLowerCase()) {
+      case 'name':
+        return FormValidators.validateName(value);
+      // case 'phone number':
+      //   return FormValidators.validatePhone(value);
+      case 'email':
+        return FormValidators.validateEmail(value);
+      case 'age':
+        return FormValidators.validateAge(value);
+      case 'height':
+        return FormValidators.validateHeight(value, isMetric);
+      case 'height (feet)':
+        return FormValidators.validateHeight(value, false);
+      case 'height (inches)':
+        return FormValidators.validateHeightInches(value);
+      default:
+        return null;
+    }
+  }
+
+  void _handleOnChanged(String label, String value, TextEditingController controller) {
+    if (label.toLowerCase() == 'phone number' && value.length > 10) {
+      controller.text = value.substring(0, 10);
+      controller.selection = TextSelection.fromPosition(
+        const TextPosition(offset: 10),
+      );
+    }
   }
 
   Widget _buildGenderSelector() {

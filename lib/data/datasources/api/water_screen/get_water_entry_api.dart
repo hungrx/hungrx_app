@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/data/Models/water_screen/get_water_entry_model.dart';
 
 class GetWaterIntakeApi {
-  static const String baseUrl = 'https://hungrxbackend.onrender.com';
-
   Future<WaterIntakeData> getWaterIntakeData(String userId, String date) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/getWaterIntakeData'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.getWaterIntakeData),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'userId': userId,

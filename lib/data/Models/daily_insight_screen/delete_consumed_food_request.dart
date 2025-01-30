@@ -12,12 +12,13 @@ class DeleteFoodRequest {
   });
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'date': date,
-    'mealId': mealId,
-    'dishId': dishId,
-  };
+        'userId': userId,
+        'date': date,
+        'mealId': mealId,
+        'dishId': dishId,
+      };
 }
+
 class DeleteFoodResponse {
   final bool success;
   final String message;
@@ -52,6 +53,7 @@ class DeleteFoodResponse {
     );
   }
 }
+
 class UpdatedMeal {
   final String mealId;
   final List<dynamic> foods;
@@ -68,7 +70,7 @@ class UpdatedMeal {
 
 class DailySummary {
   final double totalCalories;
-  final String dailyGoal;
+  final double dailyGoal; // Changed from String to double
   final double remaining;
 
   DailySummary({
@@ -80,15 +82,16 @@ class DailySummary {
   factory DailySummary.fromJson(Map<String, dynamic> json) {
     return DailySummary(
       totalCalories: (json['totalCalories'] ?? 0).toDouble(),
-      dailyGoal: json['dailyGoal'] ?? '0',
+      dailyGoal:
+          double.parse(json['dailyGoal'] ?? '0'), // Parse string to double
       remaining: (json['remaining'] ?? 0).toDouble(),
     );
   }
 }
 
 class UpdatedCalories {
-  final int caloriesToReachGoal;
-  final int deletedCalories;
+  final double caloriesToReachGoal; // Changed from int to double
+  final double deletedCalories; // Changed from int to double
 
   UpdatedCalories({
     required this.caloriesToReachGoal,
@@ -97,8 +100,8 @@ class UpdatedCalories {
 
   factory UpdatedCalories.fromJson(Map<String, dynamic> json) {
     return UpdatedCalories(
-      caloriesToReachGoal: json['caloriesToReachGoal'] ?? 0,
-      deletedCalories: json['deletedCalories'] ?? 0,
+      caloriesToReachGoal: (json['caloriesToReachGoal'] ?? 0).toDouble(),
+      deletedCalories: (json['deletedCalories'] ?? 0).toDouble(),
     );
   }
 }

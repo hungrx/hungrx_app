@@ -4,7 +4,8 @@ class ConnectivityService {
   final InternetConnectionChecker connectionChecker;
 
   ConnectivityService({InternetConnectionChecker? checker})
-      : connectionChecker = checker ?? InternetConnectionChecker();
+      : connectionChecker =
+            checker ?? InternetConnectionChecker.createInstance();
 
   Future<bool> hasInternetConnection() async {
     return await connectionChecker.hasConnection;

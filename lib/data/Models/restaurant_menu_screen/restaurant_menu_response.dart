@@ -17,6 +17,12 @@ class RestaurantMenuResponse {
       userStats: UserStats.fromJson(json['userStats'] ?? {}),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'success': success,
+    'menu': menu.toJson(),
+    'userStats': userStats.toJson(),
+  };
 }
 
 class RestaurantMenu {
@@ -42,6 +48,13 @@ class RestaurantMenu {
           .toList(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'restaurantName': restaurantName,
+    'logo': logo,
+    'categories': categories.map((e) => e.toJson()).toList(),
+  };
 }
 
 class MenuCategory {
@@ -75,6 +88,15 @@ class MenuCategory {
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'categoryName': categoryName,
+    'dishes': dishes.map((e) => e.toJson()).toList(),
+    'subCategories': subCategories.map((e) => e.toJson()).toList(),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 }
 
 class SubCategory {
@@ -103,6 +125,13 @@ class SubCategory {
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
     );
   }
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'subCategoryName': subCategoryName,
+    'dishes': dishes.map((e) => e.toJson()).toList(),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 }
 
 class Dish {
@@ -134,6 +163,14 @@ class Dish {
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
     );
   }
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'dishName': dishName,
+    'description': description,
+    'servingInfos': servingInfos.map((e) => e.toJson()).toList(),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 }
 
 class ServingInfo {
@@ -157,6 +194,12 @@ class ServingInfo {
       updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
     );
   }
+  Map<String, dynamic> toJson() => {
+    '_id': id,
+    'servingInfo': servingInfo.toJson(),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 }
 
 class ServingDetails {
@@ -181,6 +224,12 @@ class ServingDetails {
       nutritionFacts: NutritionFacts.fromJson(json['nutritionFacts'] ?? {}),
     );
   }
+  Map<String, dynamic> toJson() => {
+    'size': size,
+    'price': price,
+    'Url': url,
+    'nutritionFacts': nutritionFacts.toJson(),
+  };
 }
 
 class NutritionFacts {
@@ -204,6 +253,12 @@ class NutritionFacts {
       totalFat: NutritionValue.fromJson(json['totalFat'] ?? {}),
     );
   }
+   Map<String, dynamic> toJson() => {
+    'calories': calories.toJson(),
+    'protein': protein.toJson(),
+    'carbs': carbs.toJson(),
+    'totalFat': totalFat.toJson(),
+  };
 }
 
 class NutritionValue {
@@ -221,6 +276,10 @@ class NutritionValue {
       unit: json['unit'] ?? '',
     );
   }
+  Map<String, dynamic> toJson() => {
+    'value': value,
+    'unit': unit,
+  };
 }
 
 class UserStats {
@@ -238,4 +297,8 @@ class UserStats {
       todayConsumption: (json['todayConsumption'] as num?)?.toDouble() ?? 0.0,
     );
   }
+  Map<String, dynamic> toJson() => {
+    'dailyCalorieGoal': dailyCalorieGoal,
+    'todayConsumption': todayConsumption,
+  };
 }

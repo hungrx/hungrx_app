@@ -1,18 +1,37 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/core/errors/google_auth_error.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GoogleAuthRepository {
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    // Add scopes needed for iOS
+    scopes: [
+      'email',
+      'profile',
+    ],
+    // Add iOS client ID
+    clientId:
+        Platform.isIOS ? '487283706527-0dop9npjm3g2rhoajabadjcv32tpf8ab.apps.googleusercontent.com' : null,
+  );
   final _auth = FirebaseAuth.instance;
 
   Future<User?> signIn() async {
     try {
-      final googleUser = await _googleSignIn.signIn();
+      GoogleSignInAccount? existingUser = _googleSignIn.currentUser;
+      GoogleSignInAccount? googleUser;
+
+      if (existingUser != null) {
+        // Re-authenticate existing user
+        googleUser = await _googleSignIn.signInSilently();
+      }
+      googleUser ??= await _googleSignIn.signIn();
 
       if (googleUser == null) {
         throw GoogleAuthException(
@@ -43,6 +62,20 @@ class GoogleAuthRepository {
         message: 'Platform error occurred: ${e.message}',
       );
     } catch (e) {
+      if (Platform.isIOS) {
+        if (e.toString().contains('cancelled')) {
+          throw GoogleAuthException(
+            message: 'Sign in cancelled by user',
+            isCancelled: true,
+          );
+        }
+        if (e.toString().contains('network')) {
+          throw GoogleAuthException(
+            message: 'Network error occurred. Please check your connection.',
+          );
+        }
+      }
+
       if (e is GoogleAuthException) {
         rethrow;
       }
@@ -53,10 +86,8 @@ class GoogleAuthRepository {
   }
 
   Future<String> _storeUserInDatabase(User user) async {
-    // print(user.displayName);
     try {
-      final url =
-          Uri.parse('https://hungrxbackend.onrender.com/users/signup/google');
+      final url = Uri.parse(ApiConstants.baseUrl + ApiConstants.google);
 
       final requestBody = {
         'googleId': user.uid,
@@ -64,15 +95,13 @@ class GoogleAuthRepository {
         'name': user.displayName,
       };
 
-      // print('Request body: $requestBody');
-
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode(requestBody),
       );
 
-      // print(response.body);
+      print(response.body);
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -81,7 +110,6 @@ class GoogleAuthRepository {
             responseData['data'] != null &&
             responseData['data']['user'] != null) {
           final userId = responseData['data']['user']['id'] as String;
-          // print('Successfully got user ID: $userId');
           await _saveUserId(userId);
           return userId;
         } else {
@@ -136,7 +164,7 @@ class GoogleAuthRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_id');
     } catch (error) {
-      // print('Error signing out from Google: $error');
+      print('Error signing out from Google: $error');
     }
   }
 }

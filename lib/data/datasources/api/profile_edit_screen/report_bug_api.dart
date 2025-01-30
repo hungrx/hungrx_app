@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 
 class ReportBugApi {
-  final String baseUrl = 'https://hungrxbackend.onrender.com';
-
   Future<Map<String, dynamic>> reportBug(String userId, String report) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/bug'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.bug),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'userId': userId,
@@ -15,7 +14,6 @@ class ReportBugApi {
         }),
       );
 // print(response.body);
-// print(response.statusCode);
       if (response.statusCode == 201) {
         return json.decode(response.body);
       } else {

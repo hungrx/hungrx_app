@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:hungrx_app/data/Models/profile_setting_screen/goal_settings_model.dart';
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_event.dart';
@@ -99,16 +98,6 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
     );
   }
 
-  //   Widget _buildLoadingOverlay() {
-  //   return Container(
-  //     color: Colors.black.withOpacity(0.5),
-  //     child: const Center(
-  //       child: CircularProgressIndicator(
-  //         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildErrorOverlay(String message, VoidCallback onRetry) {
     return Container(
@@ -242,6 +231,7 @@ Widget _buildTitleRow(BuildContext context, GoalSettingsModel settings) {
               context,
               MaterialPageRoute(
                 builder: (context) => GoalSettingsEditScreen(
+                  isMaintain: false,
                   goal: settings.goal,
                   targetWeight: settings.targetWeight,
                   isMetric: settings.isMetric,
@@ -286,28 +276,59 @@ Widget _buildTitleRow(BuildContext context, GoalSettingsModel settings) {
   );
 }
 
-  Widget _buildGoalDetailsCard(GoalSettingsModel settings) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          _buildInfoRow('Goal', settings.goal),
-          const SizedBox(height: 20),
-          _buildInfoRow('Target Weight', '${settings.targetWeight}kg'),
-          const SizedBox(height: 20),
-          _buildInfoRow('Goal pace', '${settings.weightGainRate}kg / week'),
-          const SizedBox(height: 20),
-          _buildInfoRow('Activity level', settings.activityLevel),
-          const SizedBox(height: 20),
-          _buildInfoRow('Meals per day', '${settings.mealsPerDay} times'),
-        ],
-      ),
-    );
+Widget _buildGoalDetailsCard(GoalSettingsModel settings) {
+  // Helper function to convert kg to lbs
+  double kgToLbs(double kg) {
+    return kg * 2.20462;
   }
+
+  // Helper function to format weight with proper unit
+  String formatWeight(String weight, bool isMetric) {
+    if (isMetric) {
+      return '$weight kg';
+    } else {
+     
+      return '$weight lbs';
+    }
+  }
+
+  // Helper function to format weight gain rate
+  String formatWeightGainRate(double rate, bool isMetric) {
+    if (isMetric) {
+      return '${rate.toStringAsFixed(2)} kg / week';
+    } else {
+      double lbs = kgToLbs(rate);
+      return '${lbs.toStringAsFixed(0)} lbs / week';
+    }
+  }
+
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: const Color(0xFF1E1E1E),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      children: [
+        _buildInfoRow('Goal', settings.goal),
+        const SizedBox(height: 20),
+        _buildInfoRow(
+          'Target Weight', 
+          formatWeight(settings.targetWeight, settings.isMetric)
+        ),
+        const SizedBox(height: 20),
+        _buildInfoRow(
+          'Goal pace', 
+          formatWeightGainRate(settings.weightGainRate, settings.isMetric)
+        ),
+        const SizedBox(height: 20),
+        _buildInfoRow('Activity level', settings.activityLevel),
+        const SizedBox(height: 20),
+        _buildInfoRow('Meals per day', '${settings.mealsPerDay} times'),
+      ],
+    ),
+  );
+}
 
   Widget _buildInfoRow(String label, String value) {
     return Row(

@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/data/Models/water_screen/add_water_response.dart';
 
-
 class WaterIntakeApi {
   final http.Client client;
 
@@ -15,7 +14,7 @@ class WaterIntakeApi {
   }) async {
     try {
       final response = await client.post(
-        Uri.parse('${ApiConstants.baseUrl}/users/addWater'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.addWater),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'userId': userId,

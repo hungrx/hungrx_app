@@ -33,6 +33,7 @@ class PhoneNumberScreen extends StatefulWidget {
 class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _termsAccepted = false;
 
   void _hideLoadingOverlay(BuildContext context) {
     if (context.canPop()) {
@@ -66,14 +67,49 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
     if (value == null || value.isEmpty) {
       return 'Please enter a phone number';
     }
-    final phoneRegex = RegExp(r'^\d{10}$');
-    if (!phoneRegex.hasMatch(value)) {
-      return 'Please enter a valid 10-digit phone number';
+
+    // Remove any non-digit characters
+    final cleanNumber = value.replaceAll(RegExp(r'\D'), '');
+
+    // Check for valid US number length (10 digits)
+    if (cleanNumber.length != 10) {
+      return 'Please enter a valid 10-digit US phone number';
     }
+
+    // Validate area code (first 3 digits)
+    final areaCode = int.parse(cleanNumber.substring(0, 3));
+    if (areaCode < 200 || // Area codes don't start with 0 or 1
+        areaCode >= 1000 ||
+        areaCode == 666 || // Restricted area code
+        cleanNumber.substring(3, 6) == '555') {
+      // 555 is reserved
+      return 'Please enter a valid US area code';
+    }
+
     return null;
   }
 
- @override
+  Future<bool> _onWillPop() async {
+    // Check if keyboard is visible
+    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom != 0;
+
+    if (isKeyboardVisible) {
+      // If keyboard is visible, close it
+      FocusScope.of(context).unfocus();
+      return false; // Prevents app from closing
+    }
+
+    // If Google Auth is loading, hide loading overlay
+    if (context.read<GoogleAuthBloc>().state is GoogleAuthLoading) {
+      _hideLoadingOverlay(context);
+      return false;
+    }
+
+    // If keyboard is not visible and no loading state, allow app to close
+    return true;
+  }
+
+  @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return MultiBlocProvider(
@@ -128,15 +164,37 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                         await authService.checkProfileCompletion(userId);
                     if (!mounted) return;
 
-                    if (isProfileComplete) {
+                    if (isProfileComplete == true) {
                       // Existing user - navigate to home
                       if (mounted) {
                         GoRouter.of(currentContext).go('/home');
                       }
-                    } else {
+                    } else if (isProfileComplete == false) {
                       // New user - navigate to user info screen
                       if (mounted) {
                         GoRouter.of(currentContext).go('/user-info-one');
+                      }
+                    } else {
+                      // Server error case (isProfileComplete is null)
+                      if (mounted) {
+                        // Show error dialog
+                        showDialog(
+                          context: currentContext,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Connection Error'),
+                            content: const Text(
+                                'Unable to verify your profile status. Please check your internet connection and try again.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  // Optionally, you could add a retry mechanism here
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
                       }
                     }
                   } catch (e) {
@@ -180,13 +238,7 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
         child: Builder(
           builder: (context) {
             return WillPopScope(
-              onWillPop: () async {
-                if (context.read<GoogleAuthBloc>().state is GoogleAuthLoading) {
-                  _hideLoadingOverlay(context);
-                  return false;
-                }
-                return true;
-              },
+              onWillPop: _onWillPop,
               child: Scaffold(
                 resizeToAvoidBottomInset: false,
                 body: Stack(
@@ -262,31 +314,80 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                                   data: widget.isSignUp
                                       ? "Agree & Sign Up"
                                       : "Agree & Login",
-                                  onPressed: state is OtpSendLoading
-                                      ? null
-                                      : () {
-                                          if (_formKey.currentState!
-                                              .validate()) {
-                                            final countryCode = context
-                                                .read<CountryCodeBloc>()
-                                                .state
-                                                .selectedCountryCode;
-                                            final phoneNumber = countryCode +
-                                                _phoneController.text;
-                                            context
-                                                .read<OtpAuthBloc>()
-                                                .add(SendOtpEvent(phoneNumber));
-                                          }
-                                        },
+                                  onPressed: () {
+                                    if (!_termsAccepted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: const Text(
+                                              'Please accept the Terms & Conditions to continue'),
+                                          backgroundColor: Colors.red,
+                                          behavior: SnackBarBehavior.floating,
+                                          margin: const EdgeInsets.all(16),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    if (_formKey.currentState!.validate()) {
+                                      final countryCode = context
+                                          .read<CountryCodeBloc>()
+                                          .state
+                                          .selectedCountryCode;
+                                      final phoneNumber =
+                                          countryCode + _phoneController.text;
+                                      context
+                                          .read<OtpAuthBloc>()
+                                          .add(SendOtpEvent(phoneNumber));
+                                    }
+                                  },
                                 );
                               },
                             ),
                             const SizedBox(height: 20),
-                            const ClickableTermsAndPolicyText(
-                              policyUrl:
-                                  "https://www.hungrx.com/privacy-policy.html",
-                              termsUrl:
-                                  "https://www.hungrx.com/terms-and-conditions.html",
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _termsAccepted,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      _termsAccepted = value ?? false;
+                                    });
+                                  },
+                                  fillColor: MaterialStateProperty.resolveWith(
+                                    (states) =>
+                                        states.contains(MaterialState.selected)
+                                            ? AppColors.buttonColors
+                                            : Colors.grey,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: GestureDetector(
+                                    // Wrap with GestureDetector for better tap handling
+                                    behavior: HitTestBehavior.opaque,
+                                    child: ClickableTermsAndPolicyText(
+                                      
+                                      policyUrl:
+                                          "https://www.hungrx.com/privacy-policy.html",
+                                      termsUrl:
+                                          "https://www.hungrx.com/terms-and-conditions.html",
+                                      textStyle: TextStyle(
+                                          color: Colors.grey[400],
+                                          fontSize: 12),
+                                      linkStyle: const TextStyle(
+                                        color: Colors.blue,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             Column(
                               children: [
@@ -300,6 +401,25 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                                         label: 'Google',
                                         size: 25,
                                         onPressed: () {
+                                          if (!_termsAccepted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: const Text(
+                                                    'Please accept the Terms & Conditions to continue'),
+                                                backgroundColor: Colors.red,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                                margin:
+                                                    const EdgeInsets.all(16),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                            );
+                                            return;
+                                          }
                                           context
                                               .read<GoogleAuthBloc>()
                                               .add(GoogleSignInRequested());
@@ -314,7 +434,26 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                                         label: 'Apple',
                                         size: 25,
                                         onPressed: () {
-                                          // Implement Apple sign in
+                                          if (!_termsAccepted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: const Text(
+                                                    'Please accept the Terms & Conditions to continue'),
+                                                backgroundColor: Colors.red,
+                                                behavior:
+                                                    SnackBarBehavior.floating,
+                                                margin:
+                                                    const EdgeInsets.all(16),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                              ),
+                                            );
+                                            return;
+                                          }
+                                          // context.read<GoogleAuthBloc>().add(GoogleSignInRequested());
                                         },
                                         style: SocialButtonStyle.capsule,
                                       ),

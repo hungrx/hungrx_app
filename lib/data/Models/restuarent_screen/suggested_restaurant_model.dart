@@ -15,6 +15,13 @@ class RestaurantsResponse {
           .toList() ?? [],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'status': status,
+      'restaurants': restaurants.map((restaurant) => restaurant.toJson()).toList(),
+    };
+  }
 }
 
 class SuggestedRestaurantModel {
@@ -23,7 +30,7 @@ class SuggestedRestaurantModel {
   final String? address;
   final Map<String, dynamic>? coordinates;
   final double? distance;
-  final String? logo; // Added logo field
+  final String? logo;
 
   SuggestedRestaurantModel({
     required this.id,
@@ -31,7 +38,7 @@ class SuggestedRestaurantModel {
     this.address,
     this.coordinates,
     this.distance,
-    required this.logo, // Made logo required since it always comes in the response
+    required this.logo,
   });
 
   factory SuggestedRestaurantModel.fromJson(Map<String, dynamic> json) {
@@ -43,5 +50,24 @@ class SuggestedRestaurantModel {
       distance: json['distance']?.toDouble(),
       logo: json['logo'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'name': name,
+      'address': address,
+      'coordinates': coordinates,
+      'distance': distance,
+      'logo': logo,
+    };
+  }
+
+  bool equals(SuggestedRestaurantModel other) {
+    return id == other.id &&
+        name == other.name &&
+        address == other.address &&
+        logo == other.logo &&
+        distance == other.distance;
   }
 }

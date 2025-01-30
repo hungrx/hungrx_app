@@ -4,11 +4,13 @@ import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dis
 class CartItem {
   final String dishName;
   final String size;
+   final int quantity; 
   final NutritionInfo nutritionInfo;
 
   CartItem({
     required this.dishName,
     required this.size,
+     required this.quantity,  
     required this.nutritionInfo,
   });
 }

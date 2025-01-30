@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
@@ -20,6 +22,7 @@ import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/cus
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/dish_details_sheet.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/progress_bar.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/widgets/search_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RestaurantMenuScreen extends StatefulWidget {
   final NearbyRestaurantModel? restaurant;
@@ -39,15 +42,70 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   String? expandedCategory;
   String? expandedSubcategory;
   bool isLoading = false;
+  RestaurantMenuResponse? _cachedMenuResponse;
+  DateTime? _lastFetchTime;
+  static const cacheDuration = Duration(minutes: 30);
+
+
   @override
   void initState() {
     super.initState();
-    context.read<RestaurantMenuBloc>().add(
-          LoadRestaurantMenu(
-            restaurantId: widget.restaurantId ?? "",
-          ),
-        );
+    _loadCachedData();
     context.read<GetCartBloc>().add(LoadCart());
+  }
+
+  Future<void> _loadCachedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('menu_cache_${widget.restaurantId}');
+    final lastFetchTimeStr = prefs.getString('menu_last_fetch_${widget.restaurantId}');
+
+    if (cachedData != null && lastFetchTimeStr != null) {
+      final lastFetchTime = DateTime.parse(lastFetchTimeStr);
+      if (DateTime.now().difference(lastFetchTime) < cacheDuration) {
+        try {
+          final jsonData = json.decode(cachedData);
+          setState(() {
+            _cachedMenuResponse = RestaurantMenuResponse.fromJson(jsonData);
+            _lastFetchTime = lastFetchTime;
+          });
+        } catch (e) {
+          debugPrint('Error loading cached menu: $e');
+        }
+      }
+    }
+    
+    // Fetch fresh data
+    _fetchMenuData();
+  }
+
+  Future<void> _cacheData(RestaurantMenuResponse menuResponse) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'menu_cache_${widget.restaurantId}',
+        json.encode(menuResponse.toJson())
+      );
+      await prefs.setString(
+        'menu_last_fetch_${widget.restaurantId}',
+        DateTime.now().toIso8601String()
+      );
+      _lastFetchTime = DateTime.now();
+    } catch (e) {
+      debugPrint('Error caching menu data: $e');
+    }
+  }
+
+  void _fetchMenuData() {
+    // Prevent frequent refetches
+    if (_lastFetchTime != null && 
+        DateTime.now().difference(_lastFetchTime!) < const Duration(seconds: 30)) {
+      return;
+    }
+    context.read<RestaurantMenuBloc>().add(
+      LoadRestaurantMenu(
+        restaurantId: widget.restaurantId ?? "",
+      ),
+    );
   }
 
   bool _checkCalorieLimit(BuildContext context, double dishCalories) {
@@ -96,28 +154,66 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // print("rest :${widget.restaurantId}");
     return BlocProvider(
       create: (context) => MenuExpansionBloc(),
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: _buildAppBar(),
-        body: BlocBuilder<RestaurantMenuBloc, RestaurantMenuState>(
-          builder: (context, state) {
-            if (state is RestaurantMenuLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is RestaurantMenuError) {
-              return Center(
-                  child: Text(state.message,
-                      style: const TextStyle(color: Colors.white)));
-            } else if (state is RestaurantMenuLoaded) {
-              return _buildContent(state.menuResponse);
+        body: BlocConsumer<RestaurantMenuBloc, RestaurantMenuState>(
+          listener: (context, state) {
+            if (state is RestaurantMenuLoaded) {
+              // Cache new data only if it's different from cached data
+              if (_cachedMenuResponse == null || 
+                  !_areMenusEqual(_cachedMenuResponse!.menu, state.menuResponse.menu)) {
+                _cacheData(state.menuResponse);
+                setState(() {
+                  _cachedMenuResponse = state.menuResponse;
+                });
+              }
             }
-            return const SizedBox();
+          },
+          builder: (context, state) {
+            if (state is RestaurantMenuLoading && _cachedMenuResponse == null) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is RestaurantMenuError && _cachedMenuResponse == null) {
+              return Center(
+                child: Text(state.message, style: const TextStyle(color: Colors.white))
+              );
+            }
+
+            // Use cached data or new data
+            final menuResponse = _cachedMenuResponse ?? 
+              (state is RestaurantMenuLoaded ? state.menuResponse : null);
+
+            if (menuResponse == null) {
+              return const SizedBox();
+            }
+
+            return _buildContent(menuResponse);
           },
         ),
       ),
     );
+  }
+
+  bool _areMenusEqual(RestaurantMenu menu1, RestaurantMenu menu2) {
+    if (menu1.id != menu2.id || 
+        menu1.restaurantName != menu2.restaurantName ||
+        menu1.categories.length != menu2.categories.length) {
+      return false;
+    }
+
+    for (int i = 0; i < menu1.categories.length; i++) {
+      final cat1 = menu1.categories[i];
+      final cat2 = menu2.categories[i];
+      if (cat1.id != cat2.id || 
+          cat1.dishes.length != cat2.dishes.length ||
+          cat1.subCategories.length != cat2.subCategories.length) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   PreferredSizeWidget _buildAppBar() {

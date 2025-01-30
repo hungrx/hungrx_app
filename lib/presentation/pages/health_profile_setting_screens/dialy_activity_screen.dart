@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:confetti/confetti.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/Models/profile_setting_screen/tdee_result_model.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_event.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_state.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
+import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/celebration_dialog.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/navigation_buttons.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/prograss_indicator.dart';
-import 'package:hungrx_app/routes/route_names.dart';
 
 class DailyActivityScreen extends StatefulWidget {
   const DailyActivityScreen({super.key});
@@ -21,12 +19,20 @@ class DailyActivityScreen extends StatefulWidget {
 
 class DailyActivityScreenState extends State<DailyActivityScreen>
     with TickerProviderStateMixin {
+  final Map<ActivityLevel, String> activityDisplayNames = const {
+    ActivityLevel.sedentary: "Sedentary",
+    ActivityLevel.lightlyActive: "Lightly Active",
+    ActivityLevel.moderatelyActive: "Moderately Active",
+    ActivityLevel.veryActive: "Very Active",
+    ActivityLevel.extraActive: "Extra Active",
+  };
   final Map<ActivityLevel, String> activityDescriptions = const {
     ActivityLevel.sedentary: "Little to no exercise, desk job",
     ActivityLevel.lightlyActive: "Light exercise 1-3 days/week",
     ActivityLevel.moderatelyActive: "Moderate exercise 3-5 days/week",
     ActivityLevel.veryActive: "Hard exercise 6-7 days/week",
-    ActivityLevel.extraActive: "Very hard exercise & physical job or 2x training",
+    ActivityLevel.extraActive:
+        "Very hard exercise & physical job or 2x training",
   };
 
   late ConfettiController _confettiController;
@@ -35,7 +41,8 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 5));
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 5));
     _dialogAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -49,68 +56,6 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
     super.dispose();
   }
 
-  void _showCelebrationDialog(BuildContext context, TDEEResultModel tdeeResult) {
-    final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.width < 360;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return ScaleTransition(
-          scale: CurvedAnimation(
-            parent: _dialogAnimationController,
-            curve: Curves.easeOutBack,
-          ),
-          child: AlertDialog(
-            backgroundColor: Colors.transparent,
-            content: Container(
-              width: size.width * 0.8,
-              padding: EdgeInsets.all(size.width * 0.05),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                    size: isSmallScreen ? 40 : 50,
-                  ),
-                  SizedBox(height: size.height * 0.02),
-                  Text(
-                    "All Set!",
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 20 : 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: size.height * 0.01),
-                  Text(
-                    "Your profile is complete.",
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 14 : 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-
-    _confettiController.play();
-    _dialogAnimationController.forward();
-
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.of(context).pop();
-      context.pushNamed(RouteNames.tdeeResults, extra: tdeeResult);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -122,7 +67,10 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
           BlocConsumer<UserProfileFormBloc, UserProfileFormState>(
             listener: (context, state) {
               if (state.isSuccess && state.tdeeResult != null) {
-                _showCelebrationDialog(context, state.tdeeResult!);
+                CelebrationDialogManager(
+                  confettiController: _confettiController,
+                  dialogAnimationController: _dialogAnimationController,
+                ).showCelebrationDialog(context, state.tdeeResult!);
               }
               if (state.errorMessage != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -149,9 +97,7 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                           currentStep: 6,
                           totalSteps: 6,
                         ),
-                        
                         SizedBox(height: size.height * 0.04),
-                        
                         Text(
                           'Help us calculate your TDEE',
                           style: TextStyle(
@@ -160,9 +106,7 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        
                         SizedBox(height: size.height * 0.03),
-                        
                         Text(
                           "What's your Activity Level?",
                           style: TextStyle(
@@ -170,9 +114,7 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                             fontSize: isSmallScreen ? 14 : 16,
                           ),
                         ),
-                        
                         SizedBox(height: size.height * 0.02),
-                        
                         Expanded(
                           child: SingleChildScrollView(
                             child: Column(
@@ -192,11 +134,10 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                             ),
                           ),
                         ),
-                        
                         NavigationButtons(
                           buttonText: "Finish",
                           onNextPressed: state.isLoading
-                              ? (){}
+                              ? () {}
                               : () {
                                   if (state.activityLevel != null) {
                                     context
@@ -205,7 +146,8 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Please select an activity level'),
+                                        content: Text(
+                                            'Please select an activity level'),
                                       ),
                                     );
                                   }
@@ -290,7 +232,8 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
           onTap: state.isLoading
               ? null
               : () {
-                  context.read<UserProfileFormBloc>()
+                  context
+                      .read<UserProfileFormBloc>()
                       .add(ActivityLevelChanged(activity));
                 },
           child: Container(
@@ -311,7 +254,7 @@ class DailyActivityScreenState extends State<DailyActivityScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  activity.toString().split('.').last,
+                 activityDisplayNames[activity]!, 
                   style: TextStyle(
                     color: isSelected ? AppColors.buttonColors : Colors.white,
                     fontSize: isSmallScreen ? 14 : 16,

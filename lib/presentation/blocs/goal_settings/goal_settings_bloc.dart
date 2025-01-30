@@ -13,6 +13,7 @@ class GoalSettingsBloc extends Bloc<GoalSettingsEvent, GoalSettingsState> {
     this._authService,
   ) : super(GoalSettingsInitial()) {
     on<FetchGoalSettings>(_onFetchGoalSettings);
+     on<ClearGoalSettings>(_onClearGoalSettings); 
   }
 
   Future<void> _onFetchGoalSettings(
@@ -32,5 +33,12 @@ class GoalSettingsBloc extends Bloc<GoalSettingsEvent, GoalSettingsState> {
     } catch (e) {
       emit(GoalSettingsError(e.toString()));
     }
+  }
+
+    void _onClearGoalSettings(
+    ClearGoalSettings event,
+    Emitter<GoalSettingsState> emit,
+  ) {
+    emit(GoalSettingsInitial());
   }
 }

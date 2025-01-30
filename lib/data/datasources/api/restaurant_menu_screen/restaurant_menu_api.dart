@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/data/Models/restaurant_menu_screen/restaurant_menu_response.dart';
 
 class RestaurantMenuApi {
-  final String baseUrl = 'https://hungrxbackend.onrender.com';
-
   Future<RestaurantMenuResponse> getMenu(
       String restaurantId, String userId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/getMenu'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.getMenu),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'restaurantId': restaurantId,

@@ -13,7 +13,92 @@ import 'package:hungrx_app/routes/route_names.dart';
 class GoalPaceScreen extends StatelessWidget {
   const GoalPaceScreen({super.key});
 
-  @override
+  void _validateAndNavigate(BuildContext context, UserProfileFormState state) {
+
+    final currentWeight = double.tryParse(state.weight) ?? 0;
+    final targetWeight = double.tryParse(state.targetWeight ?? '') ?? 0;
+    final weeklyPace = _calculateWeeklyPace(state.weightPace??2.0, state.isMetric);
+
+
+    final weightDifference = (targetWeight - currentWeight).abs();
+    final weeksToGoal = (weightDifference / weeklyPace).ceil();
+    final monthsToGoal = (weeksToGoal / 4).ceil();
+
+    if (monthsToGoal > 24) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: Text('Long-Term Goal', style: TextStyle(color: Colors.white)),
+          content: Text(
+            'This goal will take over 2 years to achieve. Consider adjusting your target weight or choosing a faster pace.',
+            style: TextStyle(color: Colors.grey[300]),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Adjust Goal', style: TextStyle(color: Colors.grey)),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: Text('Proceed Anyway', style: TextStyle(color: AppColors.buttonColors)),
+              onPressed: () {
+                Navigator.pop(context);
+                context.pushNamed(RouteNames.dailyactivity);
+              },
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    context.pushNamed(RouteNames.dailyactivity);
+  }
+
+  double _calculateWeeklyPace(double paceValue, bool isMetric) {
+  
+    return (paceValue - 1) * (isMetric ? 0.25 : 0.5) + (isMetric ? 0.25 : 0.5);
+  }
+
+  String _getPaceText(WeightGoal? goal, double paceValue, bool isMetric) {
+    if (goal == WeightGoal.maintain) {
+      return '0 ${isMetric ? 'kg' : 'lbs'}';
+    }
+    final pace = _calculateWeeklyPace(paceValue, isMetric);
+    return '${pace.toStringAsFixed(2)} ${isMetric ? 'kg' : 'lbs'}';
+  }
+
+  String _getEstimatedTimeToGoal(
+    WeightGoal? goal,
+    double paceValue,
+    double currentWeight,
+    double goalWeight,
+    bool isMetric,
+  ) {
+    if (goal == WeightGoal.maintain) return "";
+    if (currentWeight <= 0 || goalWeight <= 0) return "Invalid weight values";
+
+    final weeklyPace = _calculateWeeklyPace(paceValue, isMetric);
+    if (weeklyPace == 0) return "Invalid pace selected";
+
+    final weightDifference = (goalWeight - currentWeight).abs();
+    final weeksToGoal = (weightDifference / weeklyPace).ceil();
+    final monthsToGoal = (weeksToGoal / 4).ceil();
+
+    // Maximum safe monthly weight change
+    final maxMonthlyChange = isMetric ? 4.0 : 8.8; // 4kg or 8.8lbs per month
+    final actualMonthlyChange = weightDifference / monthsToGoal;
+    
+    if (actualMonthlyChange > maxMonthlyChange) {
+      return "Warning: This pace may be too aggressive for healthy progress";
+    }
+
+    return monthsToGoal < 1 
+      ? "Expected time: Less than a month"
+      : "Expected time: About ${monthsToGoal} month${monthsToGoal > 1 ? 's' : ''}";
+  }
+
+  @override 
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.width < 360;
@@ -44,21 +129,21 @@ class GoalPaceScreen extends StatelessWidget {
                               currentStep: 5,
                               totalSteps: 6,
                             ),
-                            
+
                             SizedBox(height: size.height * 0.04),
-                            
+
                             // Title
                             Text(
                               _getTitle(state.weightGoal),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: isSmallScreen ? 24 : 28,
+                                fontSize: isSmallScreen ? 22 : 26,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            
+
                             SizedBox(height: size.height * 0.02),
-                            
+
                             // Suggestion Text
                             Text(
                               _getSuggestion(state.weightPace ?? 2.0),
@@ -68,15 +153,16 @@ class GoalPaceScreen extends StatelessWidget {
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            
+
                             SizedBox(height: size.height * 0.06),
-                            
+
                             // Pace Display
                             Center(
                               child: Text(
                                 _getPaceText(
                                   state.weightGoal,
                                   state.weightPace ?? 2.0,
+                                  state.isMetric,
                                 ),
                                 style: TextStyle(
                                   color: Colors.white,
@@ -85,7 +171,7 @@ class GoalPaceScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            
+
                             Center(
                               child: Text(
                                 'per week',
@@ -95,9 +181,9 @@ class GoalPaceScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            
+
                             SizedBox(height: size.height * 0.01),
-                            
+
                             // Slider
                             SizedBox(
                               height: size.height * 0.05,
@@ -115,23 +201,24 @@ class GoalPaceScreen extends StatelessWidget {
                                 },
                               ),
                             ),
-                            
+
                             // Pace Labels
                             Padding(
                               padding: EdgeInsets.symmetric(
                                 horizontal: size.width * 0.02,
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: _getPaceLabels(
                                   state.weightGoal,
                                   isSmallScreen,
                                 ),
                               ),
                             ),
-                            
+
                             SizedBox(height: size.height * 0.05),
-                            
+
                             // Estimated Time Container
                             Center(
                               child: Container(
@@ -150,7 +237,10 @@ class GoalPaceScreen extends StatelessWidget {
                                     state.weightGoal,
                                     state.weightPace ?? 2.0,
                                     double.tryParse(state.weight) ?? 0,
-                                    double.tryParse(state.targetWeight ?? '0') ?? 0,
+                                    double.tryParse(
+                                            state.targetWeight ?? '0') ??
+                                        0,
+                                        state.isMetric
                                   ),
                                   style: TextStyle(
                                     color: Colors.grey,
@@ -160,18 +250,20 @@ class GoalPaceScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            
+
                             SizedBox(height: size.height * 0.03),
                           ],
                         ),
                       ),
                     ),
-                    
+
                     // Navigation Buttons
                     NavigationButtons(
-                      onNextPressed: () {
-                        context.pushNamed(RouteNames.dailyactivity);
-                      },
+                      onNextPressed: () => _validateAndNavigate(context, state),
+                      // onNextPressed: () {
+                      //   print(state.weightPace);
+                      //   context.pushNamed(RouteNames.dailyactivity);
+                      // },
                     ),
                   ],
                 ),
@@ -196,13 +288,13 @@ class GoalPaceScreen extends StatelessWidget {
     }
   }
 
-  String _getPaceText(WeightGoal? goal, double paceValue) {
-    if (goal == WeightGoal.maintain) {
-      return '0 Kg';
-    }
-    double pace = (paceValue - 1) * 0.25 + 0.25;
-    return '${pace.toStringAsFixed(2)} Kg';
-  }
+  // String _getPaceText(WeightGoal? goal, double paceValue) {
+  //   if (goal == WeightGoal.maintain) {
+  //     return '0 Kg';
+  //   }
+  //   double pace = (paceValue - 1) * 0.25 + 0.25;
+  //   return '${pace.toStringAsFixed(2)} Kg';
+  // }
 
   List<Widget> _getPaceLabels(WeightGoal? goal, bool isSmallScreen) {
     if (goal == WeightGoal.maintain) {
@@ -216,14 +308,20 @@ class GoalPaceScreen extends StatelessWidget {
         )
       ];
     }
-    
-    return ['Mild', 'Moderate', 'Fast', ].map((e) => Text(
-      e,
-      style: TextStyle(
-        color: Colors.grey,
-        fontSize: isSmallScreen ? 14 : 16,
-      ),
-    )).toList();
+
+    return [
+      'Mild',
+      'Moderate',
+      'Fast',
+    ]
+        .map((e) => Text(
+              e,
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: isSmallScreen ? 14 : 16,
+              ),
+            ))
+        .toList();
   }
 
   String _getSuggestion(double paceValue) {
@@ -241,27 +339,27 @@ class GoalPaceScreen extends StatelessWidget {
     }
   }
 
-  String _getEstimatedTimeToGoal(
-    WeightGoal? goal,
-    double paceValue,
-    double currentWeight,
-    double goalWeight,
-  ) {
-    if (goal == WeightGoal.maintain) {
-      return "";
-    }
+  // String _getEstimatedTimeToGoal(
+  //   WeightGoal? goal,
+  //   double paceValue,
+  //   double currentWeight,
+  //   double goalWeight,
+  // ) {
+  //   if (goal == WeightGoal.maintain) {
+  //     return "";
+  //   }
 
-    double weeklyPace = (paceValue - 1) * 0.25 + 0.25;
-    double weightDifference = (goalWeight - currentWeight).abs();
-    int weeksToGoal = (weightDifference / weeklyPace).ceil();
-    int monthsToGoal = (weeksToGoal / 4).ceil();
+  //   double weeklyPace = (paceValue - 1) * 0.25 + 0.25;
+  //   double weightDifference = (goalWeight - currentWeight).abs();
+  //   int weeksToGoal = (weightDifference / weeklyPace).ceil();
+  //   int monthsToGoal = (weeksToGoal / 4).ceil();
 
-    if (monthsToGoal < 1) {
-      return "You will reach your goal in less than a month!";
-    } else if (monthsToGoal == 1) {
-      return "You will reach your goal in about 1 month.";
-    } else {
-      return "You will reach your goal in about $monthsToGoal months.";
-    }
-  }
+  //   if (monthsToGoal < 1) {
+  //     return "You can expect to reach your goal in less than a month!";
+  //   } else if (monthsToGoal == 1) {
+  //     return "You can expect to reach your goal in about 1 month.";
+  //   } else {
+  //     return "You can expect to reach your goal in about $monthsToGoal months.";
+  //   }
+  // }
 }

@@ -5,6 +5,7 @@ class WeightUpdateInitial extends WeightUpdateState {}
 class WeightUpdateLoading extends WeightUpdateState {}
 
 class WeightUpdateSuccess extends WeightUpdateState {
+  
   final String message;
 
   WeightUpdateSuccess(this.message);

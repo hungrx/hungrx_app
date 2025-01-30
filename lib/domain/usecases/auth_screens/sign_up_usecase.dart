@@ -1,9 +1,5 @@
-
-
 import 'package:hungrx_app/data/Models/auth_screens/email_model.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/email_sign_up_repository.dart';
-
-
 
 class SignUpUseCase {
   final UserSignUpRepository repository;

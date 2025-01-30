@@ -3,12 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/eat_screen/eat_screen_model.dart';
-import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/eat_screen_search/eat_screen_search_state.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_state.dart';
 import 'package:hungrx_app/routes/route_names.dart';
+import 'package:shimmer/shimmer.dart';
 
 class EatScreen extends StatefulWidget {
   const EatScreen({super.key});
@@ -18,17 +17,23 @@ class EatScreen extends StatefulWidget {
 }
 
 class _EatScreenState extends State<EatScreen> {
+  // final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   String? userId;
   EatScreenData? _cachedData;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadEatScreenData();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _loadEatScreenData();
+  // }
 
   void _loadEatScreenData() {
     context.read<EatScreenBloc>().add(GetEatScreenDataEvent());
+  }
+
+  String _formatCalories(String value) {
+    double parsedValue = double.tryParse(value) ?? 0.0;
+    return parsedValue.round().toString();
   }
 
   @override
@@ -36,73 +41,218 @@ class _EatScreenState extends State<EatScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            if (userId != null) {
-              _loadEatScreenData();
+        child: BlocConsumer<EatScreenBloc, EatScreenState>(
+          listener: (context, state) {
+            if (state is EatScreenError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  action: SnackBarAction(
+                    label: 'Retry',
+                    onPressed: _loadEatScreenData,
+                  ),
+                ),
+              );
+            } else if (state is EatScreenLoaded) {
+              _cachedData = state.data.data;
             }
           },
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: BlocConsumer<EatScreenBloc, EatScreenState>(
-              listener: (context, state) {
-                if (state is EatScreenLoaded) {
-                  _cachedData = state.data.data;
-                } else if (state is EatScreenError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      action: SnackBarAction(
-                        label: 'Retry',
-                        onPressed: () {
-                          if (userId != null) {
-                            _loadEatScreenData();
-                          }
-                        },
+          builder: (context, state) {
+            // Trigger data load on first build if no data exists
+            if (state is EatScreenInitial) {
+              context.read<EatScreenBloc>().add(GetEatScreenDataEvent());
+            }
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                _loadEatScreenData();
+              },
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Padding(
+                     padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        // Removed extra Padding
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_cachedData != null || state is EatScreenLoaded)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildHeader((state is EatScreenLoaded)
+                                    ? state.data.data
+                                    : _cachedData!),
+                                const SizedBox(height: 100),
+                                _buildCalorieBudget(_formatCalories(
+                                    (state is EatScreenLoaded)
+                                        ? state.data.data.dailyCalorieGoal
+                                        : _cachedData!.dailyCalorieGoal)),
+                                const SizedBox(height: 20),
+                                _buildOptionsGrid(),
+                                const SizedBox(height: 40),
+                                _buildEnjoyCalories(),
+                              ],
+                            )
+                          else
+                            _buildPlaceholderContent(),
+                        ],
                       ),
                     ),
-                  );
-                }
-              },
-              builder: (context, state) {
-                String value = _cachedData?.dailyCalorieGoal ?? "0";
-                double parsedValue = double.tryParse(value) ?? 0.0;
-                String result = parsedValue.round().toString();
-                // or if you want to keep it as a double with no decimal places:
-                // String result = parsedValue.toStringAsFixed(0);
-
-                return Stack(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(_cachedData),
-                        const SizedBox(height: 20),
-                        _buildSearchBar(context),
-                        const SizedBox(height: 20),
-                        _buildCalorieBudget(result),
-                        const SizedBox(height: 20),
-                        _buildOptionsGrid(),
-                        const Spacer(),
-                        _buildEnjoyCalories(),
-                      ],
-                    ),
-                    // Show loading overlay only during initial load
-                    if (state is EatScreenLoading && _cachedData == null)
-
-                      // _buildLoadingOverlay(),{}
-                      // Show error overlay only during initial load failure
-                      if (state is EatScreenError && _cachedData == null)
-                        _buildErrorOverlay("An error occurred")
-                  ],
-                );
-              },
-            ),
-          ),
+                  ),
+                  if (state is EatScreenLoading && _cachedData == null)
+                    // const Center(
+                    //   child: CircularProgressIndicator(),
+                    // ),
+                  if (state is EatScreenError && _cachedData == null)
+                    _buildErrorOverlay("An error occurred"),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
+
+Widget _buildPlaceholderContent() {
+  return Shimmer.fromColors(
+    baseColor: Colors.grey[800]!,
+    highlightColor: Colors.grey[700]!,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Shimmer for header
+        Container(
+          width: 200,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        const SizedBox(height: 40),
+        // Shimmer for calorie budget
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 120,
+              height: 45,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: 180,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 100),
+        // Shimmer for options grid
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildErrorOverlay(String message) {
     return Container(
@@ -118,11 +268,7 @@ class _EatScreenState extends State<EatScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                if (userId != null) {
-                  _loadEatScreenData();
-                }
-              },
+              onPressed: _loadEatScreenData,
               child: const Text('Retry'),
             ),
           ],
@@ -144,48 +290,6 @@ class _EatScreenState extends State<EatScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSearchBar(BuildContext context) {
-    return BlocBuilder<EatScreenSearchBloc, EatScreenSearchState>(
-      builder: (context, state) {
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.tileColor,
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: TextField(
-            style: const TextStyle(color: Colors.white),
-            onTap: () {
-              // Navigate to search screen when the search bar is tapped
-              context.pushNamed(RouteNames.eatScreenSearch);
-            },
-            readOnly: true, // Make it non-editable in this view
-            decoration: InputDecoration(
-              hintText: 'Search your food',
-              hintStyle: const TextStyle(color: Colors.grey),
-              prefixIcon: const Icon(Icons.search, color: Colors.grey),
-              suffixIcon: state is SearchLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.grey),
-                        ),
-                      ),
-                    )
-                  : null,
-              border: InputBorder.none,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -215,10 +319,6 @@ class _EatScreenState extends State<EatScreen> {
           'Discover Nearby Restaurant Menus That Fit Your Calorie Budget',
           'assets/images/burger.png',
           () {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => const RestaurantScreen()),
-            // );
             context.pushNamed(RouteNames.restaurants);
           },
         )),

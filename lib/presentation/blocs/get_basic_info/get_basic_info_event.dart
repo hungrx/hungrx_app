@@ -1,6 +1,6 @@
 abstract class GetBasicInfoEvent {}
 
+// Remove userId from GetBasicInfoRequested event
 class GetBasicInfoRequested extends GetBasicInfoEvent {
-  final String userId;
-  GetBasicInfoRequested(this.userId);
+  GetBasicInfoRequested(); // No longer needs userId parameter
 }

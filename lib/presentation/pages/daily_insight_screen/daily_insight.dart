@@ -160,24 +160,35 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
 
   Future<void> _showDatePicker() async {
     final picked = await showDatePicker(
+    
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder: (context, child) {
         return Theme(
+
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
+            colorScheme: ColorScheme.light(
+              
               primary: AppColors.buttonColors,
               onPrimary: Colors.white,
               surface: Colors.grey[900]!,
               onSurface: Colors.white,
             ),
             dialogBackgroundColor: Colors.grey[800],
+            dialogTheme: const DialogTheme(
+              titleTextStyle: TextStyle(color: Colors.white),
+              contentTextStyle: TextStyle(color: Colors.white),
+              backgroundColor: Colors.grey,
+             
+              surfaceTintColor: Colors.white,
+            ),
           ),
           child: child!,
         );
       },
+
     );
     if (picked != null && !_isSameDay(picked, selectedDate)) {
       setState(() => selectedDate = picked);
@@ -242,6 +253,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
 
   Widget _buildCalorieProgress(DailySummary summary) {
     final progress = summary.totalCalories / summary.dailyGoal;
+    final formattedDate = DateFormat('DD-MM-yyyy').format(selectedDate);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -281,6 +293,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+               
                 _buildCalorieInfo(
                   Icons.flag,
                   'Daily Target',
@@ -298,6 +311,13 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
                   'Remaining',
                   '${summary.remaining.toStringAsFixed(0)} cal',
                 ),
+                  const SizedBox(height: 8),
+                    _buildCalorieInfo(
+                  Icons.calendar_month,
+                  'Date',
+                  formattedDate,
+                ),
+                
               ],
             ),
           ),

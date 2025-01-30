@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/data/Models/auth_screens/otp_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpRepository {
-  final String baseUrl = 'https://hungrxbackend.onrender.com';
-
   Future<void> sendOtp(OtpSendModel otpSendModel) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/users/sendOTP'),
+      Uri.parse(ApiConstants.baseUrl + ApiConstants.sendOTP),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(otpSendModel.toJson()),
     );
@@ -20,7 +19,7 @@ class OtpRepository {
   Future<String> verifyOtp(OtpVerifyModel otpVerifyModel) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/verifyOTP'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.verifyOTP),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(otpVerifyModel.toJson()),
       );

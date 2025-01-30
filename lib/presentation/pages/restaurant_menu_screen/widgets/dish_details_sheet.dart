@@ -46,6 +46,7 @@ class DishDetails extends StatefulWidget {
 }
 
 class _DishDetailsState extends State<DishDetails> {
+  int quantity = 1;
   bool isExceedingLimit = false;
   bool _checkCalorieLimit(BuildContext context, double dishCalories) {
     // Get current cart state for items in cart
@@ -69,7 +70,7 @@ class _DishDetailsState extends State<DishDetails> {
 
       // Calculate total calories including base consumption, cart items, and new dish
       final totalCaloriesAfterAdd =
-          baseConsumedCalories + cartCalories + dishCalories;
+          baseConsumedCalories + cartCalories + (dishCalories * quantity);
 
       if (totalCaloriesAfterAdd > dailyCalorieGoal) {
         // Calculate remaining calories for better user feedback
@@ -125,8 +126,8 @@ class _DishDetailsState extends State<DishDetails> {
 
     final nutrition = _calculateTotalNutrition();
 
-    if (_checkCalorieLimit(context, nutrition.calories)) {
-      // Use calculated calories
+    if (_checkCalorieLimit(context, nutrition.calories * quantity)) {
+      // Multiply by quantity
       final cartRequest = CartRequest(
         orders: [
           CartOrderRequest(
@@ -135,6 +136,7 @@ class _DishDetailsState extends State<DishDetails> {
               CartItemRequest(
                 dishId: widget.dishId!,
                 servingSize: selectedSize,
+                quantity: quantity, // Add quantity here
               ),
             ],
           ),
@@ -146,6 +148,7 @@ class _DishDetailsState extends State<DishDetails> {
       final cartItem = CartItem(
         dishName: widget.name,
         size: selectedSize,
+        quantity: quantity, // Add quantity here
         nutritionInfo: nutrition,
       );
 
@@ -486,35 +489,122 @@ class _DishDetailsState extends State<DishDetails> {
   Widget _buildBottomBar(NutritionInfo nutrition) {
     return BlocBuilder<AddToCartBloc, AddToCartState>(
       builder: (context, state) {
-        return Padding(
+        return Container(
           padding: const EdgeInsets.all(16),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.buttonColors,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: AppColors.tileColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
             ),
-            onPressed: state is AddToCartLoading
-                ? null
-                : () {
-                    _handleAddToCart(context);
-                  },
-            child: state is AddToCartLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Quantity Selector
+              Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    MaterialButton(
+                      minWidth: 40,
+                      height: 40,
+                      shape: const CircleBorder(),
+                      padding: EdgeInsets.zero,
+                      color: AppColors.buttonColors,
+                      onPressed: quantity > 1
+                          ? () {
+                              setState(() {
+                                quantity--;
+                              });
+                            }
+                          : null,
+                      child: const Icon(
+                        Icons.remove,
+                        color: Colors.black,
+                        size: 20,
+                      ),
                     ),
-                  )
-                : Text(
-                    'Add to Meal (${nutrition.calories.round()} Calories)',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
+                    Container(
+                      width: 40,
+                      alignment: Alignment.center,
+                      child: Text(
+                        '$quantity',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
+                    MaterialButton(
+                      minWidth: 40,
+                      height: 40,
+                      shape: const CircleBorder(),
+                      padding: EdgeInsets.zero,
+                      color: AppColors.buttonColors,
+                      onPressed: () {
+                        setState(() {
+                          quantity++;
+                        });
+                      },
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.black,
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Add to Cart Button
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.buttonColors,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    minimumSize: const Size(double.infinity, 50),
                   ),
+                  onPressed: state is AddToCartLoading
+                      ? null
+                      : () {
+                          _handleAddToCart(context);
+                        },
+                  child: state is AddToCartLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.black),
+                          ),
+                        )
+                      : Text(
+                          'Add to Meal (${(nutrition.calories * quantity).round()} Cal)',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ],
           ),
         );
       },

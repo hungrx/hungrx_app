@@ -60,8 +60,9 @@ class MealData {
     return MealData(
       mealId: json['mealId'] ?? '',
       foods: (json['foods'] as List<dynamic>?)
-          ?.map((food) => FoodItem.fromJson(food))
-          .toList() ?? [],
+              ?.map((food) => FoodItem.fromJson(food))
+              .toList() ??
+          [],
     );
   }
 }
@@ -101,13 +102,14 @@ class FoodItem {
       selectedMeal: json['selectedMeal'] ?? '',
       dishId: json['dishId'] ?? '',
       totalCalories: (json['totalCalories'] ?? 0.0).toDouble(),
-      timestamp: DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
+      timestamp:
+          DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
       name: json['name'] ?? '',
       brandName: json['brandName'],
       image: json['image'],
       nutritionFacts: NutritionFacts.fromJson(json['nutritionFacts'] ?? {}),
-      servingInfo: json['servingInfo'] != null 
-          ? ServingInfo.fromJson(json['servingInfo']) 
+      servingInfo: json['servingInfo'] != null
+          ? ServingInfo.fromJson(json['servingInfo'])
           : null,
       foodId: json['foodId'] ?? '',
       isCustomFood: json['isCustomFood'] ?? false,
@@ -116,7 +118,7 @@ class FoodItem {
 }
 
 class NutritionFacts {
-  final int calories;
+  final double calories;
   final dynamic totalFat; // Changed to handle both NutrientInfo and num
   final dynamic sodium;
   final dynamic totalCarbohydrates;
@@ -145,23 +147,24 @@ class NutritionFacts {
   factory NutritionFacts.fromJson(Map<String, dynamic> json) {
     dynamic getValue(dynamic field) {
       if (field is Map) {
-        return field['value'] ?? 0;
+        return (field['value'] ?? 0.0).toDouble();
       }
-      return field ?? 0;
+      return (field ?? 0.0).toDouble();
     }
 
     return NutritionFacts(
-      calories: json['calories'] ?? 0,
+      calories: (json['calories'] ?? 0.0).toDouble(),
       totalFat: getValue(json['totalFat']),
       sodium: getValue(json['sodium']),
-      totalCarbohydrates: getValue(json['totalCarbohydrates']) ?? json['carbs'] ?? 0,
+      totalCarbohydrates:
+          getValue(json['totalCarbohydrates']) ?? getValue(json['carbs']),
       sugars: getValue(json['sugars']),
       protein: getValue(json['protein']),
       cholesterol: getValue(json['cholesterol']),
       dietaryFiber: getValue(json['dietaryFiber']),
       saturatedFat: getValue(json['saturatedFat']),
-      carbs: json['carbs'],
-      fat: json['fat'],
+      carbs: json['carbs'] != null ? (json['carbs'] as num).toDouble() : null,
+      fat: json['fat'] != null ? (json['fat'] as num).toDouble() : null,
     );
   }
 }
@@ -198,7 +201,8 @@ class Weight {
   factory Weight.fromJson(Map<String, dynamic> json) {
     return Weight(
       unit: json['unit'] ?? '',
-      value: (json['vaule'] ?? 0.0).toDouble(), // Note: handling typo in JSON 'vaule'
+      value: (json['vaule'] ?? 0.0)
+          .toDouble(), // Note: handling typo in JSON 'vaule'
     );
   }
 }

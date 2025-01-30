@@ -26,6 +26,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
+   bool _isNavigating = false;
 
   @override
   void initState() {
@@ -48,11 +49,18 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
       CurvedAnimation(parent: _controller, curve: const Interval(0.5, 1.0)),
     );
   }
+  Future<bool> _onWillPop() async {
+    if (_isNavigating) return false;
+    
+    _isNavigating = true;
+    await _navigateToHome(context);
+    return false;
+  }
 
   Future<void> _navigateToHome(BuildContext context) async {
     try {
       final userId = await _authService.getUserId();
-      
+
       if (!mounted) return;
 
       if (userId == null) {
@@ -62,7 +70,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
       }
 
       final homeData = await _authService.fetchHomeData();
-      
+
       if (!mounted) return;
 
       if (homeData != null) {
@@ -76,7 +84,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
       context.go('/home');
     } catch (e) {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error navigating to home: ${e.toString()}'),
@@ -84,7 +92,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
           duration: const Duration(seconds: 3),
         ),
       );
-      
+
       // Navigate to home even if there's an error
       // ignore: use_build_context_synchronously
       context.go('/home');
@@ -94,33 +102,36 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: GradientContainer(
-        top: size.height * 0.00,
-        left: size.height * 0.01,
-        right: size.height * 0.01,
-        bottom: size.height * 0.01,
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        _buildHeader(context),
-                        const SizedBox(height: 24),
-                        _buildResults(widget.tdeeResult),
-                      ],
+    return  WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: GradientContainer(
+          top: size.height * 0.00,
+          left: size.height * 0.01,
+          right: size.height * 0.01,
+          bottom: size.height * 0.01,
+          child: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          _buildHeader(context),
+                          const SizedBox(height: 24),
+                          _buildResults(widget.tdeeResult, context),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -132,16 +143,9 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
       scale: _scaleAnimation,
       child: Column(
         children: [
-          Align(
-            alignment: Alignment.topRight,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () => _navigateToHome(context), // Fixed: Added context and proper function call
-            ),
-          ),
           Container(
-            width: 100,
-            height: 100,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               color: AppColors.buttonColors,
               shape: BoxShape.circle,
@@ -173,28 +177,128 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
     );
   }
 
-  Widget _buildResults(TDEEResultModel result) {
+  Widget _buildResults(TDEEResultModel result, BuildContext context) {
     return FadeTransition(
       opacity: _opacityAnimation,
       child: Column(
         children: [
+          // Motivational greeting based on goal
+          _buildMotivationalGreeting(result.goal),
+          const SizedBox(height: 10),
+
+          // Basic stats
+          _buildResultCard('Goal', _formatGoal(result.goal)),
           _buildResultCard('Height', result.height),
           _buildResultCard('Weight', result.weight),
           _buildResultCard('BMI', result.bmi),
           _buildResultCard('BMR', result.bmr),
           _buildResultCard('TDEE', result.tdee),
           _buildResultCard('Daily Calorie Goal', result.dailyCaloriesGoal),
-          _buildResultCard('Calories to Goal', result.caloriesToReachGoal),
-          _buildResultCard('Days to Goal', result.daysToReachGoal),
-          _buildResultCard('Goal Pace', result.goalPace),
-          const SizedBox(height: 50),
+          _buildResultCard('Daily Water Intake', result.dailyWaterIntake),
+
+          // Conditional fields based on goal
+          if (result.goal.toLowerCase() != 'maintain weight') ...[
+            _buildCaloriesToGoalCard(result),
+            _buildResultCard('Days to Goal', result.daysToReachGoal),
+            _buildResultCard('Goal Pace', result.goalPace),
+          ],
+
+          const SizedBox(height: 10),
           FadeTransition(
             opacity: _opacityAnimation,
-            child: const PremiumContainer(),
+            child: PremiumContainer(
+              onpress: () => _navigateToHome(context),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildMotivationalGreeting(String goal) {
+    String greeting;
+    String message;
+
+    switch (goal.toLowerCase()) {
+      case 'maintain weight':
+        greeting = "Great Choice for Balance! 🌟";
+        message =
+            "Maintaining a healthy weight is key to long-term wellness. We'll help you stay on track!";
+        break;
+      case 'lose weight':
+        greeting = "You're on Your Way! 💪";
+        message =
+            "Every step counts towards your goal. We're here to support your weight loss journey!";
+        break;
+      case 'gain weight':
+        greeting = "Let's Build Together! 🎯";
+        message =
+            "Ready to help you gain strength and reach your target weight safely!";
+        break;
+      default:
+        greeting = "Welcome to Your Journey! 🌱";
+        message = "We're here to support you every step of the way!";
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 0),
+      decoration: BoxDecoration(
+        color: AppColors.buttonColors.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.buttonColors.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            greeting,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.orangeAccent,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.white70,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatGoal(String goal) {
+    // Capitalize first letter of each word
+    return goal.split(' ').map((word) {
+      if (word.isEmpty) return '';
+      return word[0].toUpperCase() + word.substring(1);
+    }).join(' ');
+  }
+
+  Widget _buildCaloriesToGoalCard(TDEEResultModel result) {
+    String title;
+    switch (result.goal.toLowerCase()) {
+      case 'lose weight':
+        title = 'Calories to Burn';
+        break;
+      case 'gain weight':
+        title = 'Calories to Consume';
+        break;
+      default:
+        return const SizedBox
+            .shrink(); // Return empty widget for maintain weight
+    }
+
+    return _buildResultCard(title, result.caloriesToReachGoal);
   }
 
   Widget _buildResultCard(String title, String value) {
@@ -203,7 +307,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
       child: Padding(
         padding: const EdgeInsets.all(1.0),
         child: Container(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
           ),

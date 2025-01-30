@@ -22,6 +22,10 @@ class UserInfoScreenThree extends StatefulWidget {
 }
 
 class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
+  final FocusNode _feetFocusNode = FocusNode();
+  final FocusNode _inchesFocusNode = FocusNode();
+  final FocusNode _weightFocusNode = FocusNode();
+  final FocusNode _hightFocusNode = FocusNode();
   final TextEditingController heightController = TextEditingController();
   final TextEditingController weightController = TextEditingController();
   final TextEditingController inchesController = TextEditingController();
@@ -30,6 +34,10 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
 
   @override
   void dispose() {
+    _feetFocusNode.dispose();
+    _inchesFocusNode.dispose();
+    _weightFocusNode.dispose();
+    _hightFocusNode.dispose();
     heightController.dispose();
     weightController.dispose();
     inchesController.dispose();
@@ -215,6 +223,13 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                       controller: heightController,
                                       hintText: 'Enter Your Height (cm)',
                                       keyboardType: TextInputType.number,
+                                      focusNode: _hightFocusNode,
+                                      maxLength: 3,
+                                      textInputAction: TextInputAction.next,
+                                      onFieldSubmitted: (_) {
+                                        FocusScope.of(context)
+                                            .requestFocus(_weightFocusNode);
+                                      },
                                       onChanged: (value) {
                                         SchedulerBinding.instance
                                             .addPostFrameCallback((_) {
@@ -234,6 +249,15 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                             controller: heightController,
                                             hintText: 'Feet',
                                             keyboardType: TextInputType.number,
+                                            focusNode: _feetFocusNode,
+                                            maxLength: 1,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            onFieldSubmitted: (_) {
+                                              FocusScope.of(context)
+                                                  .requestFocus(
+                                                      _inchesFocusNode);
+                                            },
                                             onChanged: (value) {
                                               context
                                                   .read<UserProfileFormBloc>()
@@ -259,6 +283,15 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                             controller: inchesController,
                                             hintText: 'Inches',
                                             keyboardType: TextInputType.number,
+                                            focusNode: _inchesFocusNode,
+                                            maxLength: 2,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            onFieldSubmitted: (_) {
+                                              FocusScope.of(context)
+                                                  .requestFocus(
+                                                      _weightFocusNode);
+                                            },
                                             onChanged: (value) {
                                               context
                                                   .read<UserProfileFormBloc>()
@@ -293,18 +326,20 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
                                         ? 'Enter Your Weight (kg)'
                                         : 'Enter Your Weight (lbs)',
                                     keyboardType: TextInputType.number,
+                                    focusNode: _weightFocusNode,
+                                    textInputAction: TextInputAction.done,
+                                    onFieldSubmitted: (_) {
+                                      _weightFocusNode.unfocus();
+                                      _handleNextButton(context, state);
+                                    },
                                     onChanged: (value) {
                                       SchedulerBinding.instance
                                           .addPostFrameCallback((_) {
                                         validateWeight(value, state.isMetric);
                                       });
                                     },
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your weight';
-                                      }
-                                      return null;
-                                    },
+                                    validator: (value) =>
+                                        validateWeight(value, state.isMetric),
                                   ),
 
                                   // Extra space at bottom for keyboard
@@ -428,9 +463,8 @@ class UserInfoScreenThreeState extends State<UserInfoScreenThree> {
       return 'Please enter your weight';
     }
 
-    // Check if input is numeric
-    if (!RegExp(r'^\d*\.?\d*$').hasMatch(value)) {
-      return 'Please enter a valid number';
+    if (!RegExp(r'^\d*\.?\d{0,1}$').hasMatch(value)) {
+      return 'Please enter a valid number with up to 1 decimal place';
     }
 
     double? weight = double.tryParse(value);

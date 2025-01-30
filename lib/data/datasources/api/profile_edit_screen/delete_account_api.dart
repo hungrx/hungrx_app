@@ -1,13 +1,13 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class DeleteAccountApi {
-  final String baseUrl = 'https://hungrxbackend.onrender.com/users';
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 
+class DeleteAccountApi {
   Future<Map<String, dynamic>> deleteAccount(String userId) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/deleteUser'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.deleteUser),
         body: jsonEncode({'userId': userId}),
         headers: {'Content-Type': 'application/json'},
       );

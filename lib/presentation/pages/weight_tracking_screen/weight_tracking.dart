@@ -12,8 +12,10 @@ import 'package:hungrx_app/routes/route_names.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class WeightTrackingScreen extends StatefulWidget {
+  final bool isMaintain;
   const WeightTrackingScreen({
     super.key,
+    required this.isMaintain,
   });
 
   @override
@@ -21,8 +23,6 @@ class WeightTrackingScreen extends StatefulWidget {
 }
 
 class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
-
-
   @override
   void initState() {
     super.initState();
@@ -35,8 +35,6 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -48,7 +46,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
                 Expanded(
                   child: _buildContent(context, state),
                 ),
-                _buildUpdateWeightButton(context),
+                _buildUpdateWeightButton(context, state),
               ],
             );
           },
@@ -75,100 +73,113 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
           ],
         ),
       );
-    } else if (state is WeightHistoryNoRecords) {
-      return _buildNoRecordsView();
     } else if (state is WeightHistoryError) {
       return _buildErrorView(context, state.message);
     }
     return const SizedBox();
   }
 
-  Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
-    final List<ChartData> chartData = weightHistory.history
-        .where((entry) =>
-            entry.date != "Current Weight") // Filter out Current Weight
+Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
+  // Create chart data including initial weight
+  final List<ChartData> chartData = [];
+  
+  // Add initial weight as the first point
+  chartData.add(ChartData(
+    'Initial', 
+    weightHistory.initialWeight
+  ));
+  
+  // Add rest of the weight entries
+  chartData.addAll(
+    weightHistory.history
+        // ignore: unnecessary_null_comparison
+        .where((entry) => entry.date == null) // Filter out null dates
         .map((entry) => ChartData(entry.getGraphDate(), entry.weight))
-        .toList();
+        .toList()
+  );
 
-    return Container(
-      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      height: 250,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Current W: ${weightHistory.currentWeight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
-            style: const TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: SfCartesianChart(
-              primaryXAxis: const CategoryAxis(
-                isInversed: true,
-                majorGridLines: MajorGridLines(width: 1),
-                labelStyle: TextStyle(color: Colors.white),
-              ),
-              primaryYAxis: const NumericAxis(
-                majorGridLines: MajorGridLines(width: 1),
-                labelStyle: TextStyle(color: Colors.white),
-              ),
-              plotAreaBorderWidth: 0,
-              series: <CartesianSeries>[
-                LineSeries<ChartData, String>(
-                  dataSource: chartData,
-                  xValueMapper: (ChartData data, _) => data.x,
-                  yValueMapper: (ChartData data, _) => data.y,
-                  color: AppColors.buttonColors,
-                  width: 3,
-                  dashArray: const <double>[5, 5],
-                  markerSettings: const MarkerSettings(isVisible: true),
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeightEntries(WeightHistoryModel weightHistory) {
-    return Column(
+  return Container(
+    margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.grey[900],
+      borderRadius: BorderRadius.circular(16),
+    ),
+    height: 250,
+    child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            'Weight Entry',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+        Text(
+          'Initial W: ${weightHistory.initialWeight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
+          style: const TextStyle(
+              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: SfCartesianChart(
+            primaryXAxis: const CategoryAxis(
+              isInversed: true,
+              majorGridLines: MajorGridLines(width: 1),
+              labelStyle: TextStyle(color: Colors.white),
             ),
+            primaryYAxis: const NumericAxis(
+              majorGridLines: MajorGridLines(width: 1),
+              labelStyle: TextStyle(color: Colors.white),
+            ),
+            plotAreaBorderWidth: 0,
+            series: <CartesianSeries>[
+              LineSeries<ChartData, String>(
+                dataSource: chartData,
+                xValueMapper: (ChartData data, _) => data.x,
+                yValueMapper: (ChartData data, _) => data.y,
+                color: AppColors.buttonColors,
+                width: 3,
+                dashArray: const <double>[5, 5],
+                markerSettings: const MarkerSettings(isVisible: true),
+              )
+            ],
           ),
         ),
-        ...List.generate(weightHistory.history.length, (index) {
-          final entry = weightHistory.history[index];
-          final previousWeight = index < weightHistory.history.length - 1
-              ? weightHistory.history[index + 1].weight
-              : entry.weight;
-          final weightDiff = entry.weight - previousWeight;
-
-          return _buildWeightEntryItem(
-            entry.getFormattedDate(),
-            '${entry.weight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
-            weightDiff,
-            weightHistory.isMetric,
-          );
-        }),
       ],
-    );
-  }
+    ),
+  );
+}
+
+Widget _buildWeightEntries(WeightHistoryModel weightHistory) {
+  // Create a reversed list of entries
+  final reversedEntries = weightHistory.history.reversed.toList();
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Text(
+          'Weight Entry',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      ...List.generate(reversedEntries.length, (index) {
+        final entry = reversedEntries[index];
+        final nextWeight = index < reversedEntries.length - 1
+            ? reversedEntries[index + 1].weight
+            : entry.weight;
+        final weightDiff = entry.weight - nextWeight;
+
+        return _buildWeightEntryItem(
+          entry.getFormattedDate(),
+          '${entry.weight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
+          weightDiff,
+          weightHistory.isMetric,
+        );
+      }),
+    ],
+  );
+}
 
   Widget _buildWeightEntryItem(
       String date, String weight, double weightDiff, bool isMetric) {
@@ -213,94 +224,46 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
     );
   }
 
-  Widget _buildUpdateWeightButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ElevatedButton(
-        onPressed: () async {
-          final result = await context.pushNamed(RouteNames.weightPicker);
-          if (result == true) {
-            // ignore: use_build_context_synchronously
-            context.read<WeightHistoryBloc>().add(FetchWeightHistory());
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.buttonColors,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add, color: Colors.black),
-            SizedBox(width: 8),
-            Text(
-              'Update Weight',
-              style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNoRecordsView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.scale_outlined,
-            size: 80,
-            color: Colors.grey[700],
+  Widget _buildUpdateWeightButton(
+      BuildContext context, WeightHistoryState state) {
+    if (state is WeightHistoryLoaded) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ElevatedButton(
+          onPressed: () {
+            context.pushNamed(
+              RouteNames.weightPicker,
+              extra: {
+                'currentWeight': state
+                    .weightHistory.currentWeight, // your current weight value
+                'isMaintain': widget.isMaintain,
+              },
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.buttonColors,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'No Weight Records Found',
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Start tracking your weight journey\nby adding your first weight record',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              context.goNamed(
-                RouteNames.weightPicker,
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.buttonColors,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add, color: Colors.black),
+              SizedBox(width: 8),
+              Text(
+                'Update Weight',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold),
               ),
-            ),
-            child: const Text(
-              'Add First Weight Record',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    }
+    return const SizedBox();
   }
 
   Widget _buildErrorView(BuildContext context, String message) {

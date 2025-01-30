@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 
 class LogMealSearchHistoryApi {
   final String baseUrl = 'https://hungrxbackend.onrender.com';
@@ -13,14 +14,11 @@ class LogMealSearchHistoryApi {
       if (userId.isEmpty || productId.isEmpty) {
       throw Exception('userId and productId cannot be empty');
     }
-    // print('Request payload: ${json.encode({
-    //   'userId': userId,
-    //   'productId': productId,
-    // })}');
+
 
 
       final response = await http.post(
-        Uri.parse('$baseUrl/users/addHistory'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.addHistory),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'userId': userId,
@@ -28,8 +26,8 @@ class LogMealSearchHistoryApi {
         }),
       );
 // print("User history added log :${response.body}");
-print(response.body);
-print(response.statusCode);
+// print(response.body);
+// print(response.statusCode);
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {

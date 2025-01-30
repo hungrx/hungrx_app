@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/data/Models/restuarent_screen/request_restaurant_model.dart';
 
 class RequestRestaurantApi {
-  static const String baseUrl = 'https://hungrxbackend.onrender.com';
-
   Future<Map<String, dynamic>> requestRestaurant(RequestRestaurantModel request) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/reqrestaurant'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.reqrestaurant),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(request.toJson()),
       );

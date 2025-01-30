@@ -9,14 +9,17 @@ import 'package:hungrx_app/data/datasources/api/cart_screen.dart/delete_dish_car
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/get_cart_api.dart';
 import 'package:hungrx_app/data/datasources/api/daily_insight_screen/daily_insight_datasource.dart';
 import 'package:hungrx_app/data/datasources/api/dashboard_screen/calorie_metrics_api.dart';
+import 'package:hungrx_app/data/datasources/api/dashboard_screen/change_calorie_goal_api.dart';
 import 'package:hungrx_app/data/datasources/api/dashboard_screen/feedback_api_service.dart';
+import 'package:hungrx_app/data/datasources/api/home_meals/add_common_food_history_api.dart';
+import 'package:hungrx_app/data/datasources/api/home_meals/common_consume_food_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/delete_account_api.dart';
 import 'package:hungrx_app/data/datasources/api/daily_insight_screen/delete_consumed_food_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/eat_screen/eat_screen_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/eat_screen/eat_search_screen_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/home_meals/food_search_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/get_basic_info_api.dart';
-import 'package:hungrx_app/data/datasources/api/eat_screen/get_search_history_log_api.dart';
+import 'package:hungrx_app/data/datasources/api/home_meals/get_search_history_log_api.dart';
 import 'package:hungrx_app/data/datasources/api/home_meals/logmeal_search_history_api.dart';
 import 'package:hungrx_app/data/datasources/api/home_meals/meal_type_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/get_profile_details_api.dart';
@@ -44,7 +47,10 @@ import 'package:hungrx_app/data/repositories/cart_screen/delete_dish_cart_reposi
 import 'package:hungrx_app/data/repositories/auth_screen/connectivity_repository.dart';
 import 'package:hungrx_app/data/repositories/daily_insight_screen/daily_insight_repository.dart';
 import 'package:hungrx_app/data/repositories/dashboad_screen/calorie_metrics_repository.dart';
+import 'package:hungrx_app/data/repositories/dashboad_screen/change_calorie_goal_repository.dart';
 import 'package:hungrx_app/data/repositories/dashboad_screen/feedback_repository.dart';
+import 'package:hungrx_app/data/repositories/home_meals_screen/add_common_food_history_repository.dart';
+import 'package:hungrx_app/data/repositories/home_meals_screen/common_consume_food_repository.dart';
 import 'package:hungrx_app/data/repositories/home_meals_screen/common_food_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/goal_settings_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/delete_account_repository.dart';
@@ -79,8 +85,11 @@ import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/login_usecase.dart';
 import 'package:hungrx_app/domain/usecases/cart_screen.dart/consume_cart_usecase.dart';
 import 'package:hungrx_app/domain/usecases/cart_screen.dart/delete_dish_cart_usecase.dart';
+import 'package:hungrx_app/domain/usecases/dashboad_screen/change_calorie_goal_usecase.dart';
 import 'package:hungrx_app/domain/usecases/dashboad_screen/get_calorie_metrics_usecase.dart';
+import 'package:hungrx_app/domain/usecases/home_meals_screen/add_common_food_history_usecase.dart';
 import 'package:hungrx_app/domain/usecases/home_meals_screen/add_logmeal_search_history_usecase.dart';
+import 'package:hungrx_app/domain/usecases/home_meals_screen/common_consume_food_usecase.dart';
 import 'package:hungrx_app/domain/usecases/profile_screen/delete_account_usecase.dart';
 import 'package:hungrx_app/domain/usecases/daily_insight_screen/delete_consumed_food_usecase.dart';
 import 'package:hungrx_app/domain/usecases/eat_screen/eat_screen_search_food_usecase.dart';
@@ -103,12 +112,15 @@ import 'package:hungrx_app/domain/usecases/profile_screen/report_bug_usecase.dar
 import 'package:hungrx_app/domain/usecases/profile_screen/update_basic_info_usecase.dart';
 import 'package:hungrx_app/domain/usecases/weight_screen/update_weight_usecase.dart';
 import 'package:hungrx_app/firebase_options.dart';
+import 'package:hungrx_app/presentation/blocs/add_common_food_history/add_common_food_history_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_logscreen_search_history/add_logscreen_search_history_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_meal_log_screen/add_meal_log_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/calorie_metrics_dashboad/calorie_metrics_dashboad_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/change_calorie_goal/change_calorie_goal_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/consume_cart/consume_cart_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/consume_common_food/consume_common_food_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_bloc.dart';
@@ -160,6 +172,11 @@ void main() async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+    // Add this line to disable split-screen
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.manual,
+    overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+  );
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -177,6 +194,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final commonFoodApi = CommonFoodApi();
+    final commonFoodRepository = ConsumeCommonFoodRepository(commonFoodApi);
+    final commonFoodUseCase = CommonFoodUseCase(commonFoodRepository);
     final progressBarApi = ProgressBarApi();
     final progressBarRepository = ProgressBarRepository(progressBarApi);
     final waterIntakeApi = GetWaterIntakeApi();
@@ -204,13 +224,9 @@ class MyApp extends StatelessWidget {
     final getBasicInfoRepository = GetBasicInfoRepository(getBasicInfoApi);
     final getBasicInfoUseCase = GetBasicInfoUseCase(getBasicInfoRepository);
     final weightHistoryApi = WeightHistoryApi();
-    final weightUpdateApi = WeightUpdateApiService();
     final weightHistoryRepository = WeightHistoryRepository(weightHistoryApi);
-    final weightUpdateRepository = WeightUpdateRepository(weightUpdateApi);
     final getWeightHistoryUseCase =
         GetWeightHistoryUseCase(weightHistoryRepository);
-    final updateWeightUseCase = UpdateWeightUseCase(weightUpdateRepository);
-
     final httpClient = http.Client();
     final mealTypeApi = MealTypeApi(client: httpClient);
     final mealTypeRepository = MealTypeRepository(api: mealTypeApi);
@@ -256,6 +272,30 @@ class MyApp extends StatelessWidget {
           create: (context) => DeleteAccountBloc(
             authService: authService,
             deleteAccountUseCase: deleteAccountUseCase,
+          ),
+        ),
+        BlocProvider<CommonFoodBloc>(
+          create: (context) => CommonFoodBloc(commonFoodUseCase),
+        ),
+
+        BlocProvider<AddCommonFoodHistoryBloc>(
+          create: (context) => AddCommonFoodHistoryBloc(
+            AddCommonFoodHistoryUseCase(
+              AddCommonFoodHistoryRepository(
+                AddCommonFoodHistoryApi(),
+              ),
+            ),
+          ),
+        ),
+
+        BlocProvider(
+          create: (context) => WeightUpdateBloc(
+            UpdateWeightUseCase(
+              WeightUpdateRepository(
+                WeightUpdateApiService(),
+              ),
+            ),
+            AuthService(),
           ),
         ),
 
@@ -321,7 +361,7 @@ class MyApp extends StatelessWidget {
         ),
 
         BlocProvider(
-          create: (context) => GetBasicInfoBloc(getBasicInfoUseCase),
+          create: (context) => GetBasicInfoBloc(getBasicInfoUseCase,authService),
         ),
         BlocProvider(create: (_) => AddMealBloc()),
         BlocProvider(
@@ -349,13 +389,13 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        BlocProvider<WeightUpdateBloc>(
-          create: (context) => WeightUpdateBloc(
-            updateWeightUseCase,
-            authService,
-            // Add your repository/usecase here
-          ),
-        ),
+        // BlocProvider<WeightUpdateBloc>(
+        //   create: (context) => WeightUpdateBloc(
+        //     updateWeightUseCase,
+        //     authService,
+        //     // Add your repository/usecase here
+        //   ),
+        // ),
         BlocProvider<CalorieMetricsBloc>(
           create: (context) => CalorieMetricsBloc(
               GetCalorieMetricsUseCase(
@@ -396,6 +436,15 @@ class MyApp extends StatelessWidget {
               UserSignInRepository(),
             ),
           ),
+        ),
+        BlocProvider(
+          create: (context) => ChangeCalorieGoalBloc(
+              ChangeCalorieGoalUseCase(
+                ChangeCalorieGoalRepository(
+                  ChangeCalorieGoalApi(),
+                ),
+              ),
+              authService),
         ),
         BlocProvider<DailyInsightBloc>(
           create: (context) => DailyInsightBloc(

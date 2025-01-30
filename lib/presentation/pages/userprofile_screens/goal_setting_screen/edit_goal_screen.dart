@@ -6,9 +6,20 @@ import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_goal_
 import 'package:hungrx_app/data/repositories/profile_setting_screen/update_goal_settings_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/domain/usecases/profile_screen/update_goal_settings_usecase.dart';
+import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_event.dart';
+import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_event.dart';
+import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_event.dart';
+import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_state.dart';
+import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_event.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 
 class GoalSettingsEditScreen extends StatefulWidget {
   final String goal;
@@ -17,19 +28,20 @@ class GoalSettingsEditScreen extends StatefulWidget {
   final String activityLevel;
   final int mealsPerDay;
   final bool isMetric;
-  final int currentWeight;
+  final double currentWeight;
+  final bool isMaintain;
 
-  const GoalSettingsEditScreen(
-      {
-        super.key,
-      required this.goal,
-      required this.targetWeight,
-      required this.isMetric,
-      required this.currentWeight,
-      required this.weightGainRate,
-      required this.activityLevel,
-      required this.mealsPerDay,
-     });
+  const GoalSettingsEditScreen({
+    super.key,
+    required this.goal,
+    required this.targetWeight,
+    required this.isMetric,
+    required this.currentWeight,
+    required this.weightGainRate,
+    required this.activityLevel,
+    required this.mealsPerDay,
+    required this.isMaintain,
+  });
 
   @override
   State<GoalSettingsEditScreen> createState() => _GoalSettingsEditScreenState();
@@ -42,7 +54,7 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
   late String _activityLevel;
   late int _mealsPerDay;
   late UpdateGoalSettingsBloc _bloc;
-   final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService();
   String? _userId;
 
   @override
@@ -62,12 +74,13 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
     );
     _initializeUserId();
   }
+
   Future<void> _initializeUserId() async {
     final userId = await _authService.getUserId();
     setState(() {
       _userId = userId;
     });
-  } 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,11 +89,22 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
       child: BlocListener<UpdateGoalSettingsBloc, UpdateGoalSettingsState>(
         listener: (context, state) {
           if (state is UpdateGoalSettingsSuccess) {
+            context.read<GetProfileDetailsBloc>().add(FetchProfileDetails());
+            context.read<GoalSettingsBloc>().add(FetchGoalSettings());
+            context.read<EatScreenBloc>().add(GetEatScreenDataEvent());
+            context.read<HomeBloc>().add(RefreshHomeData());
+            if (widget.isMaintain) {
+              context.read<WeightUpdateBloc>().add(
+                    UpdateWeightRequested(widget.currentWeight),
+                  );
+              context.read<HomeBloc>().add(RefreshHomeData());
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                   content: Text('Goal settings updated successfully')),
             );
-             Navigator.pop(context, state.settings); 
+            context.goNamed(RouteNames.home);
+            // Navigator.pop(context, state.settings);
           } else if (state is UpdateGoalSettingsFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.error)),
@@ -100,8 +124,10 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
                     const SizedBox(height: 32),
                     _buildWeightGoalSection(),
                     const SizedBox(height: 32),
-                    _buildTargetWeightSection(),
-                    const SizedBox(height: 32),
+                    if (_goal != 'maintain weight') ...[
+                      _buildTargetWeightSection(),
+                      const SizedBox(height: 32),
+                    ],
                     _buildWeightGainRateSection(),
                     const SizedBox(height: 32),
                     _buildActivityLevelSection(),
@@ -188,6 +214,28 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
   }
 
   Widget _buildTargetWeightSection() {
+    // Function to validate target weight
+    String? getTargetWeightError() {
+      if (_targetWeight.isEmpty) {
+        return 'Target weight is required';
+      }
+
+      double? targetWeightNum = double.tryParse(_targetWeight);
+      if (targetWeightNum == null) {
+        return 'Please enter a valid number';
+      }
+
+      if (_goal == 'lose weight' && targetWeightNum >= widget.currentWeight) {
+        return 'Target weight must be less than current weight';
+      }
+
+      if (_goal == 'gain weight' && targetWeightNum <= widget.currentWeight) {
+        return 'Target weight must be greater than current weight';
+      }
+
+      return null;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -218,6 +266,12 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
             ),
             suffixText: widget.isMetric ? 'kg' : 'lbs',
             suffixStyle: const TextStyle(color: Colors.grey),
+            errorText: getTargetWeightError(),
+            errorStyle: const TextStyle(color: Colors.red),
+            // Add helper text to show current weight
+            helperText:
+                'Current weight: ${widget.currentWeight} ${widget.isMetric ? 'kg' : 'lbs'}',
+            helperStyle: const TextStyle(color: Colors.grey),
           ),
         ),
       ],
@@ -225,6 +279,22 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
   }
 
   Widget _buildWeightGainRateSection() {
+    // Helper function to convert kg to lbs
+    double kgToLbs(double kg) {
+      return kg * 2.20462;
+    }
+
+    // Helper function to format weight gain rate with proper unit
+    String formatWeightGainRate(double rate, bool isMetric) {
+      print(rate);
+      if (isMetric) {
+        return '${rate.toStringAsFixed(2)} kg/week';
+      } else {
+        double lbs = kgToLbs(rate);
+        return '${lbs.toStringAsFixed(2)} lbs/week';
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -240,11 +310,11 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
         Slider(
           value: _weightGainRate,
           min: 0.25,
-          max: 1.0,
-          divisions: 3,
+          max: 0.75,
+          divisions: 2,
           activeColor: const Color(0xFFBBD66F),
           inactiveColor: Colors.grey[800],
-          label: '$_weightGainRate ${widget.isMetric ? 'kg' : 'lbs'}/week',
+          label: formatWeightGainRate(_weightGainRate, widget.isMetric),
           onChanged: (value) {
             setState(() {
               _weightGainRate = value;
@@ -255,7 +325,7 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: ['Mild', 'Moderate', 'Fast', 'Very Fast']
+            children: ['Mild', 'Moderate', 'Fast']
                 .map((e) => Text(
                       e,
                       style: const TextStyle(color: Colors.grey, fontSize: 12),
@@ -367,16 +437,38 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
   Widget _buildSaveButton(BuildContext context) {
     return BlocBuilder<UpdateGoalSettingsBloc, UpdateGoalSettingsState>(
       builder: (context, state) {
+        // Function to check if form is valid
+        bool isFormValid() {
+          if (_goal == 'maintain weight') return true;
+
+          double? targetWeightNum = double.tryParse(_targetWeight);
+          if (targetWeightNum == null) return false;
+
+          if (_goal == 'lose weight' &&
+              targetWeightNum >= widget.currentWeight) {
+            return false;
+          }
+
+          if (_goal == 'gain weight' &&
+              targetWeightNum <= widget.currentWeight) {
+            return false;
+          }
+
+          return true;
+        }
+
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: state is UpdateGoalSettingsLoading
+            onPressed: (state is UpdateGoalSettingsLoading || !isFormValid())
                 ? null
                 : () {
                     final settings = UpdateGoalSettingsModel(
-                      userId: _userId??"",
+                      userId: _userId ?? "",
                       goal: _goal,
-                      targetWeight: _targetWeight,
+                      targetWeight: _goal == 'maintain weight'
+                          ? widget.currentWeight.toString()
+                          : _targetWeight,
                       weightGainRate: _weightGainRate,
                       activityLevel: _activityLevel,
                       mealsPerDay: _mealsPerDay,
@@ -392,6 +484,9 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+              // Disable button style
+              disabledBackgroundColor: Colors.grey,
+              disabledForegroundColor: Colors.white54,
             ),
             child: state is UpdateGoalSettingsLoading
                 ? const SizedBox(

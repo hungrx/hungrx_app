@@ -109,7 +109,7 @@ class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
 
                             // Gender Selection Text
                             Text(
-                              "Please select which sex we should use to\ncalculate your calorie needs.",
+                              "Please select your sex to help us to\ncalculate your calorie needs.",
                               style: TextStyle(
                                 color: Colors.grey,
                                 fontSize: isSmallScreen ? 14 : 16,

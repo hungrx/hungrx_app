@@ -1,17 +1,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 
 class GetBasicInfoApi {
-  static const String baseUrl = 'https://hungrxbackend.onrender.com';
-
   Future<Map<String, dynamic>> getBasicInfo(String userId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/basicInfo'),
+        Uri.parse(ApiConstants.baseUrl + ApiConstants.basicInfo),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );
-// print(response.body);
+      print(response.body);
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {

@@ -17,10 +17,6 @@ class WeightUpdateBloc extends Bloc<WeightUpdateEvent, WeightUpdateState> {
     UpdateWeightRequested event,
     Emitter<WeightUpdateState> emit,
   ) async {
-    if (event.newWeight <= 0 || event.newWeight > 200) {
-      emit(WeightUpdateError('Please enter a valid weight between 0 and 200 kg'));
-      return;
-    }
     emit(WeightUpdateLoading());
 
     try {

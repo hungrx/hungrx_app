@@ -37,7 +37,7 @@ class UserProfileFormState extends Equatable {
     this.targetWeight,
     this.weightPace,
     this.activityLevel,
-    this.isMetric = true,
+    this.isMetric = false,
     this.isSubmitting = false,
     this.isSuccess = false,
     this.errorMessage,

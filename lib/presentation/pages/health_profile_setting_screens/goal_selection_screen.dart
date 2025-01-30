@@ -65,10 +65,19 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
             const SnackBar(content: Text('Please enter your goal weight')),
           );
         } else {
-          context.pushNamed(
-            RouteNames.goalPace,
-            extra: context.read<UserProfileFormBloc>(),
-          );
+          // If maintaining weight, skip the GoalPaceScreen
+          if (state.weightGoal == WeightGoal.maintain) {
+            context.pushNamed(
+              RouteNames.dailyactivity,
+              extra: context.read<UserProfileFormBloc>(),
+            );
+          } else {
+            // For lose/gain weight, go to GoalPaceScreen
+            context.pushNamed(
+              RouteNames.goalPace,
+              extra: context.read<UserProfileFormBloc>(),
+            );
+          }
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -78,9 +87,49 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
     }
   }
 
+  static const double underweightBmi = 18.5;
+  static const double normalBmi = 24.9;
+  static const double overweightBmi = 29.9;
+
+  String getBmiCategory(double bmi) {
+    if (bmi < underweightBmi) return 'underweight';
+    if (bmi <= normalBmi) return 'normal';
+    if (bmi <= overweightBmi) return 'overweight';
+    return 'obese';
+  }
+
+  String getSuggestedGoal(double bmi) {
+    final category = getBmiCategory(bmi);
+    switch (category) {
+      case 'underweight':
+        return 'Based on your BMI, we suggest gaining weight to reach a healthier range.';
+      case 'normal':
+        return 'Your BMI is in a healthy range. We suggest maintaining your current weight.';
+      case 'overweight':
+      case 'obese':
+        return 'Based on your BMI, we suggest losing weight to reach a healthier range.';
+      default:
+        return '';
+    }
+  }
+
+  Color getGoalButtonBorderColor(WeightGoal goal, double bmi, bool isSelected) {
+    if (isSelected) return AppColors.buttonColors;
+
+    final category = getBmiCategory(bmi);
+    if (goal == WeightGoal.lose && (category == 'underweight')) {
+      return Colors.red;
+    }
+    if (goal == WeightGoal.gain &&
+        (category == 'obese' || category == 'overweight')) {
+      return Colors.red;
+    }
+    return Colors.grey[700]!;
+  }
+
   @override
   Widget build(BuildContext context) {
-    print(widget.currentWeight);
+    // print(widget.currentWeight);
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.width < 360;
     final viewInsets = MediaQuery.of(context).viewInsets;
@@ -156,8 +205,48 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
 
                                 SizedBox(height: size.height * 0.03),
 
+                                // Text(
+                                //   "What's your Goal ?",
+                                //   style: TextStyle(
+                                //     color: Colors.grey,
+                                //     fontSize: isSmallScreen ? 14 : 16,
+                                //   ),
+                                // ),
+                                if (bmi != null) ...[
+                                  Container(
+                                    padding: EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[900],
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Your BMI: ${bmi.toStringAsFixed(1)}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: isSmallScreen ? 14 : 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          getSuggestedGoal(bmi),
+                                          style: TextStyle(
+                                            color: Colors.grey[400],
+                                            fontSize: isSmallScreen ? 12 : 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: size.height * 0.03),
+                                ],
+
                                 Text(
-                                  "What's your Goal ?",
+                                  "What's your Goal?",
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: isSmallScreen ? 14 : 16,
@@ -171,6 +260,7 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                                   WeightGoal.lose,
                                   'Lose Weight',
                                   size,
+                                  bmi ?? 0,
                                 ),
                                 SizedBox(height: size.height * 0.01),
                                 _buildGoalButton(
@@ -178,6 +268,7 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                                   WeightGoal.maintain,
                                   'Maintain Weight',
                                   size,
+                                  bmi ?? 0,
                                 ),
                                 SizedBox(height: size.height * 0.01),
                                 _buildGoalButton(
@@ -185,25 +276,28 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                                   WeightGoal.gain,
                                   'Gain Weight',
                                   size,
+                                  bmi ?? 0,
                                 ),
-
                                 SizedBox(height: size.height * 0.02),
 
                                 if (state.weightGoal == WeightGoal.lose ||
-                                    state.weightGoal == WeightGoal.gain)
+                                    state.weightGoal == WeightGoal.gain ||
+                                    state.weightGoal == WeightGoal.maintain)
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "What's is your target weight?",
+                                        state.weightGoal == WeightGoal.maintain
+                                            ? "Confirm your maintenance weight:"
+                                            : "What's your target weight?",
                                         style: TextStyle(
                                           color: Colors.grey,
                                           fontSize: isSmallScreen ? 14 : 16,
                                         ),
                                       ),
                                       SizedBox(height: size.height * 0.01),
-                                      if (bmi != null)
+                                      if (bmi != null) ...[
                                         Text(
                                           'Based on your BMI of ${bmi.toStringAsFixed(1)}',
                                           style: TextStyle(
@@ -212,19 +306,22 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                                             fontStyle: FontStyle.italic,
                                           ),
                                         ),
-                                      Text(
-                                        'Your ideal weight range is $idealWeightRange',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: isSmallScreen ? 11 : 12,
-                                          fontStyle: FontStyle.italic,
+                                        Text(
+                                          'Your ideal weight range is $idealWeightRange',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: isSmallScreen ? 11 : 12,
+                                            fontStyle: FontStyle.italic,
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                       SizedBox(height: size.height * 0.01),
                                       CustomTextFormField(
                                         keyboardType: TextInputType.number,
-                                        hintText:
-                                            'Input the goal weight (${state.isMetric ? 'kg' : 'lbs'})',
+                                        hintText: state.weightGoal ==
+                                                WeightGoal.maintain
+                                            ? 'Confirm your current weight (${state.isMetric ? 'kg' : 'lbs'})'
+                                            : 'Input the goal weight (${state.isMetric ? 'kg' : 'lbs'})',
                                         controller: weightController,
                                         onChanged: (value) {
                                           context
@@ -235,7 +332,8 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                                             validateTargetWeight(
                                                 value,
                                                 state.weightGoal,
-                                                widget.currentWeight),
+                                                widget.currentWeight,
+                                                state.isMetric),
                                       ),
                                     ],
                                   ),
@@ -277,96 +375,167 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
     );
   }
 
-  Widget _buildGoalButton(
-    BuildContext context,
-    WeightGoal goal,
-    String label,
-    Size size,
-  ) {
-    final isSmallScreen = size.width < 360;
-
+  Widget _buildGoalButton(BuildContext context, WeightGoal goal, String label,
+      Size size, double bmi) {
     return BlocBuilder<UserProfileFormBloc, UserProfileFormState>(
       builder: (context, state) {
-        return GestureDetector(
-          onTap: () {
-            context.read<UserProfileFormBloc>().add(GoalChanged(goal));
-            if (goal == WeightGoal.maintain) {
-              weightController.clear();
-            }
-          },
-          child: Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(
-              vertical: size.height * 0.018,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.grey[900],
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: state.weightGoal == goal
-                    ? AppColors.buttonColors
-                    : Colors.grey[700]!,
-                width: 1,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: state.weightGoal == goal
-                      ? AppColors.buttonColors
-                      : Colors.white,
-                  fontSize: isSmallScreen ? 14 : 16,
+        final isSelected = state.weightGoal == goal;
+        final borderColor = getGoalButtonBorderColor(goal, bmi, isSelected);
+        final category = getBmiCategory(bmi);
+        final showWarning =
+            (goal == WeightGoal.lose && category == 'underweight') ||
+                (goal == WeightGoal.gain &&
+                    (category == 'obese' || category == 'overweight'));
+
+        return Column(
+          children: [
+            GestureDetector(
+              onTap: () {
+                if (showWarning) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: Colors.grey[900],
+                      title: Text('Health Consideration',
+                          style: TextStyle(color: Colors.white)),
+                      content: Text(
+                          goal == WeightGoal.lose
+                              ? 'Your BMI indicates you\'re underweight. Consider consulting a healthcare provider before starting a weight loss plan.'
+                              : 'Your BMI indicates you\'re overweight/obese. Consider consulting a healthcare provider before starting a weight gain plan.',
+                          style: TextStyle(color: Colors.grey[300])),
+                      actions: [
+                        TextButton(
+                          child: Text('Cancel',
+                              style: TextStyle(color: Colors.grey)),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        TextButton(
+                          child: Text('Proceed',
+                              style: TextStyle(color: AppColors.buttonColors)),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            context
+                                .read<UserProfileFormBloc>()
+                                .add(GoalChanged(goal));
+                            if (goal == WeightGoal.maintain) {
+                              weightController.text = widget.currentWeight;
+                              context.read<UserProfileFormBloc>().add(
+                                  TargetWeightChanged(widget.currentWeight));
+                            } else {
+                              weightController.clear();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  context.read<UserProfileFormBloc>().add(GoalChanged(goal));
+                  if (goal == WeightGoal.maintain) {
+                    weightController.text = widget.currentWeight;
+                    context
+                        .read<UserProfileFormBloc>()
+                        .add(TargetWeightChanged(widget.currentWeight));
+                  } else {
+                    weightController.clear();
+                  }
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: size.height * 0.018),
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: borderColor, width: 1),
+                ),
+                child: Center(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: isSelected ? AppColors.buttonColors : Colors.white,
+                      fontSize: size.width < 360 ? 14 : 16,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+            if (showWarning)
+              Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Please consult a healthcare provider',
+                  style: TextStyle(
+                    color: Colors.red[400],
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+          ],
         );
       },
     );
   }
 
   String? validateTargetWeight(
-      String? value, WeightGoal? goal, String currentWeight) {
+      String? value, WeightGoal? goal, String currentWeight, bool isMetric) {
     if (value == null || value.isEmpty) {
       return 'Please enter your goal weight';
+    }
+
+    if (!RegExp(r'^\d*\.?\d{0,1}$').hasMatch(value)) {
+      return 'Please enter a valid number with up to 1 decimal place';
     }
 
     try {
       final targetWeight = double.parse(value);
       final currentWeightValue = double.parse(currentWeight);
 
-      if (targetWeight <= 0) {
-        return 'Weight must be greater than 0';
+      // Base validation
+      if (targetWeight <= 0) return 'Weight must be greater than 0';
+
+      // Metric system limits
+      final minWeight = isMetric ? 30.0 : 66.0; // 30kg or 66lbs
+      final maxWeight = isMetric ? 300.0 : 660.0; // 300kg or 660lbs
+
+      if (targetWeight < minWeight) {
+        return 'Target weight cannot be less than ${minWeight.toStringAsFixed(1)} ${isMetric ? "kg" : "lbs"}';
+      }
+      if (targetWeight > maxWeight) {
+        return 'Target weight cannot exceed ${maxWeight.toStringAsFixed(1)} ${isMetric ? "kg" : "lbs"}';
       }
 
+      // Goal-specific validation
       switch (goal) {
         case WeightGoal.lose:
           if (targetWeight >= currentWeightValue) {
-            return 'Target weight must be less than your current weight ($currentWeight)';
+            return 'Target weight must be less than current weight';
           }
-          // Prevent unrealistic weight loss (e.g., more than 50% of current weight)
+          // Prevent extreme weight loss (more than 50% of current weight)
           if (targetWeight < currentWeightValue * 0.5) {
-            return 'Target weight seems too low. Please set a realistic goal';
+            return 'Please set a more realistic weight loss goal';
           }
           break;
 
         case WeightGoal.gain:
           if (targetWeight <= currentWeightValue) {
-            return 'Target weight must be greater than your current weight ($currentWeight)';
+            return 'Target weight must be greater than current weight';
           }
-          // Prevent unrealistic weight gain (e.g., more than double current weight)
+          // Prevent extreme weight gain (more than 100% increase)
           if (targetWeight > currentWeightValue * 2) {
-            return 'Target weight seems too high. Please set a realistic goal';
+            return 'Please set a more realistic weight gain goal';
           }
           break;
 
         case WeightGoal.maintain:
-          // No validation needed for maintain goal as the field won't be shown
+          final tolerance = isMetric ? 0.1 : 0.2; // 0.1kg or 0.2lbs tolerance
+          if ((targetWeight - currentWeightValue).abs() > tolerance) {
+            return 'Please confirm your current weight';
+          }
           break;
-
-        default:
-          break;
+        case null:
+          // TODO: Handle this case.
+          throw UnimplementedError();
       }
     } catch (e) {
       return 'Please enter a valid number';

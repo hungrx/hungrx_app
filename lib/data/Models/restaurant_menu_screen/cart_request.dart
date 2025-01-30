@@ -33,11 +33,17 @@ class CartOrderRequest {
 class CartItemRequest {
   final String dishId;
   final String servingSize;
+  final int quantity; // Added quantity field
 
-  CartItemRequest({required this.dishId, required this.servingSize});
+  CartItemRequest({
+    required this.dishId, 
+    required this.servingSize,
+    required this.quantity, // Made quantity required
+  });
 
   Map<String, dynamic> toJson() => {
         'dishId': dishId,
         'servingSize': servingSize,
+        'quantity': quantity, // Added quantity to JSON
       };
 }

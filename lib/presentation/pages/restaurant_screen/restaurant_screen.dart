@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/restuarent_screen/nearby_restaurant_model.dart';
+import 'package:hungrx_app/data/Models/restuarent_screen/suggested_restaurant_model.dart';
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_event.dart';
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_state.dart';
@@ -13,6 +16,7 @@ import 'package:hungrx_app/presentation/pages/restaurant_screen/widgets/distance
 import 'package:hungrx_app/presentation/pages/restaurant_screen/widgets/request_restaurant_dialog.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/widgets/restaurant_tile.dart';
 import 'package:hungrx_app/routes/route_names.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RestaurantScreen extends StatefulWidget {
   const RestaurantScreen({super.key});
@@ -22,18 +26,74 @@ class RestaurantScreen extends StatefulWidget {
 }
 
 class _RestaurantScreenState extends State<RestaurantScreen> {
+
   bool showNearbyRestaurants = false;
+  List<SuggestedRestaurantModel>? _cachedRestaurants;
+  DateTime? _lastFetchTime;
+  static const cacheDuration = Duration(minutes: 15); // Cache expires after 15 minutes
+
   @override
   void initState() {
     super.initState();
+    _loadCachedData();
+  }
+
+  Future<void> _loadCachedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('suggested_restaurants_cache');
+    final lastFetchTimeStr = prefs.getString('restaurants_last_fetch_time');
+
+    if (cachedData != null && lastFetchTimeStr != null) {
+      final lastFetchTime = DateTime.parse(lastFetchTimeStr);
+      if (DateTime.now().difference(lastFetchTime) < cacheDuration) {
+        try {
+          final jsonData = json.decode(cachedData);
+          final restaurantsResponse = RestaurantsResponse.fromJson(jsonData);
+          
+          if (restaurantsResponse.status) {
+            setState(() {
+              _cachedRestaurants = restaurantsResponse.restaurants;
+              _lastFetchTime = lastFetchTime;
+            });
+          }
+        } catch (e) {
+          debugPrint('Error loading cached restaurants: $e');
+        }
+      }
+    }
+    
+    // Fetch fresh data
     _initializeData();
   }
 
+  Future<void> _cacheData(List<SuggestedRestaurantModel> restaurants) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final responseData = RestaurantsResponse(
+        status: true,
+        restaurants: restaurants,
+      );
+      
+      await prefs.setString('suggested_restaurants_cache', 
+        json.encode(responseData.toJson()));
+      await prefs.setString('restaurants_last_fetch_time', 
+        DateTime.now().toIso8601String());
+      _lastFetchTime = DateTime.now();
+    } catch (e) {
+      debugPrint('Error caching restaurants: $e');
+    }
+  }
+
   void _initializeData() {
+    // Prevent frequent refetches
+    if (_lastFetchTime != null && 
+        DateTime.now().difference(_lastFetchTime!) < const Duration(seconds: 30)) {
+      return;
+    }
     context.read<SuggestedRestaurantsBloc>().add(FetchSuggestedRestaurants());
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
@@ -67,6 +127,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
       ),
     );
   }
+
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
@@ -296,44 +357,71 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
             ),
           ),
         ),
-        BlocBuilder<SuggestedRestaurantsBloc, SuggestedRestaurantsState>(
+        BlocConsumer<SuggestedRestaurantsBloc, SuggestedRestaurantsState>(
+          listener: (context, state) {
+            if (state is SuggestedRestaurantsLoaded) {
+              // Only update cache if data has changed
+              if (_cachedRestaurants == null || 
+                  !_areRestaurantsEqual(_cachedRestaurants!, state.restaurants)) {
+                _cacheData(state.restaurants);
+                setState(() {
+                  _cachedRestaurants = state.restaurants;
+                });
+              }
+            }
+          },
           builder: (context, state) {
-            if (state is SuggestedRestaurantsLoading) {
+            if (state is SuggestedRestaurantsLoading && _cachedRestaurants == null) {
               return const Center(
                 child: CircularProgressIndicator(),
               );
-            } else if (state is SuggestedRestaurantsError) {
+            } else if (state is SuggestedRestaurantsError && _cachedRestaurants == null) {
               return _buildErrorState(state.message);
-            } else if (state is SuggestedRestaurantsLoaded) {
-              if (state.restaurants.isEmpty) {
-                return _buildEmptyState('No suggested restaurants available');
-              }
-              return ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: state.restaurants.length,
-                itemBuilder: (context, index) {
-                  final restaurant = state.restaurants[index];
-                  return RestaurantItem(
-                    ontap: () {
-                      _onRestaurantTap(restaurant.id, null);
-                    },
-                    name: restaurant.name,
-                    imageUrl: restaurant.logo,
-                    rating: null,
-                    address: null,
-                    distance: restaurant.distance != null
-                        ? '${(restaurant.distance! / 1000).toStringAsFixed(1)} km'
-                        : 'Distance not available',
-                  );
-                },
-              );
             }
-            return const SizedBox();
+
+            // Use cached data or new data
+            final restaurants = _cachedRestaurants ?? 
+              (state is SuggestedRestaurantsLoaded ? state.restaurants : []);
+
+            if (restaurants.isEmpty) {
+              return _buildEmptyState('No suggested restaurants available');
+            }
+
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: restaurants.length,
+              itemBuilder: (context, index) {
+                final restaurant = restaurants[index];
+                return RestaurantItem(
+                  ontap: () {
+                    _onRestaurantTap(restaurant.id, null);
+                  },
+                  name: restaurant.name,
+                  imageUrl: restaurant.logo,
+                  rating: null,
+                  address: restaurant.address,
+                  distance: restaurant.distance != null
+                      ? '${(restaurant.distance! / 1000).toStringAsFixed(1)} km'
+                      : 'Distance not available',
+                );
+              },
+            );
           },
         ),
       ],
     );
+  }
+
+  bool _areRestaurantsEqual(List<SuggestedRestaurantModel> list1, 
+      List<SuggestedRestaurantModel> list2) {
+    if (list1.length != list2.length) return false;
+    
+    for (int i = 0; i < list1.length; i++) {
+      if (!list1[i].equals(list2[i])) return false;
+    }
+    
+    return true;
   }
 
   Widget _buildErrorState(String message) {
