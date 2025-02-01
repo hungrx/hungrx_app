@@ -9,11 +9,10 @@ import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_event.da
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 
-
 class BottomCalorieSearchWidget extends StatefulWidget {
   final String userId;
 
-   final VoidCallback onSearchHistoryRefresh;
+  final VoidCallback onSearchHistoryRefresh;
   final Color backgroundColor;
   final Color buttonColor;
 
@@ -26,7 +25,8 @@ class BottomCalorieSearchWidget extends StatefulWidget {
   });
 
   @override
-  State<BottomCalorieSearchWidget> createState() => _BottomCalorieSearchWidgetState();
+  State<BottomCalorieSearchWidget> createState() =>
+      _BottomCalorieSearchWidgetState();
 }
 
 class _BottomCalorieSearchWidgetState extends State<BottomCalorieSearchWidget> {
@@ -51,13 +51,7 @@ class _BottomCalorieSearchWidgetState extends State<BottomCalorieSearchWidget> {
     return BlocBuilder<ProgressBarBloc, ProgressBarState>(
       builder: (context, state) {
         if (state is ProgressBarLoading) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: widget.backgroundColor,
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return SizedBox();
         }
 
         if (state is ProgressBarError) {
@@ -74,8 +68,9 @@ class _BottomCalorieSearchWidgetState extends State<BottomCalorieSearchWidget> {
         }
 
         if (state is ProgressBarLoaded) {
-          final progress = (state.data.totalCaloriesConsumed / 
-                          state.data.dailyCalorieGoal).clamp(0.0, 1.0);
+          final progress =
+              (state.data.totalCaloriesConsumed / state.data.dailyCalorieGoal)
+                  .clamp(0.0, 1.0);
           final progressColor = _getProgressColor(progress);
 
           return Container(
@@ -136,7 +131,8 @@ class _BottomCalorieSearchWidgetState extends State<BottomCalorieSearchWidget> {
                           child: LinearProgressIndicator(
                             value: progress,
                             backgroundColor: Colors.blueGrey.withOpacity(0.2),
-                            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(progressColor),
                             minHeight: 10,
                           ),
                         ),
@@ -144,61 +140,61 @@ class _BottomCalorieSearchWidgetState extends State<BottomCalorieSearchWidget> {
                     ),
                   ],
                 ),
-             const SizedBox(height: 16),
-          // Search Bar Section
-          BlocBuilder<SearchBloc, SearchState>(
-            builder: (context, state) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[900],
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: AppColors.buttonColors.withOpacity(0.5),
-                    width: 0,
-                  ),
-                ),
-                child: TextField(
-                  style: const TextStyle(color: Colors.white),
-                  onTap: () {
-                    context.pushNamed(RouteNames.grocerySeach).then((_) {
-                     widget.onSearchHistoryRefresh();
-                    });
+                const SizedBox(height: 16),
+                // Search Bar Section
+                BlocBuilder<SearchBloc, SearchState>(
+                  builder: (context, state) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: AppColors.buttonColors.withOpacity(0.5),
+                          width: 0,
+                        ),
+                      ),
+                      child: TextField(
+                        style: const TextStyle(color: Colors.white),
+                        onTap: () {
+                          context.pushNamed(RouteNames.grocerySeach).then((_) {
+                            widget.onSearchHistoryRefresh();
+                          });
+                        },
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          hintText: 'Search your food',
+                          hintStyle: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 16,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: AppColors.buttonColors,
+                            size: 24,
+                          ),
+                          suffixIcon: Container(
+                            margin: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: AppColors.buttonColors,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              color: AppColors.primaryColor,
+                              size: 20,
+                            ),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 15,
+                          ),
+                        ),
+                      ),
+                    );
                   },
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    hintText: 'Search your food',
-                    hintStyle: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 16,
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: AppColors.buttonColors,
-                      size: 24,
-                    ),
-                    suffixIcon: Container(
-                      margin: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: AppColors.buttonColors,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        color: AppColors.primaryColor,
-                        size: 20,
-                      ),
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 15,
-                    ),
-                  ),
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 8),
+                const SizedBox(height: 8),
               ],
             ),
           );

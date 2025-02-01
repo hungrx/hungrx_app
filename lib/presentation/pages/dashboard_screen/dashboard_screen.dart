@@ -55,28 +55,95 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize everything in sequence
-    _initializeAndFetch();
-    _checkWeightReminder();
+    // Single initialization point
+    _initializeApp();
   }
 
-Future<void> _handleFirstTimeUser(String calculationDate) async {
-  bool isFirstTime = _prefs.getBool(_firstTimeKey) ?? true;
+  Future<void> _initializeApp() async {
+    try {
+      if (_isInitialized) return;
+      _isInitialized = true;
 
-  if (isFirstTime) {
-    await _prefs.setString(_accountCreationDateKey, calculationDate);
-    await _prefs.setBool(_firstTimeKey, false);
+      // 1. Initialize preferences first
+      await _initializePrefs();
+      if (!mounted) return;
 
-    if (mounted) {
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const WelcomeDialog(),
-      );
+      // 2. Check first time user status
+      bool isFirstTime = _prefs.getBool(_firstTimeKey) ?? true;
+
+      // 3. Fetch initial data
+      context.read<HomeBloc>().add(RefreshHomeData());
+
+      // 4. Handle first time user flow
+      if (isFirstTime) {
+        await for (final state in context.read<HomeBloc>().stream) {
+          if (state is HomeLoaded) {
+            if (mounted) {
+              // Set first time flag immediately
+              await _prefs.setBool(_firstTimeKey, false);
+              await _prefs.setString(
+                  _accountCreationDateKey, state.homeData.calculationDate);
+
+              // Show welcome dialog
+              await showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const WelcomeDialog(),
+              );
+            }
+            break;
+          }
+          if (state is HomeError) {
+            _isInitialized = false; // Allow retry on error
+            break;
+          }
+        }
+      }
+
+      // 5. Initialize other components
+      if (mounted) {
+        // Fetch metrics
+        final metricsBloc = context.read<CalorieMetricsBloc>();
+        metricsBloc.add(FetchCalorieMetrics());
+
+        // Wait for metrics and show dialog if needed
+        await for (final state in metricsBloc.stream) {
+          if (state is CalorieMetricsLoaded) {
+            if (!isFirstTime) {
+              // Only show metrics dialog for returning users
+              await _checkAndShowDialog();
+            }
+            break;
+          }
+          if (state is CalorieMetricsError) break;
+        }
+
+        // Check weight reminder last
+        await _checkWeightReminder();
+      }
+    } catch (e) {
+      print('Initialization error: $e');
+      _isInitialized = false;
     }
-    return;
   }
-}
+
+// Future<void> _handleFirstTimeUser(String calculationDate) async {
+//   bool isFirstTime = _prefs.getBool(_firstTimeKey) ?? true;
+
+//   if (isFirstTime) {
+//       await _prefs.setBool(_firstTimeKey, false);
+//     await _prefs.setString(_accountCreationDateKey, calculationDate);
+
+//     if (mounted) {
+//       await showDialog(
+//         context: context,
+//         barrierDismissible: false,
+//         builder: (context) => const WelcomeDialog(),
+//       );
+//     }
+//     return;
+//   }
+// }
 
   Future<void> _checkAndShowDialog() async {
     if (!mounted) return;
@@ -84,8 +151,6 @@ Future<void> _handleFirstTimeUser(String calculationDate) async {
     final state = context.read<HomeBloc>().state;
     if (state is HomeLoaded) {
       String calculationDate = state.homeData.calculationDate;
-      await _handleFirstTimeUser(calculationDate);
-
       DateTime accountCreationDate = _parseDate(calculationDate);
       DateTime now = DateTime.now();
       String today = now.toIso8601String().split('T')[0];
@@ -96,7 +161,7 @@ Future<void> _handleFirstTimeUser(String calculationDate) async {
         return;
       }
 
-      // Show metrics dialog only if it hasn't been shown today and it's not the first day
+      // Show metrics dialog only if it hasn't been shown today
       if (lastShownDate != today) {
         await _prefs.setString(_lastDialogDateKey, today);
         if (mounted) {
@@ -134,7 +199,7 @@ Future<void> _handleFirstTimeUser(String calculationDate) async {
     // Assuming date format is "dd/MM/yyyy"
     List<String> parts = date.split('/');
     return DateTime(
-      int.parse(parts  [2]), // year
+      int.parse(parts[2]), // year
       int.parse(parts[1]), // month
       int.parse(parts[0]), // day
     );
@@ -175,24 +240,24 @@ Future<void> _handleFirstTimeUser(String calculationDate) async {
     }
   }
 
-  Future<void> _initializeAndFetch() async {
-    if (_isInitialized) return;
+  // Future<void> _initializeAndFetch() async {
+  //   if (_isInitialized) return;
 
-    try {
-      _isInitialized = true;
-      await _initializePrefs();
-      if (!mounted) return;
+  //   try {
+  //     _isInitialized = true;
+  //     await _initializePrefs();
+  //     if (!mounted) return;
 
-      // Fetch both metrics and home data concurrently
-      await Future.wait([
-        _fetchMetricsAndShowDialog(),
-        _fetchData(),
-      ]);
-    } catch (e) {
-      print('Initialization error: $e');
-      _isInitialized = false;
-    }
-  }
+  //     // Fetch both metrics and home data concurrently
+  //     await Future.wait([
+  //       _fetchMetricsAndShowDialog(),
+  //       _fetchData(),
+  //     ]);
+  //   } catch (e) {
+  //     print('Initialization error: $e');
+  //     _isInitialized = false;
+  //   }
+  // }
 
   Future<void> _fetchMetricsAndShowDialog() async {
     if (!mounted) return;
@@ -227,18 +292,6 @@ Future<void> _handleFirstTimeUser(String calculationDate) async {
     }
   }
 
-  // Future<void> _checkAndShowDialog() async {
-  //   final String today = DateTime.now().toIso8601String().split('T')[0];
-  //   final String? lastShownDate = _prefs.getString(_lastDialogDateKey);
-
-  //   if (lastShownDate != today) {
-  //     await _prefs.setString(_lastDialogDateKey, today);
-  //     if (mounted) {
-  //       _showMetricsDialog();
-  //     }
-  //   }
-  // }
-
   void _showMetricsDialog() {
     print('Attempting to show metrics dialog');
 
@@ -247,7 +300,7 @@ Future<void> _handleFirstTimeUser(String calculationDate) async {
     final state = context.read<CalorieMetricsBloc>().state;
     if (state is CalorieMetricsLoaded) {
       print('Showing dialog with metrics: ${state.metrics.consumedCalories}');
-print(state.metrics.goal);
+      print(state.metrics.goal);
       showDialog(
         context: context,
         builder: (context) => MetricsDialog(
@@ -441,49 +494,49 @@ print(state.metrics.goal);
                                 ),
                               ),
                               SizedBox(width: getPadding(context, 0.03)),
-                              Expanded(
-                                flex: 2,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    context.push('/water-intake');
-                                  },
-                                  child: Container(
-                                    height: MediaQuery.of(context).size.height *
-                                        (isSmallScreen ? 0.24 : 0.27),
-                                    constraints: BoxConstraints(
-                                      minHeight: screenWidth * 0.5,
-                                      maxHeight: screenWidth * 0.75,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.tileColor,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          LucideIcons.glassWater,
-                                          color: const Color(0xFFB4D147),
-                                          size: getIconSize(context, 0.16),
-                                        ),
-                                        SizedBox(
-                                            height: getPadding(context, 0.03)),
-                                        Text(
-                                          'Water Intake',
-                                          style: TextStyle(
-                                            color:
-                                                Colors.white.withOpacity(0.9),
-                                            fontSize:
-                                                getFontSize(context, 0.04),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              )
+                              // Expanded(
+                              //   flex: 2,
+                              //   child: GestureDetector(
+                              //     onTap: () {
+                              //       context.push('/water-intake');
+                              //     },
+                              //     child: Container(
+                              //       height: MediaQuery.of(context).size.height *
+                              //           (isSmallScreen ? 0.24 : 0.27),
+                              //       constraints: BoxConstraints(
+                              //         minHeight: screenWidth * 0.5,
+                              //         maxHeight: screenWidth * 0.75,
+                              //       ),
+                              //       decoration: BoxDecoration(
+                              //         color: AppColors.tileColor,
+                              //         borderRadius: BorderRadius.circular(20),
+                              //       ),
+                              //       child: Column(
+                              //         mainAxisAlignment:
+                              //             MainAxisAlignment.center,
+                              //         children: [
+                              //           Icon(
+                              //             LucideIcons.glassWater,
+                              //             color: const Color(0xFFB4D147),
+                              //             size: getIconSize(context, 0.16),
+                              //           ),
+                              //           SizedBox(
+                              //               height: getPadding(context, 0.03)),
+                              //           Text(
+                              //             'Water Intake',
+                              //             style: TextStyle(
+                              //               color:
+                              //                   Colors.white.withOpacity(0.9),
+                              //               fontSize:
+                              //                   getFontSize(context, 0.04),
+                              //               fontWeight: FontWeight.w500,
+                              //             ),
+                              //           ),
+                              //         ],
+                              //       ),
+                              //     ),
+                              //   ),
+                              // )
                             ],
                           ),
                           SizedBox(height: getPadding(context, 0.03)),
@@ -491,6 +544,43 @@ print(state.metrics.goal);
                             context,
                             state.homeData,
                           ),
+                             SizedBox(height: getPadding(context, 0.03)),
+                          GestureDetector(
+                            onTap: () {
+                              context.push('/water-intake');
+                            },
+                            child: Container(
+                              height: MediaQuery.of(context).size.height *
+                                  (isSmallScreen ? 0.24 : 0.27),
+                              constraints: BoxConstraints(
+                                minHeight: screenWidth * 0.5,
+                                maxHeight: screenWidth * 0.75,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.tileColor,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    LucideIcons.glassWater,
+                                    color: const Color(0xFFB4D147),
+                                    size: getIconSize(context, 0.16),
+                                  ),
+                                  SizedBox(height: getPadding(context, 0.03)),
+                                  Text(
+                                    'Water Intake',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: getFontSize(context, 0.04),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
                         ],
                       ),
                     ),

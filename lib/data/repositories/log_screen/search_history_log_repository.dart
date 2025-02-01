@@ -10,7 +10,7 @@ class SearchHistoryLogRepository {
     try {
       return await api.getSearchHistory(userId);
     } catch (e) {
-      // print(e);
+      print(e);
       throw Exception('Repository error: $e');
     }
   }

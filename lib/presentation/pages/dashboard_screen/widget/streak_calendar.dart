@@ -314,17 +314,18 @@ Widget _buildLoadingView() {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: HeatMap(
-          fontSize: 0,
+
+          fontSize: 12,
           startDate: startDate,
           endDate: endDate,
           datasets: datasets,
           colorMode: ColorMode.color,
           defaultColor: const Color(0xFF2A2A2A),
-          textColor: Colors.transparent,
+          textColor: Colors.white,
           showColorTip: false,
-          showText: false,
+          showText: true,
           scrollable: true,
-          size: screenSize.width * (isSmallScreen ? 0.01 : 0.030),
+          size: screenSize.width * (isSmallScreen ? 0.01 : 0.040),
           colorsets: const {
             1: Color(0xFFB4D147),
           },

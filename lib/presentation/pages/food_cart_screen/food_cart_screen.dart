@@ -3,17 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/food_cart_screen.dart/consume_cart_request.dart';
-import 'package:hungrx_app/data/Models/food_cart_screen.dart/get_cart_model.dart';
 import 'package:hungrx_app/data/Models/restuarent_screen/nearby_restaurant_model.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_event.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_state.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/cart_shimmer.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/direction_button.dart';
-import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/meal_button.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/food_item_card.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/total_calorie_bar.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 
 class CartScreen extends StatefulWidget {
@@ -57,13 +56,19 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
+    final double screenWidth = screenSize.width;
+    final bool isSmallScreen = screenWidth < 360;
     return BlocListener<DeleteDishCartBloc, DeleteDishCartState>(
       listener: (context, state) {
         if (state is DeleteDishCartSuccess) {
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message),
+              content: Text(
+                state.message,
+                style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
+              ),
               backgroundColor: Colors.green,
             ),
           );
@@ -84,9 +89,12 @@ class _CartScreenState extends State<CartScreen> {
         appBar: AppBar(
           iconTheme: const IconThemeData(color: Colors.white),
           backgroundColor: Colors.black,
-          title: const Text(
+          title: Text(
             'Calorie Cart',
-            style: TextStyle(color: Colors.white, fontSize: 24),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isSmallScreen ? 20 : 24,
+            ),
           ),
         ),
         body: BlocBuilder<GetCartBloc, GetCartState>(
@@ -123,75 +131,62 @@ class _CartScreenState extends State<CartScreen> {
 
             if (state is CartLoaded && state.carts.isEmpty) {
               return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.shopping_cart_outlined,
-                      size: 64,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Your cart is empty',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Add some delicious food to get started',
-                      style: TextStyle(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.shopping_cart_outlined,
+                        size: isSmallScreen ? 48 : 64,
                         color: Colors.grey,
-                        fontSize: 16,
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      spacing: 16,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            // Navigate to restaurant screen
-                            context.pushNamed(RouteNames.restaurants);
-                          },
-                          icon: const Icon(Icons.restaurant),
-                          label: const Text(
-                            'Show Restaurants',
-                            style: TextStyle(color: Colors.black),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.buttonColors,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                          ),
+                      SizedBox(height: screenWidth * 0.04),
+                      Text(
+                        'Your cart is empty',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isSmallScreen ? 18 : 20,
+                          fontWeight: FontWeight.bold,
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            // Navigate to restaurant screen
-                            context.pushNamed(RouteNames.dailyInsightScreen);
-                          },
-                          icon: const Icon(Icons.history),
-                          label: const Text(
-                            'See log history',
-                            style: TextStyle(color: Colors.black),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.buttonColors,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                          ),
+                      ),
+                      SizedBox(height: screenWidth * 0.02),
+                      Text(
+                        'Add some delicious food to get started',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: isSmallScreen ? 14 : 16,
                         ),
-                      ],
-                    ),
-                  ],
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: screenWidth * 0.06),
+                      Wrap(
+                        spacing: screenWidth * 0.04,
+                        runSpacing: screenWidth * 0.03,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _buildActionButton(
+                            context: context,
+                            icon: Icons.restaurant,
+                            label: 'Show restaurants',
+                            onPressed: () =>
+                                context.pushNamed(RouteNames.restaurants),
+                            isSmallScreen: isSmallScreen,
+                            screenWidth: screenWidth,
+                          ),
+                          _buildActionButton(
+                            context: context,
+                            icon: Icons.history,
+                            label: 'See log history',
+                            onPressed: () => context
+                                .pushNamed(RouteNames.dailyInsightScreen),
+                            isSmallScreen: isSmallScreen,
+                            screenWidth: screenWidth,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
@@ -203,24 +198,29 @@ class _CartScreenState extends State<CartScreen> {
                     slivers: [
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          padding: EdgeInsets.all(screenWidth * 0.04),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildCalorieSummaryCard(
-                                  state.remaining, state.totalNutrition),
+                                state.remaining,
+                                state.totalNutrition,
+                                screenWidth,
+                              ),
                             ],
                           ),
                         ),
                       ),
-                      const SliverToBoxAdapter(
+                      SliverToBoxAdapter(
                         child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.04,
+                          ),
                           child: Text(
                             'Food Items',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
+                              fontSize: isSmallScreen ? 16 : 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -245,10 +245,11 @@ class _CartScreenState extends State<CartScreen> {
                                 // Create a list of food items for each dish in the cart
                                 return Column(
                                   children: cart.dishDetails.map((dish) {
-                                    return _buildFoodItem(
-                                      context,
-                                      cart.cartId,
-                                      dish,
+                                    return FoodItemCard(
+                            
+                                      cartId: cart.cartId,
+                                      dish: dish,
+                                      showCalorieWarning: _showCalorieWarning,
                                     );
                                   }).toList(),
                                 );
@@ -264,10 +265,9 @@ class _CartScreenState extends State<CartScreen> {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: _buildTotalCaloriesBar(
-                        state.remaining,
-                        context,
-                        state.totalNutrition,
+                      child: TotalCaloriesBar(
+                        remainingCalories: state.remaining,
+                        nutrition: state.totalNutrition,
                       ),
                     ),
                 ],
@@ -280,16 +280,53 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
+  Widget _buildActionButton({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required bool isSmallScreen,
+    required double screenWidth,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(
+        icon,
+        size: isSmallScreen ? 20 : 24,
+      ),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: isSmallScreen ? 12 : 14,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.buttonColors,
+        padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.04,
+          vertical: screenWidth * 0.02,
+        ),
+      ),
+    );
+  }
+
   Widget _buildLoadingView() {
     return const CartScreenShimmer();
   }
 
   Widget _buildCalorieSummaryCard(
-      double remainingCalories, Map<String, double> nutrition) {
+    double remainingCalories,
+    Map<String, double> nutrition,
+    double screenWidth,
+  ) {
     final currentCalories = nutrition['calories'] ?? 0.0;
     final isExceeded = currentCalories > remainingCalories;
+    final bool isSmallScreen = screenWidth < 360;
+    final double cardPadding = screenWidth * 0.04;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         color: AppColors.tileColor,
         borderRadius: BorderRadius.circular(16),
@@ -301,12 +338,12 @@ class _CartScreenState extends State<CartScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total Nutrition Facts ',
+              Text(
+                'Total Nutrition Facts',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 20,
+                  fontSize: isSmallScreen ? 18 : 20,
                 ),
               ),
               if (isExceeded)
@@ -327,8 +364,8 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
             ),
-          _buildNutritionInfo(nutrition),
-          const SizedBox(height: 10),
+          _buildNutritionInfo(nutrition, screenWidth),
+          SizedBox(height: screenWidth * 0.02),
           // Information Section
           Column(
             children: [
@@ -509,295 +546,44 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildFoodItem(
-    BuildContext context,
-    String cartId,
-    DishDetail dish,
-  ) {
-    final quantity = int.tryParse(dish.servingSize) ?? 1;
-    final caloriesPerItem =
-        double.tryParse(dish.nutritionInfo.calories.value) ?? 0;
-
-    return Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.tileColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ClipRRect(
-                  // Added ClipRRect to clip the image
-                  borderRadius:
-                      BorderRadius.circular(8), // Same radius as container
-                  child: dish.servingSize.isNotEmpty
-                      ? Image.network(
-                          dish.url??"",
-                          fit: BoxFit
-                              .cover, // Changed to cover for better image filling
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Icon(
-                                Icons.fastfood,
-                                color: Colors.grey,
-                                size: 32,
-                              ),
-                            );
-                          },
-                        )
-                      : const Center(
-                          child: Icon(
-                            Icons.fastfood,
-                            color: Colors.grey,
-                            size: 32,
-                          ),
-                        ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      dish.dishName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${dish.nutritionInfo.calories.value} ${dish.nutritionInfo.calories.unit}',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                    Text(
-                      dish.restaurantName,
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove, color: Colors.white),
-                    onPressed: () {
-                      if (quantity > 1) {
-                        context.read<GetCartBloc>().add(
-                              UpdateQuantity(
-                                cartId: cartId,
-                                dishId: dish.dishId,
-                                quantity: quantity - 1,
-                              ),
-                            );
-                      }
-                    },
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[900],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      quantity.toString(),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    onPressed: () {
-                      final state = context.read<GetCartBloc>().state;
-                      if (state is CartLoaded) {
-                        final newTotalCalories =
-                            state.totalNutrition['calories']! + caloriesPerItem;
-
-                        if (newTotalCalories > state.remaining) {
-                          _showCalorieWarning(
-                            context,
-                            'Adding more quantity would exceed your daily calorie limit!',
-                          );
-                        } else {
-                          context.read<GetCartBloc>().add(
-                                UpdateQuantity(
-                                  cartId: cartId,
-                                  dishId: dish.dishId,
-                                  quantity: quantity + 1,
-                                ),
-                              );
-                        }
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Positioned(
-          top: -10,
-          right: -2,
-          child: IconButton(
-            icon: const Icon(
-              Icons.cancel,
-              color: AppColors.buttonColors,
-              size: 24,
-            ),
-            onPressed: () {
-              context.read<DeleteDishCartBloc>().add(
-                    DeleteDishFromCart(
-                      cartId: cartId,
-                      restaurantId: dish.restaurantId,
-                      dishId: dish.dishId,
-                    ),
-                  );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTotalCaloriesBar(
-    double remainingCalories,
-    BuildContext context,
-    Map<String, double> nutrition,
-  ) {
-    final currentCalories = nutrition['calories'] ?? 0.0;
-    final isExceeded = currentCalories > remainingCalories;
-    final cartState = context.read<GetCartBloc>().state;
-
-    // Calculate actual remaining calories
-    // final actualRemainingCalories = remainingCalories - currentCalories;
-
-    if (cartState is CartLoaded) {
-      orderDetails = cartState.carts.expand((cart) {
-        return cart.dishDetails.map((dish) {
-          return OrderDetail(
-            dishId: dish.dishId,
-            quantity: int.tryParse(dish.servingSize) ?? 1,
-          );
-        });
-      }).toList();
-    }
+  Widget _buildNutritionInfo(
+      Map<String, double> nutrition, double screenWidth) {
+    final bool isSmallScreen = screenWidth < 360;
+    final double itemWidth = (screenWidth - (screenWidth * 0.24)) / 4;
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.tileColor,
-          border: Border.all(
-            color: isExceeded ? Colors.red : AppColors.buttonColors,
-            width: isExceeded ? 1.0 : 0.5,
-          ),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Calories ',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
-                          style: TextStyle(
-                            color: isExceeded
-                                ? Colors.red
-                                : AppColors.buttonColors,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          ' / ${remainingCalories.round().toString()} cal',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                MealLoggerButton(
-                  orderDetails: orderDetails,
-                  totalCalories:
-                      '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNutritionInfo(Map<String, double> nutrition) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
+      padding: EdgeInsets.only(top: screenWidth * 0.03),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _nutritionItem(
-            'Calories',
-            nutrition['calories']?.toStringAsFixed(0) ?? '0',
-          ),
+              'Calories',
+              nutrition['calories']?.toStringAsFixed(0) ?? '0',
+              itemWidth,
+              isSmallScreen),
           _nutritionItem(
-            'Protein',
-            nutrition['protein']?.toStringAsFixed(1) ?? '0',
-            'g',
-          ),
-          _nutritionItem(
-            'Carbs',
-            nutrition['carbs']?.toStringAsFixed(1) ?? '0',
-            'g',
-          ),
-          _nutritionItem(
-            'Fat',
-            nutrition['fat']?.toStringAsFixed(1) ?? '0',
-            'g',
-          ),
+              'Protein',
+              nutrition['protein']?.toStringAsFixed(1) ?? '0',
+              itemWidth,
+              isSmallScreen,
+              'g'),
+          _nutritionItem('Carbs', nutrition['carbs']?.toStringAsFixed(1) ?? '0',
+              itemWidth, isSmallScreen, 'g'),
+          _nutritionItem('Fat', nutrition['fat']?.toStringAsFixed(1) ?? '0',
+              itemWidth, isSmallScreen, 'g'),
         ],
       ),
     );
   }
 
-  Widget _nutritionItem(String label, String value, [String? unit]) {
+  Widget _nutritionItem(
+      String label, String value, double width, bool isSmallScreen,
+      [String? unit]) {
     String result = value.split('.')[0];
     return Container(
-      width: 80,
-      height: 80,
-      padding: const EdgeInsets.all(12),
+      width: width,
+      height: width,
+      padding: EdgeInsets.all(width * 0.15),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(8),
@@ -807,18 +593,18 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           Text(
             unit != null ? '$result$unit' : result,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: isSmallScreen ? 14 : 16,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: width * 0.05),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.grey,
-              fontSize: 14,
+              fontSize: isSmallScreen ? 12 : 14,
             ),
           ),
         ],

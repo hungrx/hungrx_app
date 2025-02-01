@@ -9,6 +9,9 @@ import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_sea
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_event.dart';
 import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_search_state.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_event.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/common_food_list.dart';
@@ -33,12 +36,21 @@ class _FoodSearchScreenState extends State<FoodSearchScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
-
+context.read<ProgressBarBloc>().add(FetchProgressBarData()); // Ad
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<SearchBloc>().add(ClearSearch());
       }
     });
+  }
+  Color _getProgressColor(double progress) {
+    if (progress <= 0.5) {
+      return Colors.green;
+    } else if (progress <= 0.75) {
+      return Colors.orange;
+    } else {
+      return Colors.red;
+    }
   }
 
   void _handleTabChange() {
@@ -84,28 +96,143 @@ class _FoodSearchScreenState extends State<FoodSearchScreen>
             labelColor: AppColors.buttonColors,
             unselectedLabelColor: Colors.grey,
             tabs: const [
-              Tab(
-                icon: SizedBox(),
-                text: 'Branded Foods',
-              ),
-              Tab(
-                icon: SizedBox(),
-                text: 'Common Foods',
-                
-              ),
+              Tab(text: 'Branded Foods'),
+              Tab(text: 'Common Foods'),
             ],
           ),
         ),
-        body: TabBarView(
-          controller: _tabController,
+        body: Stack(
           children: [
-            _BrandedFoodsTab(),
-            _CommonFoodsTab(),
+            TabBarView(
+              controller: _tabController,
+              children: [
+                _BrandedFoodsTab(),
+                _CommonFoodsTab(),
+              ],
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 16,
+              child: _buildFloatingProgressBar(),
+            ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildFloatingProgressBar() {
+    return BlocBuilder<ProgressBarBloc, ProgressBarState>(
+      builder: (context, state) {
+        if (state is ProgressBarLoading) {
+          return const SizedBox.shrink();
+        }
+
+        if (state is ProgressBarLoaded) {
+          final progress = (state.data.totalCaloriesConsumed / 
+                          state.data.dailyCalorieGoal).clamp(0.0, 1.0);
+          final progressColor = _getProgressColor(progress);
+          final remainingCalories = state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
+
+          return Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.grey[900],
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Calories Today',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Text(
+                              '${state.data.totalCaloriesConsumed.toInt()}',
+                              style: TextStyle(
+                                color: progressColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              ' / ${state.data.dailyCalorieGoal.round()}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'Remaining',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${remainingCalories.toInt()} cal',
+                          style: TextStyle(
+                            color: remainingCalories > 0 ? Colors.green : Colors.red,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey[800],
+                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                    minHeight: 8,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
 
   Widget _buildSearchField(BuildContext context) {
     return TextField(
@@ -191,10 +318,10 @@ class EmptySearchState extends StatelessWidget {
   final String message;
 
   const EmptySearchState({
-    Key? key,
+    super.key,
     required this.icon,
     required this.message,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -335,62 +462,150 @@ Widget _buildFoodList(BuildContext context, List<FoodItemModel> foods) {
 }
 
 Widget _buildFoodItem(BuildContext context, FoodItemModel food) {
-  return Container(
-    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-    decoration: BoxDecoration(
-      color: AppColors.tileColor,
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: ListTile(
-      contentPadding: const EdgeInsets.all(8),
-      title: Text(
-        food.name,
-        style: const TextStyle(
-          overflow: TextOverflow.ellipsis,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
+  return BlocBuilder<ProgressBarBloc, ProgressBarState>(
+    builder: (context, state) {
+      bool isConsumable = true;
+      Color calorieTextColor = Colors.green;
+      
+      if (state is ProgressBarLoaded) {
+        final remainingCalories = state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
+        isConsumable = food.nutritionFacts.calories <= remainingCalories;
+        calorieTextColor = isConsumable ? Colors.green : Colors.red;
+      }
+
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        decoration: BoxDecoration(
+          color: AppColors.tileColor,
+          borderRadius: BorderRadius.circular(10),
         ),
-      ),
-      subtitle: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'serving size : ${food.servingInfo?.size ?? "unknown"} ${food.servingInfo?.unit ?? ""}',
-            style: TextStyle(color: Colors.grey[400]),
-          ),
-          Text(
-            'Brand Name : ${food.brand}',
-            style: TextStyle(color: Colors.grey[400]),
-          ),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '${food.nutritionFacts.calories.toStringAsFixed(1)} Cal',
-            style: const TextStyle(color: Colors.white, fontSize: 14),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(
-              Icons.add_circle,
-              color: AppColors.buttonColors,
-              size: 35,
-            ),
-            onPressed: () {
+        child: ListTile(
+          onTap: () {
+            if (!isConsumable) {
+              _showCalorieWarning(context, food.nutritionFacts.calories);
+            } else {
               _showMealDetailsBottomSheet(
                 food,
                 context,
                 food.name,
                 'serving size : ${food.servingInfo?.size ?? "unknown"} ${food.servingInfo?.unit ?? ""}',
               );
-            },
+            }
+          },
+          contentPadding: const EdgeInsets.all(8),
+          title: Text(
+            food.name,
+            style: const TextStyle(
+              overflow: TextOverflow.ellipsis,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ],
-      ),
-    ),
+          subtitle: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'serving size : ${food.servingInfo?.size ?? "unknown"} ${food.servingInfo?.unit ?? ""}',
+                style: TextStyle(color: Colors.grey[400]),
+              ),
+              Text(
+                'Brand Name : ${food.brand}',
+                style: TextStyle(color: Colors.grey[400]),
+              ),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${food.nutritionFacts.calories.toStringAsFixed(1)} Cal',
+                style: TextStyle(
+                  color: calorieTextColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(
+                  Icons.add_circle,
+                  color: isConsumable ? AppColors.buttonColors : Colors.grey,
+                  size: 35,
+                ),
+                onPressed: isConsumable 
+                  ? () => _showMealDetailsBottomSheet(
+                      food,
+                      context,
+                      food.name,
+                      'serving size : ${food.servingInfo?.size ?? "unknown"} ${food.servingInfo?.unit ?? ""}',
+                    )
+                  : () => _showCalorieWarning(context, food.nutritionFacts.calories),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+void _showCalorieWarning(BuildContext context, double foodCalories) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Calorie Limit Warning',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'This food item (${foodCalories.toStringAsFixed(1)} Cal) exceeds your remaining calorie limit for today.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.grey[300],
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.buttonColors,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Understood',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
   );
 }
 

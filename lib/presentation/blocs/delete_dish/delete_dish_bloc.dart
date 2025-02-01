@@ -18,6 +18,7 @@ class DeleteDishCartBloc extends Bloc<DeleteDishCartEvent, DeleteDishCartState> 
     emit(DeleteDishCartLoading());
     try {
       final request = DeleteDishCartRequest(
+        servingSize: event.servingSize,
         cartId: event.cartId,
         restaurantId: event.restaurantId,
         dishId: event.dishId,

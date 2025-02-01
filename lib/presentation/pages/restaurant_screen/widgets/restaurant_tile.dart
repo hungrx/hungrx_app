@@ -21,128 +21,166 @@ class RestaurantItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+    final padding = screenWidth * 0.04;
+    
+    // Calculate image size based on screen width
+    final imageSize = isSmallScreen ? 70.0 : 90.0;
+    
     return GestureDetector(
       onTap: ontap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        margin: EdgeInsets.symmetric(
+          horizontal: padding,
+          vertical: padding * 0.375,
+        ),
         decoration: BoxDecoration(
           color: AppColors.tileColor,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Restaurant Image
             Padding(
-              padding: const EdgeInsets.all(5.0),
+              padding: EdgeInsets.all(padding * 0.3),
               child: SizedBox(
-                width: 90,
-                height: 90,
+                width: imageSize,
+                height: imageSize,
                 child: ClipRRect(
-                  // Added ClipRRect to clip the image
-                  borderRadius:
-                      BorderRadius.circular(8), // Same radius as container
-                  child: imageUrl != null
-                      ? Image.network(
-                          imageUrl ?? "",
-                          fit: BoxFit
-                              .cover, // Changed to cover for better image filling
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: 70,
-                              height: 70,
-                              decoration: BoxDecoration(
-                                  color: Colors.grey[900],
-                                  borderRadius: BorderRadius.circular(10)),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.restaurant,
-                                  color: Colors.grey,
-                                  size: 32,
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      : const Center(
-                          child: Icon(
-                            Icons.restaurant,
-                            color: Colors.grey,
-                            size: 32,
-                          ),
-                        ),
+                  borderRadius: BorderRadius.circular(8),
+                  child: _buildRestaurantImage(imageSize),
                 ),
               ),
             ),
+            // Restaurant Details
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(padding * 0.75),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Name and Rating Row
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Restaurant Name
                         Expanded(
+                          flex: 3,
                           child: Text(
                             name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 20,
+                              fontSize: isSmallScreen ? 16 : 18,
                               fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        rating == null
-                            ? const SizedBox()
-                            : Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.buttonColors,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.location_pin,
-                                      color: Colors.black,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      rating.toString().trim(),
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    address == null
-                        ? const SizedBox()
-                        : Text(
-                            address ?? " ",
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                    const SizedBox(height: 4),
+                        ),
+                        if (rating != null) ...[
+                          SizedBox(width: padding * 0.5),
+                          // Rating Container
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: padding * 0.5,
+                              vertical: padding * 0.25,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.buttonColors,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.location_pin,
+                                  color: Colors.black,
+                                  size: isSmallScreen ? 14 : 16,
+                                ),
+                                SizedBox(width: padding * 0.25),
+                                Text(
+                                  rating.toString().trim(),
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: isSmallScreen ? 12 : 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (address != null) ...[
+                      SizedBox(height: padding * 0.5),
+                      Text(
+                        address ?? "",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: isSmallScreen ? 12 : 14,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+Widget _buildRestaurantImage(double size) {
+  // Return placeholder immediately if URL is null
+  if (imageUrl == null || imageUrl!.isEmpty) {
+    return _buildPlaceholderImage(size);
+  }
+
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(8),
+    child: Image.network(
+      imageUrl!,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+        return Center(
+          child: CircularProgressIndicator(
+            color: Colors.grey,
+            value: loadingProgress.expectedTotalBytes != null
+                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                : null,
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return _buildPlaceholderImage(size);
+      },
+    ),
+  );
+}
+
+  Widget _buildPlaceholderImage(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        Icons.restaurant,
+        color: Colors.grey,
+        size: size * 0.4,
       ),
     );
   }

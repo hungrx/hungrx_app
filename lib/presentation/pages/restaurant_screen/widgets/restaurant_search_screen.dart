@@ -11,9 +11,9 @@ import 'package:hungrx_app/routes/route_names.dart';
 
 class RestaurantSearchScreen extends StatefulWidget {
   final List<SuggestedRestaurantModel> restaurants;
-  
+
   const RestaurantSearchScreen({
-    super.key, 
+    super.key,
     required this.restaurants,
   });
 
@@ -42,20 +42,20 @@ class _RestaurantSearchScreenState extends State<RestaurantSearchScreen> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       context.read<RestaurantSearchBloc>().add(
-        SearchRestaurants(_searchController.text),
-      );
+            SearchRestaurants(_searchController.text),
+          );
     });
   }
 
   @override
-Widget build(BuildContext context) {
-  return BlocProvider.value(
-    value: context.read<RestaurantSearchBloc>(),
-    child: _RestaurantSearchContent(
-      searchController: _searchController,
-    ),
-  );
-}
+  Widget build(BuildContext context) {
+    return BlocProvider.value(
+      value: context.read<RestaurantSearchBloc>(),
+      child: _RestaurantSearchContent(
+        searchController: _searchController,
+      ),
+    );
+  }
 }
 
 class _RestaurantSearchContent extends StatelessWidget {
@@ -67,91 +67,128 @@ class _RestaurantSearchContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+    final padding = screenSize.width * 0.04;
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: TextField(
-          controller: searchController,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: 'Search restaurants...',
-            hintStyle: const TextStyle(color: Colors.grey),
-            border: InputBorder.none,
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () {
-                searchController.clear();
-                context.read<RestaurantSearchBloc>().add(ClearRestaurantSearch());
-              },
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(isSmallScreen ? 48 : 56),
+        child: AppBar(
+          backgroundColor: Colors.black,
+          title: SizedBox(
+            height: isSmallScreen ? 40 : 48,
+            child: TextField(
+              controller: searchController,
+              autofocus: true,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isSmallScreen ? 14 : 16,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Search restaurants...',
+                hintStyle: TextStyle(
+                  color: Colors.grey,
+                  fontSize: isSmallScreen ? 14 : 16,
+                ),
+                border: InputBorder.none,
+              ),
             ),
           ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: isSmallScreen ? 20 : 24,
+            ),
+            constraints: BoxConstraints(
+              minWidth: isSmallScreen ? 32 : 40,
+              minHeight: isSmallScreen ? 32 : 40,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
       ),
       body: BlocBuilder<RestaurantSearchBloc, RestaurantSearchState>(
-
         builder: (context, state) {
-          debugPrint('Rebuilding UI with ${state.searchResults.length} results');
           if (state.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            return Center(
+              child: SizedBox(
+                width: isSmallScreen ? 24 : 32,
+                height: isSmallScreen ? 24 : 32,
+                child: const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 2,
+                ),
               ),
             );
           }
 
           if (state.error.isNotEmpty) {
             return Center(
-              child: Text(
-                state.error,
-                style: const TextStyle(color: Colors.white),
+              child: Padding(
+                padding: EdgeInsets.all(padding),
+                child: Text(
+                  state.error,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             );
           }
 
           if (state.searchResults.isEmpty && searchController.text.isNotEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_off,
-                    color: Colors.grey,
-                    size: 48,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No restaurants found',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+            return Center(
+              child: Padding(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      color: Colors.grey,
+                      size: isSmallScreen ? 40 : 48,
                     ),
-                  ),
-                ],
+                    SizedBox(height: padding),
+                    Text(
+                      'No restaurants found',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isSmallScreen ? 14 : 16,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: EdgeInsets.symmetric(
+              vertical: padding * 0.75,
+              horizontal: padding * 0.5,
+            ),
             itemCount: state.searchResults.length,
             itemBuilder: (context, index) {
               final restaurant = state.searchResults[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 0,
+                padding: EdgeInsets.symmetric(
+                  vertical: padding * 0.25,
                 ),
                 child: RestaurantItem(
-                  ontap: () => context.pushNamed(
-                    RouteNames.menu,
-                    extra: restaurant.id,
-                  ),
+                  ontap: () {
+                    context.pushNamed(
+                      RouteNames.menu,
+                      extra: {
+                        'restaurantId': restaurant.id,
+                        'restaurant': null,
+                      },
+                    );
+                  },
                   name: restaurant.name,
                   imageUrl: restaurant.logo,
                   rating: null,

@@ -13,6 +13,7 @@ import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart'
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/bottom_search_bar.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/common_consume_sheet.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/custom_food_dialog.dart';
+import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meal_screen_shimmer.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';
 
 class LogMealScreen extends StatelessWidget {
@@ -51,101 +52,100 @@ class _LogMealViewState extends State<LogMealView> {
     context.read<ProgressBarBloc>().add(FetchProgressBarData());
   }
 
-@override
-Widget build(BuildContext context) {
-  return SafeArea(
-    child: Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Scaffold(
         backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text(
-          'Log your meal',
-          style: TextStyle(color: Colors.white),
-        ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            color: Colors.grey[900],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            itemBuilder: (BuildContext context) => [
-              PopupMenuItem<String>(
-                value: 'add_custom',
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.add_circle_outline,
-                      color: AppColors.buttonColors,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Add Custom Food',
-                      style: TextStyle(
-                        color: Colors.grey[200],
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text(
+            'Log your meal',
+            style: TextStyle(color: Colors.white),
+          ),
+          actions: [
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              color: Colors.grey[900],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              itemBuilder: (BuildContext context) => [
+                PopupMenuItem<String>(
+                  value: 'add_custom',
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.add_circle_outline,
+                        color: AppColors.buttonColors,
+                        size: 20,
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Add Custom Food',
+                        style: TextStyle(
+                          color: Colors.grey[200],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              onSelected: (String value) {
+                if (value == 'add_custom') {
+                  _showCustomFoodDialog(context);
+                }
+              },
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHistoryHeader(),
+                    _buildFoodList(),
                   ],
                 ),
               ),
-            ],
-            onSelected: (String value) {
-              if (value == 'add_custom') {
-                _showCustomFoodDialog(context);
-              }
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHistoryHeader(),
-                  _buildFoodList(),
-                ],
-              ),
             ),
-          ),
-          BottomCalorieSearchWidget(
-            userId: widget.userId,
-            onSearchHistoryRefresh: () {
-              context.read<SearchHistoryLogBloc>().add(
-                    GetSearchHistoryLogRequested(),
-                  );
-            },
-          ),
-        ],
+            BottomCalorieSearchWidget(
+              userId: widget.userId,
+              onSearchHistoryRefresh: () {
+                context.read<SearchHistoryLogBloc>().add(
+                      GetSearchHistoryLogRequested(),
+                    );
+              },
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-void _showCustomFoodDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return const CustomFoodDialog();
-    },
-  ).then((value) {
-    if (value != null) {
-      // Refresh the search history after adding custom food
-      context.read<SearchHistoryLogBloc>().add(
-            GetSearchHistoryLogRequested(),
-          );
-    }
-  });
-}
-
+  void _showCustomFoodDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const CustomFoodDialog();
+      },
+    ).then((value) {
+      if (value != null) {
+        // Refresh the search history after adding custom food
+        context.read<SearchHistoryLogBloc>().add(
+              GetSearchHistoryLogRequested(),
+            );
+      }
+    });
+  }
 
   Widget _buildHistoryHeader() {
     return BlocBuilder<SearchHistoryLogBloc, SearchHistoryLogState>(
@@ -208,9 +208,7 @@ void _showCustomFoodDialog(BuildContext context) {
     return BlocBuilder<SearchHistoryLogBloc, SearchHistoryLogState>(
       builder: (context, state) {
         if (state is SearchHistoryLogLoading) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.buttonColors),
-          );
+          return const ShimmerLoadingEffect();
         }
 
         if (state is SearchHistoryLogFailure) {
@@ -324,7 +322,23 @@ void _showCustomFoodDialog(BuildContext context) {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        if (foodItem.brandName == "Common Food") {
+          _showCommonFoodMealDetailsBottomSheet(
+            context,
+            foodItem,
+            foodItem.name,
+            '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+          );
+        } else {
+          _showMealDetailsBottomSheet(
+            foodItem,
+            context,
+            foodItem.name,
+            '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+          );
+        }
+      },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         padding: const EdgeInsets.all(12),
@@ -371,24 +385,21 @@ void _showCustomFoodDialog(BuildContext context) {
                   size: 35,
                 ),
                 onPressed: () {
-                  print(foodItem.brandName);
-                  if(foodItem.brandName == "Common Food"){
-                       _showCommonFoodMealDetailsBottomSheet(
-                           context,
-                    foodItem,
-                 
-                    foodItem.name,
-                    '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
-                  );
-
-                  }else{
-                  _showMealDetailsBottomSheet(
-                    foodItem,
-                    context,
-                    foodItem.name,
-                    '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
-                  );
-                }
+                  if (foodItem.brandName == "Common Food") {
+                    _showCommonFoodMealDetailsBottomSheet(
+                      context,
+                      foodItem,
+                      foodItem.name,
+                      '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+                    );
+                  } else {
+                    _showMealDetailsBottomSheet(
+                      foodItem,
+                      context,
+                      foodItem.name,
+                      '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+                    );
+                  }
                 },
               ),
             ],
@@ -436,8 +447,7 @@ void _showCustomFoodDialog(BuildContext context) {
     });
   }
 
-
-   void _showCommonFoodMealDetailsBottomSheet(
+  void _showCommonFoodMealDetailsBottomSheet(
     BuildContext context,
     GetSearchHistoryLogItem food,
     String name,
@@ -464,11 +474,10 @@ void _showCustomFoodDialog(BuildContext context) {
                   ),
                   child: CommonFoodConsumeBottomSheet(
                     isHistoryScreen: true,
-                    servingSize: food.servingInfo.size?? 0.0,
+                    servingSize: food.servingInfo.size ?? 0.0,
                     productId: food.foodId,
-                    userId: state.userId ??
-                        "", 
-                    calories: food.nutritionFacts.calories??0.0,
+                    userId: state.userId ?? "",
+                    calories: food.nutritionFacts.calories ?? 0.0,
                     mealName: name,
                     servingInfo: description,
                   ),

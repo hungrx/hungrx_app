@@ -37,7 +37,7 @@ class AddCommonFoodHistoryData {
   final String foodId;
   final String name;
   final String brandName;
-  final String image;
+  final String? image;  // Made nullable
   final NutritionFacts nutritionFacts;
   final ServingInfo servingInfo;
   final Category category;
@@ -49,7 +49,7 @@ class AddCommonFoodHistoryData {
     required this.foodId,
     required this.name,
     required this.brandName,
-    required this.image,
+    this.image,  // Remove required keyword
     required this.nutritionFacts,
     required this.servingInfo,
     required this.category,
@@ -63,7 +63,7 @@ class AddCommonFoodHistoryData {
       foodId: json['foodId'],
       name: json['name'],
       brandName: json['brandName'],
-      image: json['image'],
+      image: json['image'],  // Will automatically handle null
       nutritionFacts: NutritionFacts.fromJson(json['nutritionFacts']),
       servingInfo: ServingInfo.fromJson(json['servingInfo']),
       category: Category.fromJson(json['category']),
@@ -133,7 +133,7 @@ class NutrientInfo {
 }
 
 class ServingInfo {
-  final int size;
+  final double size;  // Changed from int to double
   final String unit;
 
   ServingInfo({
@@ -143,7 +143,7 @@ class ServingInfo {
 
   factory ServingInfo.fromJson(Map<String, dynamic> json) {
     return ServingInfo(
-      size: json['size'],
+      size: json['size'].toDouble(),  // Convert to double
       unit: json['unit'],
     );
   }

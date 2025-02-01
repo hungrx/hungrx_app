@@ -12,6 +12,7 @@ class CommonFoodApi {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(request.toJson()),
       );
+      print(response.body);
 
       if (response.statusCode == 200) {
         return CommonFoodResponse.fromJson(json.decode(response.body));
@@ -19,6 +20,7 @@ class CommonFoodApi {
         throw Exception('Failed to add common food: ${response.body}');
       }
     } catch (e) {
+      print(e);
       throw Exception('Network error: $e');
     }
   }

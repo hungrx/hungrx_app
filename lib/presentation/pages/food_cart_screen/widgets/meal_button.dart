@@ -45,6 +45,8 @@ class _MealLoggerButtonState extends State<MealLoggerButton> {
   }
 
   void _showMealLogDialog(BuildContext context) {
+    print(widget.orderDetails.first.quantity);
+    print(widget.totalCalories);
     showDialog(
       barrierDismissible: false,
       context: context,

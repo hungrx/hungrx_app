@@ -61,13 +61,19 @@ class OrderItem {
 class CartItem {
   final String dishId;
   final String servingSize;
+  final int quantity;  // Added quantity field
 
-  CartItem({required this.dishId, required this.servingSize});
+  CartItem({
+    required this.dishId, 
+    required this.servingSize,
+    required this.quantity,  // Added to constructor
+  });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
       dishId: json['dishId'],
-      servingSize: json['servingSize'].toString(), // Convert to string in case it's a number
+      servingSize: json['servingSize'].toString(),
+      quantity: json['quantity'] as int,  // Parse quantity
     );
   }
 }
@@ -80,8 +86,9 @@ class DishDetail {
   final String dishId;
   final String dishName;
   final String servingSize;
+  final int? quantity;  // Added quantity field
   final NutritionInfo nutritionInfo;
-  final String? url;  // Added url field
+  final String? url;
 
   DishDetail({
     required this.restaurantId,
@@ -91,8 +98,9 @@ class DishDetail {
     required this.dishId,
     required this.dishName,
     required this.servingSize,
+     this.quantity,  // Added to constructor
     required this.nutritionInfo,
-    this.url,  // Made optional since it might not always be present
+    this.url,
   });
 
   factory DishDetail.fromJson(Map<String, dynamic> json) {
@@ -104,12 +112,12 @@ class DishDetail {
       dishId: json['dishId'],
       dishName: json['dishName'].toString().trim(),
       servingSize: json['servingSize'].toString(),
+      quantity: json['quantity'] as int,  // Parse quantity
       nutritionInfo: NutritionInfo.fromJson(json['nutritionInfo']),
-      url: json['url'],  // Added url parsing
+      url: json['url'],
     );
   }
 }
-
 class NutritionInfo {
   final NutritionValue calories;
   final NutritionValue protein;

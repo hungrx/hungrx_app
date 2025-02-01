@@ -2,20 +2,20 @@ class DeleteFoodRequest {
   final String userId;
   final String date;
   final String mealId;
-  final String dishId;
+  final String foodId;
 
   DeleteFoodRequest({
     required this.userId,
     required this.date,
     required this.mealId,
-    required this.dishId,
+    required this.foodId,
   });
 
   Map<String, dynamic> toJson() => {
         'userId': userId,
         'date': date,
         'mealId': mealId,
-        'dishId': dishId,
+        'foodId': foodId,
       };
 }
 

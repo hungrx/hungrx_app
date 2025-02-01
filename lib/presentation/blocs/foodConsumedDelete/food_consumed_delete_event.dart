@@ -3,11 +3,11 @@ abstract class DeleteFoodEvent {}
 class DeleteConsumedFoodRequested extends DeleteFoodEvent {
   final String date;
   final String mealId;
-  final String dishId;
+  final String foodId;
 
   DeleteConsumedFoodRequested({
     required this.date,
     required this.mealId,
-    required this.dishId,
+    required this.foodId,
   });
 }

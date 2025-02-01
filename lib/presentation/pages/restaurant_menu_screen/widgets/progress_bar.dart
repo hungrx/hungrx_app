@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
-class CalorieSummaryWidget extends StatefulWidget {
+class CalorieSummaryWidget extends StatelessWidget {
   final double consumedCalories;
   final double dailyCalorieGoal;
   final int itemCount;
@@ -21,28 +21,6 @@ class CalorieSummaryWidget extends StatefulWidget {
     this.primaryColor = AppColors.primaryColor,
   });
 
-  @override
-  State<CalorieSummaryWidget> createState() => _CalorieSummaryWidgetState();
-}
-
-class _CalorieSummaryWidgetState extends State<CalorieSummaryWidget> {
-  double? _previousRemaining;
-
-  @override
-  void initState() {
-    super.initState();
-    _previousRemaining = widget.dailyCalorieGoal - widget.consumedCalories;
-  }
-
-  @override
-  void didUpdateWidget(covariant CalorieSummaryWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Update _previousRemaining only when consumedCalories changes
-    if (widget.consumedCalories != oldWidget.consumedCalories) {
-      _previousRemaining = widget.dailyCalorieGoal - oldWidget.consumedCalories;
-    }
-  }
-
   Color _getProgressColor(double progress) {
     if (progress <= 0.5) return Colors.green;
     if (progress <= 0.75) return Colors.orange;
@@ -51,11 +29,12 @@ class _CalorieSummaryWidgetState extends State<CalorieSummaryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final currentRemaining = widget.dailyCalorieGoal - widget.consumedCalories;
+    final progress = (consumedCalories / dailyCalorieGoal).clamp(0.0, 1.0);
+    final currentRemaining = dailyCalorieGoal - consumedCalories;
 
     return Container(
       padding: const EdgeInsets.all(16),
-      color: widget.backgroundColor,
+      color: backgroundColor,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -69,82 +48,51 @@ class _CalorieSummaryWidgetState extends State<CalorieSummaryWidget> {
                     'Daily Calorie Progress',
                     style: TextStyle(color: Colors.grey),
                   ),
-                  TweenAnimationBuilder<double>(
-                    duration: const Duration(milliseconds: 300),
-                    tween: Tween(begin: 0, end: widget.consumedCalories),
-                    builder: (context, value, child) {
-                      final progress =
-                          (value / widget.dailyCalorieGoal).clamp(0.0, 1.0);
-                      return Row(
-                        children: [
-                          Text(
-                            '${value.toInt()}',
-                            style:
-                                TextStyle(color: _getProgressColor(progress)),
+                  AnimatedSlideFade(
+                    child: Row(
+                      children: [
+                        Text(
+                          '${consumedCalories.toInt()}',
+                          style: TextStyle(
+                            color: _getProgressColor(progress),
+                            fontWeight: FontWeight.bold,
                           ),
-                          Text(
-                            ' / ${widget.dailyCalorieGoal.round()} cal',
-                            style: const TextStyle(color: Colors.blueGrey),
-                          ),
-                        ],
-                      );
-                    },
+                        ),
+                        Text(
+                          ' / ${dailyCalorieGoal.round()} cal',
+                          style: const TextStyle(color: Colors.blueGrey),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              TweenAnimationBuilder<double>(
-                duration: const Duration(milliseconds: 300),
-                tween: Tween(
-                  begin: (_previousRemaining ?? widget.dailyCalorieGoal) /
-                      widget.dailyCalorieGoal,
-                  end: (widget.consumedCalories / widget.dailyCalorieGoal)
-                      .clamp(0.0, 1.0),
-                ),
-                builder: (context, value, child) {
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: value,
-                      backgroundColor: Colors.blueGrey,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        _getProgressColor(value),
-                      ),
-                      minHeight: 10,
-                    ),
-                  );
-                },
+              AnimatedProgressBar(
+                value: progress,
+                color: _getProgressColor(progress),
               ),
               const SizedBox(height: 8),
-              TweenAnimationBuilder<double>(
-                duration: const Duration(milliseconds: 300),
-                tween: Tween(
-                  begin: _previousRemaining ?? widget.dailyCalorieGoal,
-                  end: currentRemaining,
+              AnimatedSlideFade(
+                child: Row(
+                  children: [
+                    const Text(
+                      'Remaining:',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      ' ${currentRemaining.round()} cal',
+                      style: TextStyle(
+                        color: _getProgressColor(progress),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                builder: (context, value, child) {
-                  final progress =
-                      (widget.consumedCalories / widget.dailyCalorieGoal)
-                          .clamp(0.0, 1.0);
-                  return Row(
-                    children: [
-                      const Text(
-                        'Remaining:',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        ' ${value.round()} cal',
-                        style: TextStyle(
-                          color: _getProgressColor(progress),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  );
-                },
               ),
             ],
           ),
@@ -159,38 +107,131 @@ class _CalorieSummaryWidgetState extends State<CalorieSummaryWidget> {
                     'Total calories',
                     style: TextStyle(color: Colors.grey),
                   ),
-                  TweenAnimationBuilder<double>(
-                    duration: const Duration(milliseconds: 300),
-                    tween: Tween(begin: 0, end: widget.consumedCalories),
-                    builder: (context, value, child) {
-                      return Text(
-                        '${value.toInt()}cal',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      );
-                    },
+                  AnimatedSlideFade(
+                    child: Text(
+                      '${consumedCalories.toInt()}cal',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.buttonColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                onPressed: widget.onViewOrderPressed,
-                child: Text(
-                  'View cart (${widget.itemCount} items) >',
-                  style: TextStyle(color: widget.primaryColor),
-                ),
+              AnimatedOrderButton(
+                itemCount: itemCount,
+                onPressed: onViewOrderPressed,
+                buttonColor: buttonColor,
+                primaryColor: primaryColor,
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class AnimatedProgressBar extends StatelessWidget {
+  final double value;
+  final Color color;
+
+  const AnimatedProgressBar({
+    super.key,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+      tween: Tween(begin: 0, end: value),
+      builder: (context, animatedValue, _) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: animatedValue,
+            backgroundColor: Colors.blueGrey.withOpacity(0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 10,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class AnimatedSlideFade extends StatelessWidget {
+  final Widget child;
+
+  const AnimatedSlideFade({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.1, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey(child.toString()),
+        child: child,
+      ),
+    );
+  }
+}
+
+class AnimatedOrderButton extends StatelessWidget {
+  final int itemCount;
+  final VoidCallback onPressed;
+  final Color buttonColor;
+  final Color primaryColor;
+
+  const AnimatedOrderButton({
+    super.key,
+    required this.itemCount,
+    required this.onPressed,
+    required this.buttonColor,
+    required this.primaryColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 300),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: buttonColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        onPressed: onPressed,
+        child: AnimatedSlideFade(
+          child: Text(
+            'View cart ($itemCount items) >',
+            style: TextStyle(
+              color: primaryColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -11,6 +11,7 @@ class CommonFoodUseCase {
     try {
       return await _repository.addCommonFood(request);
     } catch (e) {
+      print(e);
       throw Exception('UseCase error: $e');
     }
   }

@@ -11,6 +11,7 @@ class ConsumeCommonFoodRepository {
     try {
       return await _api.addCommonFood(request);
     } catch (e) {
+      
       throw Exception('Repository error: $e');
     }
   }

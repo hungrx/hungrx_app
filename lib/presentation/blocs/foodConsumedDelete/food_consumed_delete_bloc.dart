@@ -32,7 +32,7 @@ class DeleteFoodBloc extends Bloc<DeleteFoodEvent, DeleteFoodState> {
         userId: userId,
         date: event.date,
         mealId: event.mealId,
-        dishId: event.dishId,
+        foodId: event.foodId,
       );
       final response = await _deleteConsumedFoodUseCase.execute(request);
       emit(DeleteFoodSuccess(response));

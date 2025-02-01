@@ -8,6 +8,8 @@ import 'package:hungrx_app/presentation/blocs/foodConsumedDelete/food_consumed_d
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_daily_insight_data/get_daily_insight_data_state.dart';
+import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
 import 'package:intl/intl.dart';
 
 class FoodDetailsDialog extends StatelessWidget {
@@ -33,12 +35,14 @@ class FoodDetailsDialog extends StatelessWidget {
         BlocListener<DeleteFoodBloc, DeleteFoodState>(
           listener: (context, state) {
             if (state is DeleteFoodSuccess) {
+              context.read<HomeBloc>().add(RefreshHomeData());
               Navigator.of(context).pop();
               context.read<DailyInsightBloc>().add(
                     GetDailyInsightData(
                       date: date,
                     ),
                   );
+
               _showSnackBar(
                 context: context,
                 message: state.response.message,
@@ -307,7 +311,7 @@ class FoodDetailsDialog extends StatelessWidget {
                       DeleteConsumedFoodRequested(
                         date: date,
                         mealId: mealIds,
-                        dishId: food.dishId,
+                        foodId: food.foodId,
                       ),
                     );
               },
@@ -342,23 +346,13 @@ class FoodDetailsDialog extends StatelessWidget {
       ),
       backgroundColor: isError ? Colors.red : Colors.green,
       behavior: SnackBarBehavior.floating,
-      margin: EdgeInsets.only(
-        bottom: MediaQuery.of(context).size.height * 0.1,
-        left: 16,
-        right: 16,
-      ),
+
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
-      duration: const Duration(seconds: 3),
+      duration: const Duration(microseconds: 100),
       dismissDirection: DismissDirection.horizontal,
-      // action: SnackBarAction(
-      //   label: 'Dismiss',
-      //   textColor: Colors.white,
-      //   onPressed: () {
-      //     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      //   },
-      // ),
+
     );
 
     // Show the SnackBar

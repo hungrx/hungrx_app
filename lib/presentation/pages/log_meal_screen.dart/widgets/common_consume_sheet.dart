@@ -11,6 +11,9 @@ import 'package:hungrx_app/presentation/blocs/consume_common_food/consume_common
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_event.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_state.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_event.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
 
@@ -61,7 +64,7 @@ class _CommonFoodConsumeBottomSheetState
   String selectedMealType = 'CHOOSE';
   String? servingsError;
   double caloriesPerGram = 0;
-
+  bool isExceedingLimit = false;
   @override
   void initState() {
     super.initState();
@@ -112,6 +115,8 @@ class _CommonFoodConsumeBottomSheetState
   void _updateCalories(String value) {
     setState(() {
       servingsError = null;
+      isExceedingLimit = false;
+
       if (value.isEmpty) {
         servingsError = 'Please enter number of servings';
         totalCalories = 0;
@@ -143,28 +148,28 @@ class _CommonFoodConsumeBottomSheetState
 
       numberOfServings = servings;
 
-      // Get the selected serving unit
       final ServingUnit unit = servingUnits.firstWhere(
         (u) => u.name == selectedServingUnit,
-        orElse: () => servingUnits[0], // Default to the first unit if not found
+        orElse: () => servingUnits[0],
       );
 
-      // Calculate relative serving size compared to base serving
-      // Example: if base is 82.5g and user selects 90g serving:
-      // servingRatio = 90g / 82.5g = 1.09
       if (selectedServingUnit == 'g') {
-        // For grams, directly calculate based on calories per gram
         totalCalories = caloriesPerGram * servings;
       } else {
-        // For other units, calculate based on their gram equivalent
         double gramsInSelectedServing = unit.grams * servings;
         totalCalories = caloriesPerGram * gramsInSelectedServing;
       }
 
-      // Calculate total calories based on serving ratio and number of servings
-      // If base calories is 200 and ratio is 1.09 and servings is 2:
-      // totalCalories = 200 * 1.09 * 2 = 436 calories
-      // totalCalories = widget.calories * servingRatio * servings;
+      // Check if total calories exceed remaining limit
+      final state = context.read<ProgressBarBloc>().state;
+      if (state is ProgressBarLoaded) {
+        final remainingCalories =
+            state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
+        if (totalCalories > remainingCalories) {
+          isExceedingLimit = true;
+          servingsError = 'Exceeds daily calorie limit';
+        }
+      }
     });
   }
 
@@ -175,6 +180,10 @@ class _CommonFoodConsumeBottomSheetState
   }
 
   void _handleAddToMeal() {
+    if (isExceedingLimit) {
+      _showCalorieWarning(context);
+      return;
+    }
     if (selectedMealType == 'CHOOSE') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -217,382 +226,469 @@ class _CommonFoodConsumeBottomSheetState
     // ! for animating the calorie count
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<CommonFoodBloc, CommonFoodState>(
-          listener: (context, state) {
-            if (state is CommonFoodSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.response.message),
-                  backgroundColor: Colors.green,
+  void _showCalorieWarning(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.grey[900],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.orange,
+                  size: 48,
                 ),
-              );
-              Navigator.pop(context);
-            } else if (state is CommonFoodFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          },
-        ),
-        BlocListener<AddCommonFoodHistoryBloc, AddCommonFoodHistoryState>(
-          listener: (context, state) {
-            if (state is AddCommonFoodHistorySuccess) {
-              context.read<SearchHistoryLogBloc>().add(
-                    GetSearchHistoryLogRequested(),
-                  );
-            } else if (state is AddCommonFoodHistoryFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          },
-        ),
-      ],
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          border: Border.all(color: AppColors.buttonColors, width: 1),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.buttonColors,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          SizedBox(
-                            width: 250,
-                            child: Text(
-                              widget.mealName,
-                              style: const TextStyle(
-                                overflow: TextOverflow.clip,
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            '${totalCalories.toStringAsFixed(1)} cal',
-                            style: const TextStyle(
-                              color: AppColors.buttonColors,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.servingInfo,
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Quantity input
-                          Expanded(
-                            flex: 2,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Quantity',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                TextField(
-                                  controller: _servingsController,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                          decimal: true),
-                                  style: const TextStyle(color: Colors.white),
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    fillColor: Colors.grey[800],
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    errorText: servingsError,
-                                    hintText: 'Enter quantity',
-                                    hintStyle:
-                                        TextStyle(color: Colors.grey[400]),
-                                  ),
-                                  onChanged: _updateCalories,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-
-                          // Serving unit dropdown
-                          Expanded(
-                            flex: 3,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Serving Size',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[800],
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: AppColors.buttonColors
-                                          .withOpacity(0.3),
-                                    ),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: selectedServingUnit,
-                                      isExpanded: true,
-                                      dropdownColor: Colors.grey[800],
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      items:
-                                          servingUnits.map((ServingUnit unit) {
-                                        return DropdownMenuItem<String>(
-                                          value: unit.name,
-                                          child: Text(
-                                            unit.label,
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
-                                        );
-                                      }).toList(),
-                                      onChanged: _handleServingUnitChange,
-                                      // onChanged: (String? newValue) {
-                                      //   if (newValue != null) {
-                                      //     setState(() {
-                                      //       selectedServingUnit = newValue;
-                                      //       _updateCalories(
-                                      //           _servingsController.text);
-                                      //     });
-                                      //   }
-                                      // },
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-                      // !
-                      BlocBuilder<MealTypeBloc, MealTypeState>(
-                        builder: (context, state) {
-                          if (state is MealTypeLoading) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: CircularProgressIndicator(
-                                  color: AppColors.buttonColors,
-                                ),
-                              ),
-                            );
-                          }
-
-                          if (state is MealTypeError) {
-                            return Center(
-                              child: Column(
-                                children: [
-                                  Text(
-                                    state.message,
-                                    style: const TextStyle(color: Colors.red),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextButton(
-                                    onPressed: () {
-                                      context
-                                          .read<MealTypeBloc>()
-                                          .add(FetchMealTypes());
-                                    },
-                                    child: const Text('Retry'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-
-                          if (state is MealTypeLoaded) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Select Meal Type',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Wrap(
-                                    spacing: 16,
-                                    runSpacing: 16,
-                                    children: state.mealTypes.map((mealType) {
-                                      bool isSelected =
-                                          state.selectedMealId == mealType.id;
-                                      return InkWell(
-                                        onTap: () {
-                                          context.read<MealTypeBloc>().add(
-                                                SelectMealType(
-                                                    mealId: mealType.id),
-                                              );
-                                          setState(() {
-                                            selectedMealType =
-                                                mealType.meal.toUpperCase();
-                                          });
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 8,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? AppColors.buttonColors
-                                                : Colors.transparent,
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? AppColors.buttonColors
-                                                  : Colors.grey,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                isSelected
-                                                    ? Icons.check_circle
-                                                    : Icons.circle_outlined,
-                                                size: 18,
-                                                color: isSelected
-                                                    ? Colors.black
-                                                    : Colors.grey,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                mealType.meal,
-                                                style: TextStyle(
-                                                  color: isSelected
-                                                      ? Colors.black
-                                                      : Colors.grey,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-
-                          return const SizedBox.shrink();
-                        },
-                      ),
-
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: BlocBuilder<CommonFoodBloc, CommonFoodState>(
-                          builder: (context, state) {
-                            return ElevatedButton(
-                              onPressed: state is CommonFoodLoading
-                                  ? null
-                                  : _handleAddToMeal,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.buttonColors,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(25),
-                                ),
-                                elevation: 2,
-                              ),
-                              child: state is CommonFoodLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                AppColors.buttonColors),
-                                      ),
-                                    )
-                                  : Text(
-                                      selectedMealType == 'CHOOSE'
-                                          ? "CHOOSE MEAL"
-                                          : 'ADD TO $selectedMealType',
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                            );
-                          },
-                        ),
-                      )
-                    ],
+                const SizedBox(height: 16),
+                const Text(
+                  'Calorie Limit Warning',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                BlocBuilder<ProgressBarBloc, ProgressBarState>(
+                  builder: (context, state) {
+                    if (state is ProgressBarLoaded) {
+                      final remainingCalories = state.data.dailyCalorieGoal -
+                          state.data.totalCaloriesConsumed;
+                      return Text(
+                        'This portion (${totalCalories.toStringAsFixed(1)} Cal) exceeds your remaining calorie limit (${remainingCalories.toStringAsFixed(1)} Cal) for today.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey[300],
+                          fontSize: 14,
+                        ),
+                      );
+                    }
+                    return const SizedBox();
+                  },
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.buttonColors,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Understood',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProgressBarBloc, ProgressBarState>(
+      builder: (context, progressState) {
+        final bool isWithinLimit = progressState is ProgressBarLoaded
+            ? totalCalories <=
+                (progressState.data.dailyCalorieGoal -
+                    progressState.data.totalCaloriesConsumed)
+            : true;
+        return MultiBlocListener(
+          listeners: [
+            BlocListener<CommonFoodBloc, CommonFoodState>(
+              listener: (context, state) {
+                if (state is CommonFoodSuccess) {
+                  context.read<ProgressBarBloc>().add(FetchProgressBarData());
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.response.message),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(microseconds: 400),
+                    ),
+                  );
+                  Navigator.pop(context);
+                } else if (state is CommonFoodFailure) {
+                  print(state.error);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.error),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+            ),
+            BlocListener<AddCommonFoodHistoryBloc, AddCommonFoodHistoryState>(
+              listener: (context, state) {
+                if (state is AddCommonFoodHistorySuccess) {
+                  context.read<SearchHistoryLogBloc>().add(
+                        GetSearchHistoryLogRequested(),
+                      );
+                } else if (state is AddCommonFoodHistoryFailure) {
+                  print(state.error);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.error),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
             ),
           ],
-        ),
-      ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[900],
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+              border: Border.all(color: AppColors.buttonColors, width: 1),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.buttonColors,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              SizedBox(
+                                width: 250,
+                                child: Text(
+                                  widget.mealName,
+                                  style: const TextStyle(
+                                    overflow: TextOverflow.clip,
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '${totalCalories.toStringAsFixed(1)} cal',
+                                style: TextStyle(
+                                  color: isWithinLimit
+                                      ? AppColors.buttonColors
+                                      : Colors.red,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.servingInfo,
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Quantity input
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Quantity',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextField(
+                                      controller: _servingsController,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: Colors.grey[800],
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        errorText: servingsError,
+                                        hintText: 'Enter quantity',
+                                        hintStyle:
+                                            TextStyle(color: Colors.grey[400]),
+                                      ),
+                                      onChanged: _updateCalories,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+
+                              // Serving unit dropdown
+                              Expanded(
+                                flex: 3,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Serving Size',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[800],
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: AppColors.buttonColors
+                                              .withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          value: selectedServingUnit,
+                                          isExpanded: true,
+                                          dropdownColor: Colors.grey[800],
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16),
+                                          items: servingUnits
+                                              .map((ServingUnit unit) {
+                                            return DropdownMenuItem<String>(
+                                              value: unit.name,
+                                              child: Text(
+                                                unit.label,
+                                                style: const TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            );
+                                          }).toList(),
+                                          onChanged: _handleServingUnitChange,
+                                          // onChanged: (String? newValue) {
+                                          //   if (newValue != null) {
+                                          //     setState(() {
+                                          //       selectedServingUnit = newValue;
+                                          //       _updateCalories(
+                                          //           _servingsController.text);
+                                          //     });
+                                          //   }
+                                          // },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 24),
+                          // !
+                          BlocBuilder<MealTypeBloc, MealTypeState>(
+                            builder: (context, state) {
+                              if (state is MealTypeLoading) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.buttonColors,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              if (state is MealTypeError) {
+                                return Center(
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        state.message,
+                                        style:
+                                            const TextStyle(color: Colors.red),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      TextButton(
+                                        onPressed: () {
+                                          context
+                                              .read<MealTypeBloc>()
+                                              .add(FetchMealTypes());
+                                        },
+                                        child: const Text('Retry'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              if (state is MealTypeLoaded) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Select Meal Type',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Wrap(
+                                        spacing: 16,
+                                        runSpacing: 16,
+                                        children:
+                                            state.mealTypes.map((mealType) {
+                                          bool isSelected =
+                                              state.selectedMealId ==
+                                                  mealType.id;
+                                          return InkWell(
+                                            onTap: () {
+                                              context.read<MealTypeBloc>().add(
+                                                    SelectMealType(
+                                                        mealId: mealType.id),
+                                                  );
+                                              setState(() {
+                                                selectedMealType =
+                                                    mealType.meal.toUpperCase();
+                                              });
+                                            },
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 8,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: isSelected
+                                                    ? AppColors.buttonColors
+                                                    : Colors.transparent,
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: isSelected
+                                                      ? AppColors.buttonColors
+                                                      : Colors.grey,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    isSelected
+                                                        ? Icons.check_circle
+                                                        : Icons.circle_outlined,
+                                                    size: 18,
+                                                    color: isSelected
+                                                        ? Colors.black
+                                                        : Colors.grey,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    mealType.meal,
+                                                    style: TextStyle(
+                                                      color: isSelected
+                                                          ? Colors.black
+                                                          : Colors.grey,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              return const SizedBox.shrink();
+                            },
+                          ),
+
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: BlocBuilder<CommonFoodBloc, CommonFoodState>(
+                              builder: (context, state) {
+                                return ElevatedButton(
+                                  onPressed: (state is CommonFoodLoading ||
+                                          !isWithinLimit)
+                                      ? null
+                                      : _handleAddToMeal,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isWithinLimit
+                                        ? AppColors.buttonColors
+                                        : Colors.grey,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(25),
+                                    ),
+                                    elevation: 2,
+                                  ),
+                                  child: state is CommonFoodLoading
+                                      ? const CircularProgressIndicator()
+                                      : Text(
+                                          selectedMealType == 'CHOOSE'
+                                              ? "CHOOSE MEAL"
+                                              : 'ADD TO $selectedMealType',
+                                          style: TextStyle(
+                                            color: isWithinLimit
+                                                ? Colors.black
+                                                : Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

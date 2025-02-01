@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -26,11 +25,11 @@ class RestaurantScreen extends StatefulWidget {
 }
 
 class _RestaurantScreenState extends State<RestaurantScreen> {
-
   bool showNearbyRestaurants = false;
   List<SuggestedRestaurantModel>? _cachedRestaurants;
   DateTime? _lastFetchTime;
-  static const cacheDuration = Duration(minutes: 15); // Cache expires after 15 minutes
+  static const cacheDuration =
+      Duration(minutes: 15); // Cache expires after 15 minutes
 
   @override
   void initState() {
@@ -49,7 +48,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         try {
           final jsonData = json.decode(cachedData);
           final restaurantsResponse = RestaurantsResponse.fromJson(jsonData);
-          
+
           if (restaurantsResponse.status) {
             setState(() {
               _cachedRestaurants = restaurantsResponse.restaurants;
@@ -61,7 +60,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         }
       }
     }
-    
+
     // Fetch fresh data
     _initializeData();
   }
@@ -73,11 +72,11 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         status: true,
         restaurants: restaurants,
       );
-      
-      await prefs.setString('suggested_restaurants_cache', 
-        json.encode(responseData.toJson()));
-      await prefs.setString('restaurants_last_fetch_time', 
-        DateTime.now().toIso8601String());
+
+      await prefs.setString(
+          'suggested_restaurants_cache', json.encode(responseData.toJson()));
+      await prefs.setString(
+          'restaurants_last_fetch_time', DateTime.now().toIso8601String());
       _lastFetchTime = DateTime.now();
     } catch (e) {
       debugPrint('Error caching restaurants: $e');
@@ -86,17 +85,22 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
 
   void _initializeData() {
     // Prevent frequent refetches
-    if (_lastFetchTime != null && 
-        DateTime.now().difference(_lastFetchTime!) < const Duration(seconds: 30)) {
+    if (_lastFetchTime != null &&
+        DateTime.now().difference(_lastFetchTime!) <
+            const Duration(seconds: 30)) {
       return;
     }
     context.read<SuggestedRestaurantsBloc>().add(FetchSuggestedRestaurants());
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+    final padding = screenSize.width * 0.04;
+
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(isSmallScreen),
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
@@ -112,11 +116,11 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSearchBar(),
-                      _buildNearbyRestaurantsButton(),
+                      _buildSearchBar(padding),
+                      _buildNearbyRestaurantsButton(padding, isSmallScreen),
                       if (showNearbyRestaurants)
-                        _buildNearbyRestaurantsSection(),
-                      _buildSuggestedRestaurantsSection(),
+                        _buildNearbyRestaurantsSection(padding, isSmallScreen),
+                      _buildSuggestedRestaurantsSection(padding, isSmallScreen),
                     ],
                   ),
                 ),
@@ -128,26 +132,75 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
-
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(bool isSmallScreen) {
     return AppBar(
       backgroundColor: Colors.black,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: Icon(
+          Icons.arrow_back,
+          color: Colors.white,
+          size: isSmallScreen ? 20 : 24,
+        ),
         onPressed: () => Navigator.of(context).pop(),
       ),
-      title: const Text(
+      title: Text(
         'Restaurants',
         style: TextStyle(
           color: Colors.white,
-          fontSize: 24,
+          fontSize: isSmallScreen ? 20 : 24,
           fontWeight: FontWeight.bold,
         ),
       ),
       actions: [
         PopupMenuButton<String>(
           color: Colors.black,
-          icon: const Icon(Icons.more_vert, color: Colors.white),
+          icon: Icon(
+            Icons.more_vert,
+            color: Colors.white,
+            size: isSmallScreen ? 20 : 24,
+          ),
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem<String>(
+              value: 'request_restaurant',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.restaurant,
+                    color: Colors.white,
+                    size: isSmallScreen ? 18 : 22,
+                  ),
+                  SizedBox(width: isSmallScreen ? 6 : 8),
+                  Text(
+                    'Request New Restaurant',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: isSmallScreen ? 12 : 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'set_distance',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.radio_button_checked,
+                    color: Colors.white,
+                    size: isSmallScreen ? 18 : 22,
+                  ),
+                  SizedBox(width: isSmallScreen ? 6 : 8),
+                  Text(
+                    'Set Search Radius',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: isSmallScreen ? 12 : 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           onSelected: (value) {
             if (value == 'request_restaurant') {
               _showRequestDialog();
@@ -155,34 +208,6 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               _showDistanceDialog();
             }
           },
-          itemBuilder: (BuildContext context) => [
-            const PopupMenuItem<String>(
-              value: 'request_restaurant',
-              child: Row(
-                children: [
-                  Icon(Icons.restaurant, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text(
-                    'Request New Restaurant',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-            const PopupMenuItem<String>(
-              value: 'set_distance',
-              child: Row(
-                children: [
-                  Icon(Icons.radio_button_checked, color: Colors.white),
-                  SizedBox(width: 8),
-                  Text(
-                    'Set Search Radius',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -213,22 +238,20 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(double padding) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       child: GestureDetector(
         onTap: () {
           final suggestedBloc = context.read<SuggestedRestaurantsBloc>();
           if (suggestedBloc.state is SuggestedRestaurantsLoaded) {
             final restaurants =
                 (suggestedBloc.state as SuggestedRestaurantsLoaded).restaurants;
-            context.pushNamed(
-              RouteNames.restaurantSearch,
-              extra: restaurants,
-            );
+            context.pushNamed(RouteNames.restaurantSearch, extra: restaurants);
           }
         },
         child: Container(
+          height: 50,
           decoration: BoxDecoration(
             color: AppColors.tileColor,
             borderRadius: BorderRadius.circular(30),
@@ -250,9 +273,13 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
-  Widget _buildNearbyRestaurantsButton() {
+  Widget _buildNearbyRestaurantsButton(double padding, bool isSmallScreen) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+      margin: EdgeInsets.only(
+        bottom: padding,
+        left: padding,
+        right: padding,
+      ),
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: () {
@@ -263,17 +290,23 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.buttonColors,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.symmetric(
+            vertical: isSmallScreen ? 12 : 16,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        icon: const Icon(Icons.location_on, color: Colors.black),
-        label: const Text(
+        icon: Icon(
+          Icons.location_on,
+          color: Colors.black,
+          size: isSmallScreen ? 20 : 24,
+        ),
+        label: Text(
           'Find Nearby Restaurants',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 16,
+            fontSize: isSmallScreen ? 14 : 16,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -281,17 +314,41 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
-  Widget _buildNearbyRestaurantsSection() {
+  String _formatDistance(num distanceInMeters) {
+    // Convert meters to miles (1 meter = 0.000621371 miles)
+    final miles = distanceInMeters * 0.000621371;
+
+    // Format based on distance
+    if (miles < 0.1) {
+      // If less than 0.1 miles, show in feet (1 mile = 5280 feet)
+      final feet = (miles * 5280).round();
+      if (feet < 50) {
+        return 'Nearby';
+      }
+      return '$feet ft';
+    } else if (miles >= 100) {
+      // If more than 100 miles, show without decimal
+      return '${miles.round()} mi';
+    } else {
+      // Show in miles with one decimal place
+      return '${miles.toStringAsFixed(1)} mi';
+    }
+  }
+
+  Widget _buildNearbyRestaurantsSection(double padding, bool isSmallScreen) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+        Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: padding,
+            horizontal: padding,
+          ),
           child: Text(
             'Nearby Restaurants',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: isSmallScreen ? 18 : 20,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -299,40 +356,46 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         BlocBuilder<NearbyRestaurantBloc, NearbyRestaurantState>(
           builder: (context, state) {
             if (state is NearbyRestaurantLoading) {
-              return const Center(
+              return Center(
                 child: Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: CircularProgressIndicator(
+                  padding: EdgeInsets.all(padding * 1.5),
+                  child: const CircularProgressIndicator(
                     valueColor:
                         AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
                   ),
                 ),
               );
             } else if (state is NearbyRestaurantError) {
-              return _buildErrorState(state.message);
+              return _buildErrorState(state.message, isSmallScreen);
             } else if (state is NearbyRestaurantLoaded) {
               if (state.restaurants.isEmpty) {
-                return _buildEmptyState('No nearby restaurants found');
+                return _buildEmptyState(
+                    'No nearby restaurants found', isSmallScreen);
               }
-              return ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: state.restaurants.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final restaurant = state.restaurants[index];
-                  return RestaurantItem(
-                    ontap: () => _onRestaurantTap(restaurant.id, restaurant),
-                    name: restaurant.restaurantName,
-                    imageUrl: restaurant.logo,
-                    rating:
-                        '${(restaurant.distance / 1000).toStringAsFixed(1)} km',
-                    address: restaurant.address,
-                    distance:
-                        '${(restaurant.distance / 1000).toStringAsFixed(1)} km',
-                  );
-                },
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: padding),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: state.restaurants.length,
+                  separatorBuilder: (context, index) => SizedBox(
+                    height: isSmallScreen ? 8 : 12,
+                  ),
+                  itemBuilder: (context, index) {
+                    final restaurant = state.restaurants[index];
+                    final formattedDistance =
+                        _formatDistance(restaurant.distance);
+
+                    return RestaurantItem(
+                      ontap: () => _onRestaurantTap(restaurant.id, restaurant),
+                      name: restaurant.restaurantName,
+                      imageUrl: restaurant.logo,
+                      rating: formattedDistance,
+                      address: restaurant.address,
+                      distance: formattedDistance,
+                    );
+                  },
+                ),
               );
             }
             return const SizedBox.shrink();
@@ -342,17 +405,20 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
-  Widget _buildSuggestedRestaurantsSection() {
+  Widget _buildSuggestedRestaurantsSection(double padding, bool isSmallScreen) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: padding,
+            vertical: padding,
+          ),
           child: Text(
             'Restaurants',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: isSmallScreen ? 18 : 20,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -360,9 +426,9 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         BlocConsumer<SuggestedRestaurantsBloc, SuggestedRestaurantsState>(
           listener: (context, state) {
             if (state is SuggestedRestaurantsLoaded) {
-              // Only update cache if data has changed
-              if (_cachedRestaurants == null || 
-                  !_areRestaurantsEqual(_cachedRestaurants!, state.restaurants)) {
+              if (_cachedRestaurants == null ||
+                  !_areRestaurantsEqual(
+                      _cachedRestaurants!, state.restaurants)) {
                 _cacheData(state.restaurants);
                 setState(() {
                   _cachedRestaurants = state.restaurants;
@@ -371,41 +437,55 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
             }
           },
           builder: (context, state) {
-            if (state is SuggestedRestaurantsLoading && _cachedRestaurants == null) {
-              return const Center(
-                child: CircularProgressIndicator(),
+            if (state is SuggestedRestaurantsLoading &&
+                _cachedRestaurants == null) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(padding),
+                  child: const CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+                  ),
+                ),
               );
-            } else if (state is SuggestedRestaurantsError && _cachedRestaurants == null) {
-              return _buildErrorState(state.message);
+            } else if (state is SuggestedRestaurantsError &&
+                _cachedRestaurants == null) {
+              return _buildErrorState(state.message, isSmallScreen);
             }
 
-            // Use cached data or new data
-            final restaurants = _cachedRestaurants ?? 
-              (state is SuggestedRestaurantsLoaded ? state.restaurants : []);
+            final restaurants = _cachedRestaurants ??
+                (state is SuggestedRestaurantsLoaded ? state.restaurants : []);
 
             if (restaurants.isEmpty) {
-              return _buildEmptyState('No suggested restaurants available');
+              return _buildEmptyState(
+                  'No suggested restaurants available', isSmallScreen);
             }
 
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: restaurants.length,
-              itemBuilder: (context, index) {
-                final restaurant = restaurants[index];
-                return RestaurantItem(
-                  ontap: () {
-                    _onRestaurantTap(restaurant.id, null);
-                  },
-                  name: restaurant.name,
-                  imageUrl: restaurant.logo,
-                  rating: null,
-                  address: restaurant.address,
-                  distance: restaurant.distance != null
-                      ? '${(restaurant.distance! / 1000).toStringAsFixed(1)} km'
-                      : 'Distance not available',
-                );
-              },
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: restaurants.length,
+                separatorBuilder: (context, index) => SizedBox(
+                  height: isSmallScreen ? 8 : 12,
+                ),
+                itemBuilder: (context, index) {
+                  final restaurant = restaurants[index];
+                  return RestaurantItem(
+                    ontap: () {
+                      _onRestaurantTap(restaurant.id, null);
+                    },
+                    name: restaurant.name,
+                    imageUrl: restaurant.logo,
+                    rating: null,
+                    address: restaurant.address,
+                    distance: restaurant.distance != null
+                        ? '${(restaurant.distance! / 1000).toStringAsFixed(1)} km'
+                        : 'Distance not available',
+                  );
+                },
+              ),
             );
           },
         ),
@@ -413,18 +493,18 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
-  bool _areRestaurantsEqual(List<SuggestedRestaurantModel> list1, 
+  bool _areRestaurantsEqual(List<SuggestedRestaurantModel> list1,
       List<SuggestedRestaurantModel> list2) {
     if (list1.length != list2.length) return false;
-    
+
     for (int i = 0; i < list1.length; i++) {
       if (!list1[i].equals(list2[i])) return false;
     }
-    
+
     return true;
   }
 
-  Widget _buildErrorState(String message) {
+  Widget _buildErrorState(String message, bool isSmallScreen) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -433,7 +513,10 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
           children: [
             Text(
               message,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isSmallScreen ? 14 : 16,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -442,22 +525,25 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(String message, bool isSmallScreen) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.restaurant,
               color: Colors.grey,
-              size: 48,
+              size: isSmallScreen ? 40 : 48,
             ),
             const SizedBox(height: 16),
             Text(
               message,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isSmallScreen ? 14 : 16,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

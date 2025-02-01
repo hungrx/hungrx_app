@@ -229,7 +229,14 @@ class _DishDetailsState extends State<DishDetails> {
           Navigator.pop(context);
           context.read<GetCartBloc>().add(LoadCart());
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.response.message)),
+            SnackBar(
+              content: Text(
+                state.response.message,
+                style: TextStyle(color: Colors.white),
+              ),
+              duration: Duration(microseconds: 300),
+              backgroundColor: Colors.green,
+            ),
           );
         } else if (state is AddToCartError) {
           ScaffoldMessenger.of(context).showSnackBar(

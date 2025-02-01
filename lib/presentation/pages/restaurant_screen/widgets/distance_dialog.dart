@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
-class DistanceDialog extends StatelessWidget {
+class DistanceDialog extends StatefulWidget {
   final double initialDistanceInMiles;
   final Function(double) onDistanceChanged;
 
@@ -11,15 +11,31 @@ class DistanceDialog extends StatelessWidget {
     required this.onDistanceChanged,
   });
 
+  @override
+  State<DistanceDialog> createState() => _DistanceDialogState();
+}
+
+class _DistanceDialogState extends State<DistanceDialog> {
+  late TextEditingController distanceController;
+
   double _milesToMeters(double miles) {
     return miles * 1609.34; // 1 mile = 1609.34 meters
   }
 
   @override
-  Widget build(BuildContext context) {
-    final TextEditingController distanceController =
-        TextEditingController(text: initialDistanceInMiles.toStringAsFixed(1));
+  void initState() {
+    super.initState();
+    distanceController = TextEditingController(text: widget.initialDistanceInMiles.toStringAsFixed(1));
+  }
 
+  @override
+  void dispose() {
+    distanceController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.grey[900],
       shape: RoundedRectangleBorder(
@@ -91,7 +107,10 @@ class DistanceDialog extends StatelessWidget {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            distanceController.clear(); // Clear the text field before popping
+            Navigator.pop(context);
+          },
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           ),
@@ -115,7 +134,8 @@ class DistanceDialog extends StatelessWidget {
             final distanceInMiles = double.tryParse(distanceController.text);
             if (distanceInMiles != null && distanceInMiles > 0) {
               final distanceInMeters = _milesToMeters(distanceInMiles);
-              onDistanceChanged(distanceInMeters);
+              widget.onDistanceChanged(distanceInMeters);
+              distanceController.clear(); // Clear the text field before popping
               Navigator.pop(context);
               
               ScaffoldMessenger.of(context).showSnackBar(
@@ -144,7 +164,7 @@ class DistanceDialog extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  margin: EdgeInsets.all(12),
+                  margin: const EdgeInsets.all(12),
                 ),
               );
             }

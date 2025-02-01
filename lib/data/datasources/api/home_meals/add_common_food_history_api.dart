@@ -11,13 +11,14 @@ class AddCommonFoodHistoryApi {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(request.toJson()),
       );
-
+print(response.body);
       if (response.statusCode == 200) {
         return AddCommonFoodHistoryResponse.fromJson(jsonDecode(response.body));
       } else {
         throw Exception('Failed to add to history: ${response.statusCode}');
       }
     } catch (e) {
+      print(e);
       throw Exception('Network error: $e');
     }
   }

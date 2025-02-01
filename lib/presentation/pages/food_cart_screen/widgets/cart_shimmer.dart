@@ -1,6 +1,3 @@
-// First, add shimmer package to pubspec.yaml:
-// shimmer: ^3.0.0
-
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -9,6 +6,18 @@ class CartScreenShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+    final padding = screenSize.width * 0.04;
+    
+    // Calculate responsive dimensions
+    final nutritionBoxSize = isSmallScreen ? 70.0 : 80.0;
+    final foodImageSize = isSmallScreen ? 70.0 : 80.0;
+    final titleHeight = isSmallScreen ? 20.0 : 24.0;
+    final subtitleHeight = isSmallScreen ? 12.0 : 14.0;
+    final buttonHeight = isSmallScreen ? 40.0 : 48.0;
+    final iconSize = isSmallScreen ? 20.0 : 24.0;
+    
     return Shimmer.fromColors(
       baseColor: Colors.grey[900]!,
       highlightColor: Colors.grey[800]!,
@@ -18,10 +27,10 @@ class CartScreenShimmer extends StatelessWidget {
           children: [
             // Total Nutrition Facts Card
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(padding),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(padding),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -31,11 +40,11 @@ class CartScreenShimmer extends StatelessWidget {
                   children: [
                     // Title
                     Container(
-                      width: 200,
-                      height: 24,
+                      width: screenSize.width * 0.5,
+                      height: titleHeight,
                       color: Colors.white,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: padding),
                     
                     // Nutrition Grid
                     Row(
@@ -43,8 +52,8 @@ class CartScreenShimmer extends StatelessWidget {
                       children: List.generate(
                         4,
                         (index) => Container(
-                          width: 80,
-                          height: 80,
+                          width: nutritionBoxSize,
+                          height: nutritionBoxSize,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
@@ -53,27 +62,27 @@ class CartScreenShimmer extends StatelessWidget {
                       ),
                     ),
                     
-                    const SizedBox(height: 16),
+                    SizedBox(height: padding),
                     
                     // Info Rows
                     ...List.generate(
                       2,
                       (index) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        padding: EdgeInsets.symmetric(vertical: padding * 0.5),
                         child: Row(
                           children: [
                             Container(
-                              width: 16,
-                              height: 16,
+                              width: iconSize,
+                              height: iconSize,
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: padding * 0.5),
                             Container(
-                              width: 200,
-                              height: 16,
+                              width: screenSize.width * 0.5,
+                              height: subtitleHeight,
                               color: Colors.white,
                             ),
                           ],
@@ -81,16 +90,16 @@ class CartScreenShimmer extends StatelessWidget {
                       ),
                     ),
                     
-                    const SizedBox(height: 16),
+                    SizedBox(height: padding),
                     
                     // Action Buttons
                     ...List.generate(
                       2,
                       (index) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
+                        padding: EdgeInsets.only(bottom: padding * 0.5),
                         child: Container(
                           width: double.infinity,
-                          height: 48,
+                          height: buttonHeight,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
@@ -105,10 +114,10 @@ class CartScreenShimmer extends StatelessWidget {
             
             // Food Items Title
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: EdgeInsets.symmetric(horizontal: padding),
               child: Container(
-                width: 100,
-                height: 24,
+                width: screenSize.width * 0.25,
+                height: titleHeight,
                 color: Colors.white,
               ),
             ),
@@ -117,9 +126,9 @@ class CartScreenShimmer extends StatelessWidget {
             ...List.generate(
               2,
               (index) => Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(padding),
                 child: Container(
-                  height: 104,
+                  height: foodImageSize + (padding * 2),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -128,9 +137,9 @@ class CartScreenShimmer extends StatelessWidget {
                     children: [
                       // Food Image
                       Container(
-                        width: 80,
-                        height: 80,
-                        margin: const EdgeInsets.all(12),
+                        width: foodImageSize,
+                        height: foodImageSize,
+                        margin: EdgeInsets.all(padding * 0.75),
                         decoration: BoxDecoration(
                           color: Colors.grey[300],
                           borderRadius: BorderRadius.circular(8),
@@ -140,24 +149,27 @@ class CartScreenShimmer extends StatelessWidget {
                       // Food Details
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12.0),
+                          padding: EdgeInsets.symmetric(
+                            vertical: padding * 0.75,
+                            horizontal: padding * 0.5,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               Container(
-                                width: 150,
-                                height: 16,
+                                width: screenSize.width * 0.4,
+                                height: titleHeight * 0.7,
                                 color: Colors.white,
                               ),
                               Container(
-                                width: 100,
-                                height: 14,
+                                width: screenSize.width * 0.3,
+                                height: subtitleHeight,
                                 color: Colors.white,
                               ),
                               Container(
-                                width: 120,
-                                height: 14,
+                                width: screenSize.width * 0.35,
+                                height: subtitleHeight,
                                 color: Colors.white,
                               ),
                             ],
@@ -167,27 +179,27 @@ class CartScreenShimmer extends StatelessWidget {
                       
                       // Quantity Controls
                       Container(
-                        width: 120,
-                        padding: const EdgeInsets.all(12),
+                        width: screenSize.width * 0.25,
+                        padding: EdgeInsets.all(padding * 0.75),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Container(
-                              width: 24,
-                              height: 24,
+                              width: iconSize,
+                              height: iconSize,
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                               ),
                             ),
                             Container(
-                              width: 32,
-                              height: 24,
+                              width: iconSize * 1.3,
+                              height: iconSize,
                               color: Colors.white,
                             ),
                             Container(
-                              width: 24,
-                              height: 24,
+                              width: iconSize,
+                              height: iconSize,
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 shape: BoxShape.circle,
@@ -203,7 +215,7 @@ class CartScreenShimmer extends StatelessWidget {
             ),
             
             // Bottom Space for Calorie Bar
-            const SizedBox(height: 80),
+            SizedBox(height: screenSize.height * 0.1),
           ],
         ),
       ),

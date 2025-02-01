@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/common_food_model.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/common_consume_sheet.dart';
@@ -16,61 +18,158 @@ class CommonFoodListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      decoration: BoxDecoration(
-        color: AppColors.tileColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(8),
-        title: Text(
-          food.name,
-          style: const TextStyle(
-            overflow: TextOverflow.ellipsis,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+    return BlocBuilder<ProgressBarBloc, ProgressBarState>(
+      builder: (context, state) {
+        bool isWithinLimit = true;
+        if (state is ProgressBarLoaded) {
+          final remainingCalories = state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
+          isWithinLimit = food.nutritionFacts.calories <= remainingCalories;
+        }
+
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          decoration: BoxDecoration(
+            color: AppColors.tileColor,
+            borderRadius: BorderRadius.circular(10),
           ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'serving size : ${food.servingInfo.size} ${food.servingInfo.unit}',
-              style: TextStyle(color: Colors.grey[400]),
-            ),
-            Text(
-              '${food.category.main}',
-              style: TextStyle(color: Colors.grey[400]),
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${food.nutritionFacts.calories.toStringAsFixed(1)} Cal',
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(
-                Icons.add_circle,
-                color: AppColors.buttonColors,
-                size: 35,
-              ),
-              onPressed: () {
+          child: ListTile(
+            onTap: () {
+              if (!isWithinLimit) {
+                _showCalorieWarning(context);
+              } else {
                 _showMealDetailsBottomSheet(
                   context,
                   food,
                   food.name,
                   'serving size : ${food.servingInfo.size} ${food.servingInfo.unit}',
                 );
-              },
+              }
+            },
+            contentPadding: const EdgeInsets.all(8),
+            title: Text(
+              food.name,
+              style: const TextStyle(
+                overflow: TextOverflow.ellipsis,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ],
-        ),
-      ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'serving size : ${food.servingInfo.size} ${food.servingInfo.unit}',
+                  style: TextStyle(color: Colors.grey[400]),
+                ),
+                Text(
+                  food.category.main,
+                  style: TextStyle(color: Colors.grey[400]),
+                ),
+              ],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${food.nutritionFacts.calories.toStringAsFixed(1)} Cal',
+                  style: TextStyle(
+                    color: isWithinLimit ? Colors.green : Colors.red,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(
+                    Icons.add_circle,
+                    color: isWithinLimit ? AppColors.buttonColors : Colors.grey,
+                    size: 35,
+                  ),
+                  onPressed: () {
+                    if (!isWithinLimit) {
+                      _showCalorieWarning(context);
+                    } else {
+                      _showMealDetailsBottomSheet(
+                        context,
+                        food,
+                        food.name,
+                        'serving size : ${food.servingInfo.size} ${food.servingInfo.unit}',
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showCalorieWarning(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.grey[900],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.orange,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Calorie Limit Warning',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                BlocBuilder<ProgressBarBloc, ProgressBarState>(
+                  builder: (context, state) {
+                    if (state is ProgressBarLoaded) {
+                      final remainingCalories = state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
+                      return Text(
+                        'This food (${food.nutritionFacts.calories.toStringAsFixed(1)} Cal) exceeds your remaining calorie limit (${remainingCalories.toStringAsFixed(1)} Cal) for today.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey[300],
+                          fontSize: 14,
+                        ),
+                      );
+                    }
+                    return const SizedBox();
+                  },
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.buttonColors,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Understood',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -119,21 +218,3 @@ class CommonFoodListItem extends StatelessWidget {
   }
 }
 
-// Update the CommonFoodList to import and use CommonFoodListItem
-class CommonFoodList extends StatelessWidget {
-  final List<CommonFoodModel> foods;
-
-  const CommonFoodList({super.key, required this.foods});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(8),
-      itemCount: foods.length,
-      itemBuilder: (context, index) {
-        final food = foods[index];
-        return CommonFoodListItem(food: food);
-      },
-    );
-  }
-}

@@ -11,7 +11,7 @@ class GetSearchHistoryLogUseCase {
       final response = await repository.getSearchHistory(userId);
       return response.data;
     } catch (e) {
-      // print(e);
+      print(e);
       throw Exception('UseCase error: $e');
     }
   }
