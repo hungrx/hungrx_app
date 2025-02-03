@@ -1,12 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/restaurant_menu_screen/restaurant_menu_response.dart';
 import 'package:hungrx_app/data/Models/restuarent_screen/nearby_restaurant_model.dart';
-import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_state.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
@@ -14,6 +11,9 @@ import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_bloc
 import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_event.dart';
 import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_state.dart';
 import 'package:hungrx_app/presentation/blocs/manu_search/menu_search_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_event.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_event.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_state.dart';
@@ -46,18 +46,19 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   DateTime? _lastFetchTime;
   static const cacheDuration = Duration(minutes: 30);
 
-
   @override
   void initState() {
     super.initState();
     _loadCachedData();
+    context.read<ProgressBarBloc>().add(FetchProgressBarData());
     context.read<GetCartBloc>().add(LoadCart());
   }
 
   Future<void> _loadCachedData() async {
     final prefs = await SharedPreferences.getInstance();
     final cachedData = prefs.getString('menu_cache_${widget.restaurantId}');
-    final lastFetchTimeStr = prefs.getString('menu_last_fetch_${widget.restaurantId}');
+    final lastFetchTimeStr =
+        prefs.getString('menu_last_fetch_${widget.restaurantId}');
 
     if (cachedData != null && lastFetchTimeStr != null) {
       final lastFetchTime = DateTime.parse(lastFetchTimeStr);
@@ -73,7 +74,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         }
       }
     }
-    
+
     // Fetch fresh data
     _fetchMenuData();
   }
@@ -81,14 +82,10 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   Future<void> _cacheData(RestaurantMenuResponse menuResponse) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        'menu_cache_${widget.restaurantId}',
-        json.encode(menuResponse.toJson())
-      );
-      await prefs.setString(
-        'menu_last_fetch_${widget.restaurantId}',
-        DateTime.now().toIso8601String()
-      );
+      await prefs.setString('menu_cache_${widget.restaurantId}',
+          json.encode(menuResponse.toJson()));
+      await prefs.setString('menu_last_fetch_${widget.restaurantId}',
+          DateTime.now().toIso8601String());
       _lastFetchTime = DateTime.now();
     } catch (e) {
       debugPrint('Error caching menu data: $e');
@@ -97,26 +94,26 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
   void _fetchMenuData() {
     // Prevent frequent refetches
-    if (_lastFetchTime != null && 
-        DateTime.now().difference(_lastFetchTime!) < const Duration(seconds: 30)) {
+    if (_lastFetchTime != null &&
+        DateTime.now().difference(_lastFetchTime!) <
+            const Duration(seconds: 30)) {
       return;
     }
     context.read<RestaurantMenuBloc>().add(
-      LoadRestaurantMenu(
-        restaurantId: widget.restaurantId ?? "",
-      ),
-    );
+          LoadRestaurantMenu(
+            restaurantId: widget.restaurantId ?? "",
+          ),
+        );
   }
 
   bool _checkCalorieLimit(BuildContext context, double dishCalories) {
     final getCartState = context.read<GetCartBloc>().state;
-    final menuState = context.read<RestaurantMenuBloc>().state;
+    final progressState = context.read<ProgressBarBloc>().state;
 
-    if (menuState is RestaurantMenuLoaded) {
-      final userStats = menuState.menuResponse.userStats;
-      final baseConsumedCalories = userStats.todayConsumption;
-      final dailyCalorieGoal =
-          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+    if (progressState is ProgressBarLoaded) {
+      // Get calories from ProgressBarBloc
+      final baseConsumedCalories = progressState.data.totalCaloriesConsumed;
+      final dailyCalorieGoal = progressState.data.dailyCalorieGoal;
 
       // Get calories from GetCartBloc
       double cartCalories = 0.0;
@@ -148,7 +145,20 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         );
         return false;
       }
+    } else if (progressState is ProgressBarError) {
+      // Handle error state
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error checking calorie limit: ${progressState.message}',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
     }
+
     return true;
   }
 
@@ -163,8 +173,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           listener: (context, state) {
             if (state is RestaurantMenuLoaded) {
               // Cache new data only if it's different from cached data
-              if (_cachedMenuResponse == null || 
-                  !_areMenusEqual(_cachedMenuResponse!.menu, state.menuResponse.menu)) {
+              if (_cachedMenuResponse == null ||
+                  !_areMenusEqual(
+                      _cachedMenuResponse!.menu, state.menuResponse.menu)) {
                 _cacheData(state.menuResponse);
                 setState(() {
                   _cachedMenuResponse = state.menuResponse;
@@ -175,15 +186,16 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           builder: (context, state) {
             if (state is RestaurantMenuLoading && _cachedMenuResponse == null) {
               return const Center(child: CircularProgressIndicator());
-            } else if (state is RestaurantMenuError && _cachedMenuResponse == null) {
+            } else if (state is RestaurantMenuError &&
+                _cachedMenuResponse == null) {
               return Center(
-                child: Text(state.message, style: const TextStyle(color: Colors.white))
-              );
+                  child: Text(state.message,
+                      style: const TextStyle(color: Colors.white)));
             }
 
             // Use cached data or new data
-            final menuResponse = _cachedMenuResponse ?? 
-              (state is RestaurantMenuLoaded ? state.menuResponse : null);
+            final menuResponse = _cachedMenuResponse ??
+                (state is RestaurantMenuLoaded ? state.menuResponse : null);
 
             if (menuResponse == null) {
               return const SizedBox();
@@ -197,7 +209,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   bool _areMenusEqual(RestaurantMenu menu1, RestaurantMenu menu2) {
-    if (menu1.id != menu2.id || 
+    if (menu1.id != menu2.id ||
         menu1.restaurantName != menu2.restaurantName ||
         menu1.categories.length != menu2.categories.length) {
       return false;
@@ -206,7 +218,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     for (int i = 0; i < menu1.categories.length; i++) {
       final cat1 = menu1.categories[i];
       final cat2 = menu2.categories[i];
-      if (cat1.id != cat2.id || 
+      if (cat1.id != cat2.id ||
           cat1.dishes.length != cat2.dishes.length ||
           cat1.subCategories.length != cat2.subCategories.length) {
         return false;
@@ -365,7 +377,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       builder: (context, state) {
         return CustomExpansionPanel(
           backgroundColor: AppColors.tileColor,
-          key: Key('$parentCategoryId-${subCategory.id}'),
+          key: Key('${subCategory.id}-$parentCategoryId'),
           title: subCategory.subCategoryName,
           isExpanded: state.expandedSubcategoryId == subCategory.id &&
               state.expandedCategoryForSubcategory == parentCategoryId,
@@ -383,7 +395,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     );
   }
 
-  Widget _buildMenuItem(Dish dish) {
+  Widget _buildMenuItem(Dish dish) { 
     // print("dish :${dish.id}");
     // final calories = dish.servingInfos.isNotEmpty
     //     ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
@@ -399,22 +411,11 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     final menuState = context.read<RestaurantMenuBloc>().state;
 
     // Calculate remaining calories
-    double remainingCalories = 0.0;
     if (menuState is RestaurantMenuLoaded) {
-      final userStats = menuState.menuResponse.userStats;
-      final baseConsumedCalories = userStats.todayConsumption;
-      final dailyCalorieGoal =
-          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
-
       // Get calories from cart
-      double cartCalories = 0.0;
-      if (getCartState is CartLoaded) {
-        cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
-      }
+      if (getCartState is CartLoaded) {}
 
       // Calculate remaining calories
-      final currentTotal = baseConsumedCalories + cartCalories;
-      remainingCalories = dailyCalorieGoal - currentTotal;
     }
 
     final defaultCalories = dish.servingInfos.isNotEmpty
@@ -424,7 +425,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         : 0.0;
 
     final calories = dish.servingInfos.isNotEmpty
-        ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
+        ? '${(double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts.calories.value) ?? 0).round()} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
         : 'N/A';
 
     // Helper function to create NutritionInfo from ServingInfo
@@ -562,26 +563,59 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                         Row(
                           spacing: 4,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[900],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                calories,
-                                style: TextStyle(
-                                  // Change color to red if dish calories exceed remaining calories
-                                  color: defaultCalories > remainingCalories
-                                      ? Colors.red
-                                      : AppColors.buttonColors,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                            BlocBuilder<GetCartBloc, GetCartState>(
+                              builder: (context, getCartState) {
+                                return BlocBuilder<ProgressBarBloc,
+                                    ProgressBarState>(
+                                  builder: (context, progressState) {
+                                    double remainingCalories = 0.0;
+
+                                    if (progressState is ProgressBarLoaded) {
+                                      final baseConsumedCalories = progressState
+                                          .data.totalCaloriesConsumed;
+                                      final dailyCalorieGoal =
+                                          progressState.data.dailyCalorieGoal;
+
+                                      // Get calories from cart
+                                      double cartCalories = 0.0;
+                                      if (getCartState is CartLoaded) {
+                                        cartCalories = getCartState
+                                                .totalNutrition['calories'] ??
+                                            0.0;
+                                      }
+
+                                      // Calculate remaining calories
+                                      final currentTotal =
+                                          baseConsumedCalories + cartCalories;
+                                      remainingCalories =
+                                          dailyCalorieGoal - currentTotal;
+                                    }
+
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[900],
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        calories,
+                                        style: TextStyle(
+                                          // Change color to red if dish calories exceed remaining calories
+                                          color: defaultCalories >
+                                                  remainingCalories
+                                              ? Colors.red
+                                              : AppColors.buttonColors,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -686,57 +720,46 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Widget _buildOrderSummary(BuildContext context, UserStats userStats) {
-    return BlocBuilder<CartBloc, CartState>(
-      builder: (context, cartState) {
-        return BlocBuilder<GetCartBloc, GetCartState>(
-          builder: (context, getCartState) {
-            final baseConsumedCalories = userStats.todayConsumption;
-            final dailyCalorieGoal =
-                double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+    return BlocBuilder<GetCartBloc, GetCartState>(
+      builder: (context, getCartState) {
+        // Default values when cart isn't loaded yet
+        double cartCalories = 0.0;
+        int totalItems = 0;
 
-            // Default values when cart isn't loaded yet
-            double cartCalories = 0.0;
-            int totalItems = 0;
+        // Update values if cart is loaded
+        if (getCartState is CartLoaded) {
+          totalItems = getCartState.carts.fold<int>(
+            0,
+            (sum, cart) =>
+                sum +
+                cart.dishDetails.fold<int>(
+                  0,
+                  (dishSum, dish) =>
+                      dishSum + (int.tryParse(dish.servingSize) ?? 1),
+                ),
+          );
 
-            // Update values if cart is loaded
-            if (getCartState is CartLoaded) {
-              totalItems = getCartState.carts.fold<int>(
-                0,
-                (sum, cart) =>
-                    sum +
-                    cart.dishDetails.fold<int>(
-                      0,
-                      (dishSum, dish) =>
-                          dishSum + (int.tryParse(dish.servingSize) ?? 1),
-                    ),
-              );
+          cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
+        }
 
-              cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
-            }
-
-            final totalConsumedCalories = baseConsumedCalories + cartCalories;
-
-            return CalorieSummaryWidget(
-              consumedCalories: totalConsumedCalories,
-              dailyCalorieGoal: dailyCalorieGoal,
-              itemCount: totalItems,
-              onViewOrderPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CartScreen(
-                      restaurant: widget.restaurant,
-                    ),
-                  ),
-                );
-                if (mounted) {
-                  context.read<GetCartBloc>().add(LoadCart());
-                }
-              },
-              buttonColor: AppColors.buttonColors,
-              primaryColor: AppColors.primaryColor,
+        return CalorieSummaryWidget(
+          cartCalories: cartCalories,
+          itemCount: totalItems,
+          onViewOrderPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CartScreen(
+                  restaurant: widget.restaurant,
+                ),
+              ),
             );
+            if (mounted) {
+              context.read<GetCartBloc>().add(LoadCart());
+            }
           },
+          buttonColor: AppColors.buttonColors,
+          primaryColor: AppColors.primaryColor,
         );
       },
     );

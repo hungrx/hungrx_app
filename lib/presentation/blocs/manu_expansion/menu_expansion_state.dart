@@ -15,9 +15,10 @@ class MenuExpansionState {
     String? expandedCategoryForSubcategory,
   }) {
     return MenuExpansionState(
-      expandedCategoryId: expandedCategoryId,
-      expandedSubcategoryId: expandedSubcategoryId,
-      expandedCategoryForSubcategory: expandedCategoryForSubcategory,
+      expandedCategoryId: expandedCategoryId ?? this.expandedCategoryId,
+      expandedSubcategoryId: expandedSubcategoryId ?? this.expandedSubcategoryId,
+      expandedCategoryForSubcategory: 
+          expandedCategoryForSubcategory ?? this.expandedCategoryForSubcategory,
     );
   }
 }

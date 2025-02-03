@@ -5,30 +5,34 @@ import 'package:hungrx_app/presentation/blocs/manu_expansion/menu_expansion_stat
 class MenuExpansionBloc extends Bloc<MenuExpansionEvent, MenuExpansionState> {
   MenuExpansionBloc() : super(MenuExpansionState()) {
     on<ToggleCategory>((event, emit) {
-      // If clicking the same category that's already expanded, collapse it
       if (state.expandedCategoryId == event.categoryId) {
+        // If clicking the same category that's already expanded, collapse it
         emit(MenuExpansionState()); // Reset state
       } else {
-        // If clicking a different category, expand it and collapse others
+        // If clicking a different category, expand it while preserving subcategory state
         emit(MenuExpansionState(
           expandedCategoryId: event.categoryId,
-          expandedSubcategoryId: null, // Reset subcategory when changing category
+          // Reset subcategory when changing main category
+          expandedSubcategoryId: null,
           expandedCategoryForSubcategory: null,
         ));
       }
     });
 
     on<ToggleSubcategory>((event, emit) {
-      // If clicking the same subcategory that's already expanded, collapse it
-      if (state.expandedSubcategoryId == event.subcategoryId) {
+      if (state.expandedSubcategoryId == event.subcategoryId &&
+          state.expandedCategoryForSubcategory == event.categoryId) {
+        // If clicking the same subcategory that's already expanded, only collapse the subcategory
         emit(state.copyWith(
           expandedSubcategoryId: null,
           expandedCategoryForSubcategory: null,
+          // Preserve main category expansion state
+          expandedCategoryId: state.expandedCategoryId,
         ));
       } else {
-        // If clicking a different subcategory, expand it and collapse others
+        // If clicking a different subcategory, expand it while preserving main category state
         emit(state.copyWith(
-          expandedCategoryId: event.categoryId,
+          expandedCategoryId: state.expandedCategoryId, // Preserve main category state
           expandedSubcategoryId: event.subcategoryId,
           expandedCategoryForSubcategory: event.categoryId,
         ));

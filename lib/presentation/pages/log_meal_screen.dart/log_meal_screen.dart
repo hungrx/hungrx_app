@@ -5,6 +5,7 @@ import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_event.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_state.dart';
@@ -321,91 +322,136 @@ class _LogMealViewState extends State<LogMealView> {
     required String imageUrl,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: () {
-        if (foodItem.brandName == "Common Food") {
-          _showCommonFoodMealDetailsBottomSheet(
-            context,
-            foodItem,
-            foodItem.name,
-            '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
-          );
-        } else {
-          _showMealDetailsBottomSheet(
-            foodItem,
-            context,
-            foodItem.name,
-            '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
-          );
+    return BlocBuilder<ProgressBarBloc, ProgressBarState>(
+      builder: (context, progressState) {
+        double remainingCalories = 0;
+        if (progressState is ProgressBarLoaded) {
+          remainingCalories = progressState.data.dailyCalorieGoal -
+              progressState.data.totalCaloriesConsumed;
         }
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.tileColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.all(0),
-          title: Text(
-            name,
-            style: const TextStyle(
-              overflow: TextOverflow.ellipsis,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+
+        final dishCalories = foodItem.nutritionFacts.calories ?? 0;
+        final isExceedingLimit = dishCalories > remainingCalories;
+        final calorieColor = isExceedingLimit ? Colors.red : Colors.green;
+        return GestureDetector(
+          onTap: () {
+            if (isExceedingLimit) {
+              // Show warning dialog
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    backgroundColor: Colors.grey[900],
+                    title: const Text(
+                      'Calorie Limit Warning',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    content: Text(
+                      'This meal exceeds your remaining calorie limit for today (${remainingCalories.toStringAsFixed(1)} calories remaining).',
+                      style: TextStyle(color: Colors.grey[300]),
+                    ),
+                    actions: [
+                      TextButton(
+                        child: const Text('OK',
+                            style: TextStyle(color: AppColors.buttonColors)),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  );
+                },
+              );
+              return;
+            }
+
+            if (foodItem.brandName == "Common Food") {
+              _showCommonFoodMealDetailsBottomSheet(
+                context,
+                foodItem,
+                foodItem.name,
+                '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+              );
+            } else {
+              _showMealDetailsBottomSheet(
+                foodItem,
+                context,
+                foodItem.name,
+                '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+              );
+            }
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.tileColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(0),
+              title: Text(
+                name,
+                style: const TextStyle(
+                  overflow: TextOverflow.ellipsis,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'serving size : $description',
+                    style: TextStyle(color: Colors.grey[400]),
+                  ),
+                  Text(
+                    'Brand Name : $brandName',
+                    style: TextStyle(color: Colors.grey[400]),
+                  ),
+                ],
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    calories,
+                    style: TextStyle(color: calorieColor, fontSize: 14),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(
+                      Icons.add_circle,
+                      color: isExceedingLimit
+                          ? Colors.grey
+                          : AppColors.buttonColors,
+                      size: 35,
+                    ),
+                    onPressed: isExceedingLimit
+                        ? null
+                        : () {
+                            if (foodItem.brandName == "Common Food") {
+                              _showCommonFoodMealDetailsBottomSheet(
+                                context,
+                                foodItem,
+                                foodItem.name,
+                                '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+                              );
+                            } else {
+                              _showMealDetailsBottomSheet(
+                                foodItem,
+                                context,
+                                foodItem.name,
+                                '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
+                              );
+                            }
+                          },
+                  ),
+                ],
+              ),
             ),
           ),
-          subtitle: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'serving size : $description',
-                style: TextStyle(color: Colors.grey[400]),
-              ),
-              Text(
-                'Brand Name : $brandName',
-                style: TextStyle(color: Colors.grey[400]),
-              ),
-            ],
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                calories,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(
-                  Icons.add_circle,
-                  color: AppColors.buttonColors,
-                  size: 35,
-                ),
-                onPressed: () {
-                  if (foodItem.brandName == "Common Food") {
-                    _showCommonFoodMealDetailsBottomSheet(
-                      context,
-                      foodItem,
-                      foodItem.name,
-                      '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
-                    );
-                  } else {
-                    _showMealDetailsBottomSheet(
-                      foodItem,
-                      context,
-                      foodItem.name,
-                      '${foodItem.servingInfo.size} ${foodItem.servingInfo.unit}',
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 

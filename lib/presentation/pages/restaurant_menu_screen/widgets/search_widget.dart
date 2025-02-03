@@ -89,30 +89,41 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: TextField(
-          controller: _searchController,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: 'Search foods...',
-            hintStyle: const TextStyle(color: Colors.grey),
-            border: InputBorder.none,
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () {
-                _searchController.clear();
-                context.read<SearchBloc>().add(ClearSearch());
-              },
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(screenSize.height * 0.08),
+        child: AppBar(
+          backgroundColor: Colors.black,
+          title: TextField(
+            controller: _searchController,
+            autofocus: true,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isSmallScreen ? 14 : 16,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Search foods...',
+              hintStyle: TextStyle(
+                color: Colors.grey,
+                fontSize: isSmallScreen ? 14 : 16,
+              ),
+              border: InputBorder.none,
+         
             ),
           ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: isSmallScreen ? 20 : 24,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
       ),
       body: BlocBuilder<SearchBloc, SearchState>(
@@ -125,17 +136,23 @@ class _SearchScreenState extends State<SearchScreen> {
             return Center(
               child: Text(
                 state.error,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmallScreen ? 14 : 16,
+                ),
               ),
             );
           }
 
           if (state.searchResults.isEmpty &&
               _searchController.text.isNotEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'No results found',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmallScreen ? 14 : 16,
+                ),
               ),
             );
           }
@@ -144,7 +161,7 @@ class _SearchScreenState extends State<SearchScreen> {
             itemCount: state.searchResults.length,
             itemBuilder: (context, index) {
               final dish = state.searchResults[index];
-              return _buildDishItem(dish);
+              return _buildDishItem(dish, screenSize, isSmallScreen);
             },
           );
         },
@@ -152,258 +169,253 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildDishItem(Dish dish) {
-    final calories = dish.servingInfos.isNotEmpty
-        ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
-        : 'N/A';
-    final protein = dish.servingInfos.isNotEmpty
-        ? '${dish.servingInfos.first.servingInfo.nutritionFacts.protein.value} '
-        : 'N/A';
-    final carbs = dish.servingInfos.isNotEmpty
-        ? '${dish.servingInfos.first.servingInfo.nutritionFacts.carbs.value} '
-        : 'N/A';
+  Widget _buildDishItem(Dish dish, Size screenSize, bool isSmallScreen) {
+  return BlocBuilder<RestaurantMenuBloc, RestaurantMenuState>(
+    builder: (context, menuState) {
+      if (menuState is! RestaurantMenuLoaded) {
+        return const SizedBox();
+      }
 
-    // Helper function to create NutritionInfo from ServingInfo
-    NutritionInfo createNutritionInfo(ServingDetails servingDetails) {
-      return NutritionInfo(
-        calories:
-            double.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
-        protein:
-            double.tryParse(servingDetails.nutritionFacts.protein.value) ?? 0,
-        carbs: double.tryParse(servingDetails.nutritionFacts.carbs.value) ?? 0,
-        fat: double.tryParse(servingDetails.nutritionFacts.totalFat.value) ?? 0,
-        sodium: 0,
-        sugar: 0,
-        fiber: 0,
-      );
-    }
+      final userStats = menuState.menuResponse.userStats;
+      final dailyCalorieGoal = double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+      final baseConsumedCalories = userStats.todayConsumption;
+      
+      // Get cart calories
+      final cartState = context.watch<CartBloc>().state;
+      final cartCalories = cartState.totalCalories;
+      
+      // Calculate remaining calories
+      final remainingCalories = dailyCalorieGoal - (baseConsumedCalories + cartCalories);
 
-    // Create size options map from servingInfos
-    Map<String, NutritionInfo> sizeOptions = {};
-    for (var servingInfo in dish.servingInfos) {
-      sizeOptions[servingInfo.servingInfo.size] =
-          createNutritionInfo(servingInfo.servingInfo);
-    }
-    final defaultCalories = dish.servingInfos.isNotEmpty
-        ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts
-                .calories.value) ??
-            0.0
-        : 0.0;
+      final defaultCalories = dish.servingInfos.isNotEmpty
+          ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts.calories.value) ?? 0.0
+          : 0.0;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+      final isExceedingLimit = defaultCalories > remainingCalories;
+      final calorieColor = isExceedingLimit ? Colors.red : Colors.green;
+
+      final calories = dish.servingInfos.isNotEmpty
+          ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
+          : 'N/A';
+      final protein = dish.servingInfos.isNotEmpty
+          ? '${dish.servingInfos.first.servingInfo.nutritionFacts.protein.value} '
+          : 'N/A';
+      final carbs = dish.servingInfos.isNotEmpty
+          ? '${dish.servingInfos.first.servingInfo.nutritionFacts.carbs.value} '
+          : 'N/A';
+
+      // Calculate responsive dimensions
+      final imageSize = screenSize.width * 0.25;
+      final horizontalPadding = screenSize.width * 0.04;
+      final verticalPadding = screenSize.height * 0.01;
+
+      Map<String, NutritionInfo> sizeOptions = {};
+      for (var servingInfo in dish.servingInfos) {
+        sizeOptions[servingInfo.servingInfo.size] = createNutritionInfo(servingInfo.servingInfo);
+      }
+
+      return Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
             borderRadius: BorderRadius.circular(12),
-            onTap: () {
-              if (_checkCalorieLimit(context, defaultCalories)) {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) {
-                    return FractionallySizedBox(
-                      heightFactor: 0.7,
-                      child: DishDetails(
-                        servingInfos: dish.servingInfos,
-                        calories: defaultCalories,
-                        dishId: dish.id,
-                        restaurantId: widget.restaurantId,
-                        name: dish.dishName,
-                        description: dish.description,
-                        imageUrl: null,
-                        servingSizes: dish.servingInfos
-                            .map((info) => info.servingInfo.size)
-                            .toList(),
-                        sizeOptions: sizeOptions,
-                        ingredients: const [],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                if (isExceedingLimit) {
+                  _showCalorieLimitWarning(context, remainingCalories);
+                } else {
+                  _handleDishTap(dish, defaultCalories, sizeOptions);
+                }
+              },
+              child: Padding(
+                padding: EdgeInsets.all(screenSize.width * 0.03),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: imageSize,
+                      height: imageSize,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: _buildDishImage(dish),
                       ),
-                    );
-                  },
-                );
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  // Icon Container
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: ClipRRect(
-                      // Added ClipRRect to clip the image
-                      borderRadius:
-                          BorderRadius.circular(8), // Same radius as container
-                      child: dish.servingInfos.first.servingInfo.url != null
-                          ? Image.network(
-                              dish.servingInfos.first.servingInfo.url!,
-                              fit: BoxFit
-                                  .cover, // Changed to cover for better image filling
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Center(
-                                  child: Icon(
-                                    Icons.fastfood,
-                                    color: Colors.grey,
-                                    size: 32,
-                                  ),
-                                );
-                              },
-                            )
-                          : const Center(
-                              child: Icon(
-                                Icons.fastfood,
-                                color: Colors.grey,
-                                size: 32,
-                              ),
+                    SizedBox(width: screenSize.width * 0.04),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            dish.dishName,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isSmallScreen ? 16 : 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Dish Information
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          dish.dishName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            // Calories Container
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                          SizedBox(height: screenSize.height * 0.01),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: [
+                              _buildNutritionTag(
+                                calories, 
+                                calorieColor,  // Use dynamic color based on limit
+                                isSmallScreen
                               ),
-                              decoration: BoxDecoration(
-                                color: AppColors.buttonColors,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                calories,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            // Protein Container
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryColor,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
+                              _buildNutritionTag(
                                 "P$protein",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                AppColors.primaryColor,
+                                isSmallScreen
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            // Carbs Container
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryColor,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
+                              _buildNutritionTag(
                                 "C$carbs",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                AppColors.primaryColor,
+                                isSmallScreen
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.add_circle,
+                            color: isExceedingLimit ? Colors.grey : AppColors.buttonColors,
+                            size: isSmallScreen ? 28 : 34,
+                          ),
+                          onPressed: isExceedingLimit
+                              ? () => _showCalorieLimitWarning(context, remainingCalories)
+                              : () => _handleDishTap(dish, defaultCalories, sizeOptions),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Add Button Column
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const SizedBox(height: 8),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add_circle,
-                          color: AppColors.buttonColors,
-                          size: 34,
-                        ),
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return FractionallySizedBox(
-                                heightFactor: 0.7,
-                                child: DishDetails(
-                                  servingInfos: dish.servingInfos,
-                                  calories: defaultCalories,
-                                  dishId: dish.id,
-                                  restaurantId: widget.restaurantId,
-                                  name: dish.dishName,
-                                  description: dish.description,
-                                  imageUrl: null,
-                                  servingSizes: dish.servingInfos
-                                      .map((info) => info.servingInfo.size)
-                                      .toList(),
-                                  sizeOptions: sizeOptions,
-                                  ingredients: const [],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
+      );
+    },
+  );
+}
+void _showCalorieLimitWarning(BuildContext context, double remainingCalories) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          'Calorie Limit Warning',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'This dish exceeds your remaining calorie limit for today (${remainingCalories.toStringAsFixed(1)} calories remaining).',
+          style: TextStyle(color: Colors.grey[300]),
+        ),
+        actions: [
+          TextButton(
+            child: const Text('OK', style: TextStyle(color: AppColors.buttonColors)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+  Widget _buildDishImage(Dish dish) {
+    return dish.servingInfos.first.servingInfo.url != null
+        ? Image.network(
+            dish.servingInfos.first.servingInfo.url!,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(
+                child: Icon(Icons.fastfood, color: Colors.grey, size: 32),
+              );
+            },
+          )
+        : const Center(
+            child: Icon(Icons.fastfood, color: Colors.grey, size: 32),
+          );
+  }
+
+  Widget _buildNutritionTag(String text, Color color, bool isSmallScreen) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
       ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color == AppColors.buttonColors ? Colors.black : Colors.white,
+          fontSize: isSmallScreen ? 12 : 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  void _handleDishTap(Dish dish, double defaultCalories,
+      Map<String, NutritionInfo> sizeOptions) {
+    if (_checkCalorieLimit(context, defaultCalories)) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => FractionallySizedBox(
+          heightFactor: 0.7,
+          child: DishDetails(
+            servingInfos: dish.servingInfos,
+            calories: defaultCalories,
+            dishId: dish.id,
+            restaurantId: widget.restaurantId,
+            name: dish.dishName,
+            description: dish.description,
+            imageUrl: null,
+            servingSizes:
+                dish.servingInfos.map((info) => info.servingInfo.size).toList(),
+            sizeOptions: sizeOptions,
+            ingredients: const [],
+          ),
+        ),
+      );
+    }
+  }
+
+  NutritionInfo createNutritionInfo(ServingDetails servingDetails) {
+    return NutritionInfo(
+      calories:
+          double.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
+      protein:
+          double.tryParse(servingDetails.nutritionFacts.protein.value) ?? 0,
+      carbs: double.tryParse(servingDetails.nutritionFacts.carbs.value) ?? 0,
+      fat: double.tryParse(servingDetails.nutritionFacts.totalFat.value) ?? 0,
+      sodium: 0,
+      sugar: 0,
+      fiber: 0,
     );
   }
 }

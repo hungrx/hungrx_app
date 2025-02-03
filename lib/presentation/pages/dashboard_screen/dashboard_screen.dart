@@ -488,55 +488,55 @@ class DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                flex: 3,
+                                flex: 4,
                                 child: StreakCalendar(
                                   isMaintain: state.homeData.goalStatus,
                                 ),
                               ),
                               SizedBox(width: getPadding(context, 0.03)),
-                              // Expanded(
-                              //   flex: 2,
-                              //   child: GestureDetector(
-                              //     onTap: () {
-                              //       context.push('/water-intake');
-                              //     },
-                              //     child: Container(
-                              //       height: MediaQuery.of(context).size.height *
-                              //           (isSmallScreen ? 0.24 : 0.27),
-                              //       constraints: BoxConstraints(
-                              //         minHeight: screenWidth * 0.5,
-                              //         maxHeight: screenWidth * 0.75,
-                              //       ),
-                              //       decoration: BoxDecoration(
-                              //         color: AppColors.tileColor,
-                              //         borderRadius: BorderRadius.circular(20),
-                              //       ),
-                              //       child: Column(
-                              //         mainAxisAlignment:
-                              //             MainAxisAlignment.center,
-                              //         children: [
-                              //           Icon(
-                              //             LucideIcons.glassWater,
-                              //             color: const Color(0xFFB4D147),
-                              //             size: getIconSize(context, 0.16),
-                              //           ),
-                              //           SizedBox(
-                              //               height: getPadding(context, 0.03)),
-                              //           Text(
-                              //             'Water Intake',
-                              //             style: TextStyle(
-                              //               color:
-                              //                   Colors.white.withOpacity(0.9),
-                              //               fontSize:
-                              //                   getFontSize(context, 0.04),
-                              //               fontWeight: FontWeight.w500,
-                              //             ),
-                              //           ),
-                              //         ],
-                              //       ),
-                              //     ),
-                              //   ),
-                              // )
+                              Expanded(
+                                flex: 2,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    context.push('/water-intake');
+                                  },
+                                  child: Container(
+                                    height: MediaQuery.of(context).size.height *
+                                        (isSmallScreen ? 0.24 : 0.37),
+                                    constraints: BoxConstraints(
+                                      minHeight: screenWidth * 0.5,
+                                      maxHeight: screenWidth * 0.75,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.tileColor,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          LucideIcons.glassWater,
+                                          color: const Color(0xFFB4D147),
+                                          size: getIconSize(context, 0.16),
+                                        ),
+                                        SizedBox(
+                                            height: getPadding(context, 0.03)),
+                                        Text(
+                                          'Water Intake',
+                                          style: TextStyle(
+                                            color:
+                                                Colors.white.withOpacity(0.9),
+                                            fontSize:
+                                                getFontSize(context, 0.04),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
                             ],
                           ),
                           SizedBox(height: getPadding(context, 0.03)),
@@ -544,43 +544,43 @@ class DashboardScreenState extends State<DashboardScreen> {
                             context,
                             state.homeData,
                           ),
-                             SizedBox(height: getPadding(context, 0.03)),
-                          GestureDetector(
-                            onTap: () {
-                              context.push('/water-intake');
-                            },
-                            child: Container(
-                              height: MediaQuery.of(context).size.height *
-                                  (isSmallScreen ? 0.24 : 0.27),
-                              constraints: BoxConstraints(
-                                minHeight: screenWidth * 0.5,
-                                maxHeight: screenWidth * 0.75,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.tileColor,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    LucideIcons.glassWater,
-                                    color: const Color(0xFFB4D147),
-                                    size: getIconSize(context, 0.16),
-                                  ),
-                                  SizedBox(height: getPadding(context, 0.03)),
-                                  Text(
-                                    'Water Intake',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontSize: getFontSize(context, 0.04),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
+                          //    SizedBox(height: getPadding(context, 0.03)),
+                          // GestureDetector(
+                          //   onTap: () {
+                          //     context.push('/water-intake');
+                          //   },
+                          //   child: Container(
+                          //     height: MediaQuery.of(context).size.height *
+                          //         (isSmallScreen ? 0.24 : 0.27),
+                          //     constraints: BoxConstraints(
+                          //       minHeight: screenWidth * 0.5,
+                          //       maxHeight: screenWidth * 0.75,
+                          //     ),
+                          //     decoration: BoxDecoration(
+                          //       color: AppColors.tileColor,
+                          //       borderRadius: BorderRadius.circular(20),
+                          //     ),
+                          //     child: Column(
+                          //       mainAxisAlignment: MainAxisAlignment.center,
+                          //       children: [
+                          //         Icon(
+                          //           LucideIcons.glassWater,
+                          //           color: const Color(0xFFB4D147),
+                          //           size: getIconSize(context, 0.16),
+                          //         ),
+                          //         SizedBox(height: getPadding(context, 0.03)),
+                          //         Text(
+                          //           'Water Intake',
+                          //           style: TextStyle(
+                          //             color: Colors.white.withOpacity(0.9),
+                          //             fontSize: getFontSize(context, 0.04),
+                          //             fontWeight: FontWeight.w500,
+                          //           ),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // )
                         ],
                       ),
                     ),

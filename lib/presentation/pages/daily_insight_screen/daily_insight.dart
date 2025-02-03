@@ -253,7 +253,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
 
   Widget _buildCalorieProgress(DailySummary summary) {
     final progress = summary.totalCalories / summary.dailyGoal;
-    final formattedDate = DateFormat('DD-MM-yyyy').format(selectedDate);
+    final formattedDate = DateFormat('dd-MM-yyyy').format(selectedDate);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -374,7 +374,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
   }
 
   Widget _buildMealItem(FoodItem food, DailyFoodResponse data, String title) {
-    final formattedTime = DateFormat('hh:mm a').format(food.timestamp);
+    // final formattedTime = DateFormat('hh:mm a').format(food.timestamp);
     final servingText = food.servingInfo != null
         ? '${food.servingInfo!.size} ${food.servingInfo!.unit}'
         : '${food.servingSize} serving';
@@ -429,19 +429,11 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        servingText,
-                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        formattedTime,
-                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                      ),
-                    ],
+                  Text(
+                    servingText,
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
                   ),
+                  const SizedBox(width: 8),
                 ],
               ),
             ),

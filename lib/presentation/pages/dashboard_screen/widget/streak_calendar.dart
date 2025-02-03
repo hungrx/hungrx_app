@@ -9,8 +9,8 @@ import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_state.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class StreakCalendar extends StatefulWidget {
- final bool isMaintain ;
-  
+  final bool isMaintain;
+
   const StreakCalendar({super.key, required this.isMaintain});
 
   @override
@@ -18,12 +18,8 @@ class StreakCalendar extends StatefulWidget {
 }
 
 class _StreakCalendarState extends State<StreakCalendar> {
-
-  double getResponsiveSize(BuildContext context, {
-    required double small,
-    required double medium,
-    required double large
-  }) {
+  double getResponsiveSize(BuildContext context,
+      {required double small, required double medium, required double large}) {
     final width = MediaQuery.of(context).size.width;
     if (width < 360) return small;
     if (width < 600) return medium;
@@ -53,6 +49,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
   double getIconSize(BuildContext context, double factor) {
     return MediaQuery.of(context).size.width * factor;
   }
+
   bool _isLoading = false;
 
   @override
@@ -64,14 +61,14 @@ class _StreakCalendarState extends State<StreakCalendar> {
   Future<void> _loadStreakData() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    
+
     // Assuming you have a FetchStreakData event
     context.read<StreakBloc>().add(FetchStreakData());
-    
+
     setState(() => _isLoading = false);
   }
 
-Widget _buildLoadingView() {
+  Widget _buildLoadingView() {
     return _buildContainer(
       context,
       child: SizedBox(
@@ -97,7 +94,7 @@ Widget _buildLoadingView() {
     );
   }
 
-   Widget _buildErrorView(String message) {
+  Widget _buildErrorView(String message) {
     return _buildContainer(
       context,
       child: SizedBox(
@@ -123,8 +120,8 @@ Widget _buildLoadingView() {
             SizedBox(height: getPadding(context, 0.03)),
             ElevatedButton.icon(
               onPressed: _loadStreakData,
-              icon: Icon(LucideIcons.refreshCw, 
-                size: getIconSize(context, 0.04)),
+              icon:
+                  Icon(LucideIcons.refreshCw, size: getIconSize(context, 0.04)),
               label: Text(
                 'Retry',
                 style: TextStyle(
@@ -180,10 +177,9 @@ Widget _buildLoadingView() {
         if (state is StreakLoaded) {
           final streakData = state.streakData;
           final streakMap = streakData.getStreakMap();
-          final startingDate = streakData.startDate();
-          final endingDate = widget.isMaintain 
-              ? DateTime.now().add(const Duration(days: 365)) // Show one year ahead for unlimited
-              : streakData.endDate();
+          final startingDate = streakData.startDate;
+          final endingDate = DateTime.now().add(
+              const Duration(days: 365)); // Show one year ahead for unlimited
 
           // final endingDate = streakData.endDate();
 
@@ -196,7 +192,7 @@ Widget _buildLoadingView() {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 5),
+                    padding: const EdgeInsets.only(left: 5, bottom: 5),
                     child: Row(
                       children: [
                         _buildHeader(context, isSmallScreen),
@@ -204,14 +200,9 @@ Widget _buildLoadingView() {
                     ),
                   ),
                   SizedBox(
-                    height: screenSize.height * (isSmallScreen ? 0.13 : 0.155),
-                    child: _buildHeatMap(
-                      startingDate,
-                      endingDate,
-                      streakMap,
-                      screenSize,
-                      isSmallScreen
-                    ),
+                    height: screenSize.height * (isSmallScreen ? 0.13 : 0.225),
+                    child: _buildHeatMap(startingDate, endingDate, streakMap,
+                        screenSize, isSmallScreen),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(left: 3),
@@ -228,7 +219,7 @@ Widget _buildLoadingView() {
     );
   }
 
-    Widget _buildContainer(BuildContext context, {required Widget child}) {
+  Widget _buildContainer(BuildContext context, {required Widget child}) {
     return Container(
       padding: getResponsivePadding(context),
       constraints: const BoxConstraints(
@@ -288,14 +279,8 @@ Widget _buildLoadingView() {
     );
   }
 
-
-  Widget _buildHeatMap(
-    DateTime startDate,
-    DateTime endDate,
-    Map<DateTime, int> datasets,
-    Size screenSize,
-    bool isSmallScreen
-  ) {
+  Widget _buildHeatMap(DateTime startDate, DateTime endDate,
+      Map<DateTime, int> datasets, Size screenSize, bool isSmallScreen) {
     return ShaderMask(
       shaderCallback: (Rect bounds) {
         return const LinearGradient(
@@ -314,8 +299,8 @@ Widget _buildLoadingView() {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: HeatMap(
-
-          fontSize: 12,
+          borderRadius: 10,
+          fontSize:  screenSize.width * (isSmallScreen ? 0.03 : 0.025),
           startDate: startDate,
           endDate: endDate,
           datasets: datasets,
@@ -325,9 +310,9 @@ Widget _buildLoadingView() {
           showColorTip: false,
           showText: true,
           scrollable: true,
-          size: screenSize.width * (isSmallScreen ? 0.01 : 0.040),
+          size: screenSize.width * (isSmallScreen ? 0.01 : 0.05),
           colorsets: const {
-            1: Color(0xFFB4D147),
+            1: Color.fromARGB(255, 119, 141, 41),
           },
         ),
       ),
@@ -342,7 +327,7 @@ Widget _buildLoadingView() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-         if (!widget.isMaintain) ...[
+        if (!widget.isMaintain) ...[
           _buildStatContainer(
             text: '${streakData.daysLeft}',
             isSmallScreen: isSmallScreen,
@@ -358,14 +343,14 @@ Widget _buildLoadingView() {
         SizedBox(width: isSmallScreen ? 6 : 8),
         _buildStatContainer(
           icon: LucideIcons.flame,
-          text: '${streakData.totalStreak}',
+          text: '${streakData.currentStreak}',
           isSmallScreen: isSmallScreen,
         ),
       ],
     );
   }
 
-Widget _buildStatContainer({
+  Widget _buildStatContainer({
     IconData? icon,
     required String text,
     required bool isSmallScreen,

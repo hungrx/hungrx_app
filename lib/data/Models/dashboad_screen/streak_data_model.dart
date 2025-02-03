@@ -2,7 +2,8 @@ class StreakDataModel {
   final String userId;
   final String startingDate;
   final String expectedEndDate;
-  final int totalStreak;
+  final int totalDays;
+  final int currentStreak;
   final int daysLeft;
   final List<String> dates;
   final bool status;
@@ -12,7 +13,8 @@ class StreakDataModel {
     required this.userId,
     required this.startingDate,
     required this.expectedEndDate,
-    required this.totalStreak,
+    required this.totalDays,
+    required this.currentStreak,
     required this.daysLeft,
     required this.dates,
     required this.status,
@@ -24,7 +26,8 @@ class StreakDataModel {
       userId: json['data']['userId'],
       startingDate: json['data']['startingDate'],
       expectedEndDate: json['data']['expectedEndDate'],
-      totalStreak: json['data']['totalStreak'],
+      totalDays: json['data']['totalDays'],
+      currentStreak: json['data']['currentStreak'],
       daysLeft: json['data']['daysLeft'],
       dates: List<String>.from(json['data']['dates']),
       status: json['status'],
@@ -32,9 +35,9 @@ class StreakDataModel {
     );
   }
 
-  // Convert date string from dd-mm-yyyy to DateTime
+  // Convert date string from dd/mm/yyyy to DateTime
   DateTime _parseDate(String dateString) {
-    final parts = dateString.split('-');
+    final parts = dateString.split('/');
     if (parts.length != 3) {
       throw FormatException('Invalid date format: $dateString');
     }
@@ -49,30 +52,14 @@ class StreakDataModel {
   }
 
   // Get startingDate as DateTime
-  DateTime  startDate() {
+  DateTime get startDate {
     return _parseDate(startingDate);
   }
 
   // Get expectedEndDate as DateTime
-  DateTime endDate() {
+  DateTime get endDate {
     return _parseDate(expectedEndDate);
   }
-
-  // Get formatted starting date (if needed)
-  // String get formattedStartDate {
-  //   final date = startDate;
-  //   return '${date.day.toString().padLeft(2, '0')}-'
-  //       '${date.month.toString().padLeft(2, '0')}-'
-  //       '${date.year}';
-  // }
-
-  // // Get formatted end date (if needed)
-  // String get formattedEndDate {
-  //   final date = endDate;
-  //   return '${date.day.toString().padLeft(2, '0')}-'
-  //       '${date.month.toString().padLeft(2, '0')}-'
-  //       '${date.year}';
-  // }
 
   Map<DateTime, int> getStreakMap() {
     Map<DateTime, int> streakMap = {};
@@ -81,5 +68,12 @@ class StreakDataModel {
       streakMap[parsedDate] = 1;
     }
     return streakMap;
+  }
+
+  // Optional: Add a method to format dates if needed
+  String formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
   }
 }

@@ -12,8 +12,8 @@ import 'package:hungrx_app/presentation/blocs/food_kart/food_kart_state.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
-import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_state.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 
 class DishDetails extends StatefulWidget {
   final double calories;
@@ -48,113 +48,108 @@ class DishDetails extends StatefulWidget {
 class _DishDetailsState extends State<DishDetails> {
   int quantity = 1;
   bool isExceedingLimit = false;
-  bool _checkCalorieLimit(BuildContext context, double dishCalories) {
-    // Get current cart state for items in cart
-    // final cartState = context.read<CartBloc>().state;
-    final menuState = context.read<RestaurantMenuBloc>().state;
+bool _checkCalorieLimit(BuildContext context, double dishCalories) {
+  final getCartState = context.read<GetCartBloc>().state;
+  final progressState = context.read<ProgressBarBloc>().state;
 
-    // Get cart bloc for total nutrition calculation
-    final getCartState = context.read<GetCartBloc>().state;
+  if (progressState is ProgressBarLoaded) {
+    final baseConsumedCalories = progressState.data.totalCaloriesConsumed;
+    final dailyCalorieGoal = progressState.data.dailyCalorieGoal;
 
-    if (menuState is RestaurantMenuLoaded) {
-      final userStats = menuState.menuResponse.userStats;
-      final baseConsumedCalories = userStats.todayConsumption;
-      final dailyCalorieGoal =
-          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
-
-      // Get calories from cart using GetCartBloc
-      double cartCalories = 0.0;
-      if (getCartState is CartLoaded) {
-        cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
-      }
-
-      // Calculate total calories including base consumption, cart items, and new dish
-      final totalCaloriesAfterAdd =
-          baseConsumedCalories + cartCalories + (dishCalories * quantity);
-
-      if (totalCaloriesAfterAdd > dailyCalorieGoal) {
-        // Calculate remaining calories for better user feedback
-        final remainingCalories =
-            dailyCalorieGoal - (baseConsumedCalories + cartCalories);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Warning: Adding this item would exceed your daily limit',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Item calories: ${dishCalories.toInt()} cal\n'
-                  'Remaining calories: ${remainingCalories.toInt()} cal',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'Dismiss',
-              textColor: Colors.white,
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              },
-            ),
-          ),
-        );
-        return false;
-      }
+    double cartCalories = 0.0;
+    if (getCartState is CartLoaded) {
+      cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
     }
-    return true;
-  }
 
-  void _handleAddToCart(BuildContext context) {
-    if (widget.dishId == null || widget.restaurantId == null) {
+    final totalCaloriesAfterAdd = 
+        baseConsumedCalories + cartCalories + (dishCalories * quantity);  // Multiply here
+
+    if (totalCaloriesAfterAdd > dailyCalorieGoal) {
+      final remainingCalories = 
+          dailyCalorieGoal - (baseConsumedCalories + cartCalories);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid dish or restaurant information'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final nutrition = _calculateTotalNutrition();
-
-    if (_checkCalorieLimit(context, nutrition.calories * quantity)) {
-      // Multiply by quantity
-      final cartRequest = CartRequest(
-        orders: [
-          CartOrderRequest(
-            restaurantId: widget.restaurantId!,
-            items: [
-              CartItemRequest(
-                dishId: widget.dishId!,
-                servingSize: selectedSize,
-                quantity: quantity, // Add quantity here
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Warning: Adding this item would exceed your daily limit',
+                style: TextStyle(
+                  color: Colors.white, 
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Item calories: ${(dishCalories * quantity).toInt()} cal\n'  
+                'Remaining calories: ${remainingCalories.toInt()} cal',
+                style: const TextStyle(color: Colors.white),
               ),
             ],
           ),
-        ],
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Dismiss',
+            textColor: Colors.white,
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+          ),
+        ),
       );
-
-      context.read<AddToCartBloc>().add(SubmitAddToCartEvent(cartRequest));
-
-      final cartItem = CartItem(
-        dishName: widget.name,
-        size: selectedSize,
-        quantity: quantity, // Add quantity here
-        nutritionInfo: nutrition,
-      );
-
-      context.read<CartBloc>().add(AddToCart(cartItem));
+      return false;
     }
   }
+  return true;
+}
+
+
+void _handleAddToCart(BuildContext context) {
+  if (widget.dishId == null || widget.restaurantId == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Invalid dish or restaurant information'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  final nutrition = _calculateTotalNutrition();
+  
+  // Pass the base calories, not multiplied by quantity
+  if (_checkCalorieLimit(context, nutrition.calories)) {  // REMOVED multiplication here
+    final cartRequest = CartRequest(
+      orders: [
+        CartOrderRequest(
+          restaurantId: widget.restaurantId!,
+          items: [
+            CartItemRequest(
+              dishId: widget.dishId!,
+              servingSize: selectedSize,
+              quantity: quantity,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    context.read<AddToCartBloc>().add(SubmitAddToCartEvent(cartRequest));
+
+    final cartItem = CartItem(
+      dishName: widget.name,
+      size: selectedSize,
+      quantity: quantity,
+      nutritionInfo: nutrition,
+    );
+
+    context.read<CartBloc>().add(AddToCart(cartItem));
+  }
+}
+
 
   String selectedSize = '';
   late ServingInfo selectedServingInfo;
@@ -170,30 +165,29 @@ class _DishDetailsState extends State<DishDetails> {
     }
   }
 
-  void _checkAndUpdateCalorieLimitStatus() {
-    final nutrition = _calculateTotalNutrition();
-    final menuState = context.read<RestaurantMenuBloc>().state;
-    final getCartState = context.read<GetCartBloc>().state;
+void _checkAndUpdateCalorieLimitStatus() {
+  final nutrition = _calculateTotalNutrition();
+  final progressState = context.read<ProgressBarBloc>().state;
+  final getCartState = context.read<GetCartBloc>().state;
 
-    if (menuState is RestaurantMenuLoaded) {
-      final userStats = menuState.menuResponse.userStats;
-      final baseConsumedCalories = userStats.todayConsumption;
-      final dailyCalorieGoal =
-          double.tryParse(userStats.dailyCalorieGoal) ?? 2000.0;
+  if (progressState is ProgressBarLoaded) {
+    final baseConsumedCalories = progressState.data.totalCaloriesConsumed;
+    final dailyCalorieGoal = progressState.data.dailyCalorieGoal;
 
-      double cartCalories = 0.0;
-      if (getCartState is CartLoaded) {
-        cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
-      }
-
-      final totalCaloriesAfterAdd =
-          baseConsumedCalories + cartCalories + nutrition.calories;
-
-      setState(() {
-        isExceedingLimit = totalCaloriesAfterAdd > dailyCalorieGoal;
-      });
+    double cartCalories = 0.0;
+    if (getCartState is CartLoaded) {
+      cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
     }
+
+    // Consider quantity in the calculation
+    final totalCaloriesAfterAdd = 
+        baseConsumedCalories + cartCalories + (nutrition.calories * quantity);
+
+    setState(() {
+      isExceedingLimit = totalCaloriesAfterAdd > dailyCalorieGoal;
+    });
   }
+}
 
   void _updateSelectedSize(String size) {
     setState(() {
@@ -423,37 +417,36 @@ class _DishDetailsState extends State<DishDetails> {
     );
   }
 
-  Widget _buildNutritionInfo(NutritionInfo nutrition) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Nutrition Information',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+Widget _buildNutritionInfo(NutritionInfo nutrition) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Nutrition Information',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 16,
+        runSpacing: 16,
+        children: [
+          _nutritionItem(
+            'Calories',
+            '${(nutrition.calories * quantity).round()}', // Multiply by quantity
+            isExceedingLimit,
           ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: [
-            _nutritionItem(
-              'Calories',
-              '${nutrition.calories.round()}',
-              isExceedingLimit,
-            ),
-            // _nutritionItem('Calories', '${nutrition.calories.round()}'),
-            _nutritionItem('Protein', '${nutrition.protein.round()}g', false),
-            _nutritionItem('Carbs', '${nutrition.carbs.round()}g', false),
-            _nutritionItem('Fat', '${nutrition.fat.round()}g', false),
-          ],
-        ),
-      ],
-    );
-  }
+          _nutritionItem('Protein', '${(nutrition.protein * quantity).round()}g', false),
+          _nutritionItem('Carbs', '${(nutrition.carbs * quantity).round()}g', false),
+          _nutritionItem('Fat', '${(nutrition.fat * quantity).round()}g', false),
+        ],
+      ),
+    ],
+  );
+}
 
   Widget _nutritionItem(String label, String value, bool isCaloriesExceeding) {
     return Container(
@@ -534,6 +527,7 @@ class _DishDetailsState extends State<DishDetails> {
                           ? () {
                               setState(() {
                                 quantity--;
+                                 _checkAndUpdateCalorieLimitStatus();  // Add this
                               });
                             }
                           : null,
@@ -564,6 +558,7 @@ class _DishDetailsState extends State<DishDetails> {
                       onPressed: () {
                         setState(() {
                           quantity++;
+                           _checkAndUpdateCalorieLimitStatus();  // Add this
                         });
                       },
                       child: const Icon(
@@ -603,7 +598,7 @@ class _DishDetailsState extends State<DishDetails> {
                           ),
                         )
                       : Text(
-                          'Add to Meal (${(nutrition.calories * quantity).round()} Cal)',
+                          'Add to Cart (${(nutrition.calories * quantity).round()} Cal)',
                           style: const TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.bold,

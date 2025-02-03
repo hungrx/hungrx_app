@@ -595,7 +595,7 @@ class _CartScreenState extends State<CartScreen> {
             unit != null ? '$result$unit' : result,
             style: TextStyle(
               color: Colors.white,
-              fontSize: isSmallScreen ? 14 : 16,
+              fontSize: isSmallScreen ? 12 : 14,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -604,7 +604,7 @@ class _CartScreenState extends State<CartScreen> {
             label,
             style: TextStyle(
               color: Colors.grey,
-              fontSize: isSmallScreen ? 12 : 14,
+              fontSize: isSmallScreen ? 10 : 12,
             ),
           ),
         ],

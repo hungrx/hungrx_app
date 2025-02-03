@@ -25,7 +25,8 @@ class CustomExpansionPanel extends StatefulWidget {
   State<CustomExpansionPanel> createState() => _CustomExpansionPanelState();
 }
 
-class _CustomExpansionPanelState extends State<CustomExpansionPanel> with SingleTickerProviderStateMixin {
+class _CustomExpansionPanelState extends State<CustomExpansionPanel>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _expandAnimation;
 
@@ -82,7 +83,6 @@ class _CustomExpansionPanelState extends State<CustomExpansionPanel> with Single
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      
                       child: Text(
                         widget.title,
                         style: TextStyle(
@@ -93,7 +93,8 @@ class _CustomExpansionPanelState extends State<CustomExpansionPanel> with Single
                       ),
                     ),
                     RotationTransition(
-                      turns: Tween(begin: 0.0, end: 0.5).animate(_expandAnimation),
+                      turns:
+                          Tween(begin: 0.0, end: 0.5).animate(_expandAnimation),
                       child: const Icon(
                         Icons.keyboard_arrow_down,
                         color: Colors.white,

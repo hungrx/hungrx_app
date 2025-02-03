@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 
 class CalorieSummaryWidget extends StatelessWidget {
-  final double consumedCalories;
-  final double dailyCalorieGoal;
   final int itemCount;
   final VoidCallback onViewOrderPressed;
   final Color backgroundColor;
   final Color buttonColor;
   final Color primaryColor;
+  final double cartCalories;
 
   const CalorieSummaryWidget({
     super.key,
-    required this.consumedCalories,
-    required this.dailyCalorieGoal,
     required this.itemCount,
     required this.onViewOrderPressed,
+    required this.cartCalories,
     this.backgroundColor = Colors.black,
     this.buttonColor = AppColors.buttonColors,
     this.primaryColor = AppColors.primaryColor,
@@ -29,106 +30,126 @@ class CalorieSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = (consumedCalories / dailyCalorieGoal).clamp(0.0, 1.0);
-    final currentRemaining = dailyCalorieGoal - consumedCalories;
+    return BlocBuilder<ProgressBarBloc, ProgressBarState>(
+      builder: (context, progressState) {
+        if (progressState is ProgressBarLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: backgroundColor,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Daily Calorie Progress',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  AnimatedSlideFade(
-                    child: Row(
+        if (progressState is ProgressBarError) {
+          return Center(child: Text(progressState.message));
+        }
+
+        if (progressState is ProgressBarLoaded) {
+          final totalConsumedCalories =
+              progressState.data.totalCaloriesConsumed + cartCalories;
+          final dailyCalorieGoal = progressState.data.dailyCalorieGoal;
+          final progress =
+              (totalConsumedCalories / dailyCalorieGoal).clamp(0.0, 1.0);
+          final currentRemaining = dailyCalorieGoal - totalConsumedCalories;
+
+          return Container(
+            padding: const EdgeInsets.all(16),
+            color: backgroundColor,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${consumedCalories.toInt()}',
-                          style: TextStyle(
-                            color: _getProgressColor(progress),
-                            fontWeight: FontWeight.bold,
-                          ),
+                        const Text(
+                          'Daily Calorie Progress',
+                          style: TextStyle(color: Colors.grey),
                         ),
-                        Text(
-                          ' / ${dailyCalorieGoal.round()} cal',
-                          style: const TextStyle(color: Colors.blueGrey),
+                        AnimatedSlideFade(
+                          child: Row(
+                            children: [
+                              Text(
+                                '${totalConsumedCalories.toInt()}',
+                                style: TextStyle(
+                                  color: _getProgressColor(progress),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                ' / ${dailyCalorieGoal.round()} cal',
+                                style: const TextStyle(color: Colors.blueGrey),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              AnimatedProgressBar(
-                value: progress,
-                color: _getProgressColor(progress),
-              ),
-              const SizedBox(height: 8),
-              AnimatedSlideFade(
-                child: Row(
-                  children: [
-                    const Text(
-                      'Remaining:',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
+                    const SizedBox(height: 8),
+                    AnimatedProgressBar(
+                      value: progress,
+                      color: _getProgressColor(progress),
                     ),
-                    Text(
-                      ' ${currentRemaining.round()} cal',
-                      style: TextStyle(
-                        color: _getProgressColor(progress),
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(height: 8),
+                    AnimatedSlideFade(
+                      child: Row(
+                        children: [
+                          const Text(
+                            'Remaining:',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            ' ${currentRemaining.round()} cal',
+                            style: TextStyle(
+                              color: _getProgressColor(progress),
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Total calories',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  AnimatedSlideFade(
-                    child: Text(
-                      '${consumedCalories.toInt()}cal',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total calories',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        AnimatedSlideFade(
+                          child: Text(
+                            '${totalConsumedCalories.toInt()}cal',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-              AnimatedOrderButton(
-                itemCount: itemCount,
-                onPressed: onViewOrderPressed,
-                buttonColor: buttonColor,
-                primaryColor: primaryColor,
-              ),
-            ],
-          ),
-        ],
-      ),
+                    AnimatedOrderButton(
+                      itemCount: itemCount,
+                      onPressed: onViewOrderPressed,
+                      buttonColor: buttonColor,
+                      primaryColor: primaryColor,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 }
@@ -236,4 +257,3 @@ class AnimatedOrderButton extends StatelessWidget {
     );
   }
 }
-
