@@ -143,12 +143,13 @@ Widget _buildRestaurantImage(double size) {
   }
 
   return ClipRRect(
+
     borderRadius: BorderRadius.circular(8),
     child: Image.network(
       imageUrl!,
       width: size,
       height: size,
-      fit: BoxFit.cover,
+      fit: BoxFit.fitHeight,
       loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
         if (loadingProgress == null) {
           return child;

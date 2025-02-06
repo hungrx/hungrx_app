@@ -16,7 +16,7 @@ import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_event.da
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
-import 'package:hungrx_app/presentation/controller/home_data_notifier.dart';
+// import 'package:hungrx_app/presentation/controller/home_data_notifier.dart';
 
 class MealDetailsBottomSheet extends StatefulWidget {
   final bool isHistoryScreen;
@@ -160,7 +160,7 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
       totalCalories: totalCalories,
     );
 
-    HomeDataNotifier.decreaseCalories(totalCalories);
+    // HomeDataNotifier.decreaseCalories(totalCalories);
     context.read<AddMealBloc>().add(AddMealSubmitted(request));
 
     if (!widget.isHistoryScreen) {
@@ -542,30 +542,49 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                             height: 50,
                             child: BlocBuilder<AddMealBloc, AddMealState>(
                               builder: (context, state) {
+                                final bool isMealSelected =
+                                    selectedMealType != 'CHOOSE';
+
                                 return ElevatedButton(
                                   onPressed: (state is AddMealLoading ||
-                                          !isWithinLimit)
+                                          !isWithinLimit ||
+                                          !isMealSelected)
                                       ? null
                                       : _handleAddToMeal,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isWithinLimit
-                                        ? AppColors.buttonColors
-                                        : Colors.grey,
+                                    backgroundColor: isMealSelected
+                                        ? (isWithinLimit
+                                            ? AppColors.buttonColors
+                                            : Colors.grey)
+                                        : Colors.grey[600],
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(25),
                                     ),
                                     elevation: 2,
                                   ),
                                   child: state is AddMealLoading
-                                      ? const CircularProgressIndicator()
+                                      ? const Center(
+                                          child: SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      AppColors.buttonColors),
+                                            ),
+                                          ),
+                                        )
                                       : Text(
                                           selectedMealType == 'CHOOSE'
-                                              ? "CHOOSE MEAL"
+                                              ? "SELECT MEAL TYPE"
                                               : 'ADD TO $selectedMealType',
                                           style: TextStyle(
-                                            color: isWithinLimit
-                                                ? Colors.black
-                                                : Colors.white,
+                                            color: isMealSelected
+                                                ? (isWithinLimit
+                                                    ? Colors.black
+                                                    : Colors.white)
+                                                : Colors.white70,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                           ),
@@ -573,7 +592,7 @@ class _MealDetailsBottomSheetState extends State<MealDetailsBottomSheet> {
                                 );
                               },
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),

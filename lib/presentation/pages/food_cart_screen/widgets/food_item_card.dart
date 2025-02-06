@@ -130,7 +130,7 @@ class FoodItemCard extends StatelessWidget {
             : Center(
                 child: Icon(
                   Icons.fastfood,
-                  color: Colors.red,
+                  color: Colors.black,
                   size: size * 0.4,
                 ),
               ),

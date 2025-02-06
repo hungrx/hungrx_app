@@ -8,9 +8,9 @@ class MealLoggerButton extends StatefulWidget {
   final Color buttonColor;
   final Color textColor;
   final double borderRadius;
-
   final String totalCalories;
   final List<OrderDetail> orderDetails;
+  final bool isEnabled; // New parameter to control button state
 
   const MealLoggerButton({
     super.key,
@@ -20,6 +20,7 @@ class MealLoggerButton extends StatefulWidget {
     this.borderRadius = 20,
     required this.totalCalories,
     required this.orderDetails,
+    required this.isEnabled, // Make it required
   });
 
   @override
@@ -30,23 +31,25 @@ class _MealLoggerButtonState extends State<MealLoggerButton> {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => _showMealLogDialog(context),
+      onPressed: widget.isEnabled ? () => _showMealLogDialog(context) : null, // Disable button when isEnabled is false
       style: ElevatedButton.styleFrom(
-        backgroundColor: widget.buttonColor,
+        backgroundColor: widget.isEnabled ? widget.buttonColor : Colors.grey, // Grey out when disabled
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius),
         ),
       ),
       child: Text(
         widget.buttonText,
-        style: TextStyle(color: widget.textColor),
+        style: TextStyle(
+          color: widget.isEnabled ? widget.textColor : Colors.white60, // Dim text when disabled
+        ),
       ),
     );
   }
 
   void _showMealLogDialog(BuildContext context) {
-    print(widget.orderDetails.first.quantity);
-    print(widget.totalCalories);
+    // print(widget.orderDetails.first.quantity);
+    // print(widget.totalCalories);
     showDialog(
       barrierDismissible: false,
       context: context,
@@ -59,5 +62,4 @@ class _MealLoggerButtonState extends State<MealLoggerButton> {
     );
   }
 }
-
 

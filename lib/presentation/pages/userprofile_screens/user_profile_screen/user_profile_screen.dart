@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -21,10 +20,9 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
-  // late GetProfileDetailsBloc _bloc;
   GetProfileDetailsModel? _cachedProfileDetails;
   String? userId;
-bool _isInitialLoad = true;
+  bool _isInitialLoad = true;
 
   @override
   void initState() {
@@ -35,14 +33,15 @@ bool _isInitialLoad = true;
   Future<void> _loadCachedData() async {
     final prefs = await SharedPreferences.getInstance();
     final cachedData = prefs.getString('profile_cache');
-    
+
     if (cachedData != null) {
       setState(() {
-        _cachedProfileDetails = GetProfileDetailsModel.fromJson(json.decode(cachedData));
+        _cachedProfileDetails =
+            GetProfileDetailsModel.fromJson(json.decode(cachedData));
         _isInitialLoad = false;
       });
     }
-    
+
     // Fetch fresh data in background
     _fetchProfileDetails();
   }
@@ -60,6 +59,7 @@ bool _isInitialLoad = true;
     _fetchProfileDetails();
     return Future.delayed(const Duration(seconds: 1));
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,7 +83,8 @@ bool _isInitialLoad = true;
                   );
                 }
               } else if (state is GetProfileDetailsSuccess) {
-                if (_cachedProfileDetails?.toJson() != state.profileDetails.toJson()) {
+                if (_cachedProfileDetails?.toJson() !=
+                    state.profileDetails.toJson()) {
                   setState(() {
                     _cachedProfileDetails = state.profileDetails;
                   });
@@ -141,13 +142,14 @@ bool _isInitialLoad = true;
   //   );
   // }
 
- Widget _buildHeader(BuildContext context, GetProfileDetailsModel? profileData) {
+  Widget _buildHeader(
+      BuildContext context, GetProfileDetailsModel? profileData) {
     return Padding(
       padding: const EdgeInsets.only(top: 40.0, bottom: 20),
       child: Column(
         children: [
           profileData == null
-              ?  CircleAvatar(
+              ? CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.grey[900],
                   child: Icon(

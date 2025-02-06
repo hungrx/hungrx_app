@@ -1,3 +1,6 @@
+
+import 'package:hungrx_app/data/Models/food_cart_screen.dart/consume_cart_response.dart';
+
 class AddCommonFoodHistoryRequest {
   final String userId;
   final String dishId;
@@ -117,34 +120,42 @@ class NutritionFacts {
 
 class NutrientInfo {
   final double value;
-  final String unit;
+  final String? unit;
 
   NutrientInfo({
     required this.value,
-    required this.unit,
+    this.unit,
   });
 
   factory NutrientInfo.fromJson(Map<String, dynamic> json) {
     return NutrientInfo(
-      value: json['value'].toDouble(),
+      value: (json['value'] ?? 0.0).toDouble(),
       unit: json['unit'],
     );
   }
 }
 
+
+
 class ServingInfo {
-  final double size;  // Changed from int to double
+  final dynamic size;
   final String unit;
+  final Weight? weight;
+  final int quantity;
 
   ServingInfo({
     required this.size,
     required this.unit,
+    this.weight,
+    required this.quantity,
   });
 
   factory ServingInfo.fromJson(Map<String, dynamic> json) {
     return ServingInfo(
-      size: json['size'].toDouble(),  // Convert to double
-      unit: json['unit'],
+      size: json['size'] ?? 0,
+      unit: json['unit'] ?? '',
+      weight: json['weight'] != null ? Weight.fromJson(json['weight']) : null,
+      quantity: json['quantity'] ?? 1,
     );
   }
 }
@@ -160,8 +171,8 @@ class Category {
 
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
-      main: json['main'],
-      sub: List<String>.from(json['sub']),
+      main: json['main'] ?? '',
+      sub: (json['sub'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 }

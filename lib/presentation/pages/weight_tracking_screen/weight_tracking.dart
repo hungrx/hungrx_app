@@ -79,107 +79,177 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
     return const SizedBox();
   }
 
-Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
-  // Create chart data including initial weight
-  final List<ChartData> chartData = [];
-  
-  // Add initial weight as the first point
-  chartData.add(ChartData(
-    'Initial', 
-    weightHistory.initialWeight
-  ));
-  
-  // Add rest of the weight entries
-  chartData.addAll(
-    weightHistory.history
-        // ignore: unnecessary_null_comparison
-        .where((entry) => entry.date == null) // Filter out null dates
-        .map((entry) => ChartData(entry.getGraphDate(), entry.weight))
-        .toList()
-  );
+  Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
+    final List<ChartData> chartData = [];
 
-  return Container(
-    margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.grey[900],
-      borderRadius: BorderRadius.circular(16),
-    ),
-    height: 250,
-    child: Column(
+    // Sort history by date before creating chart data
+    final sortedHistory = List.from(weightHistory.history)
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    // Add initial weight as the first point
+    chartData.add(ChartData('Initial', weightHistory.initialWeight));
+
+    // Add rest of the weight entries
+    chartData.addAll(sortedHistory
+        .where((entry) => entry.date != null)
+        .map((entry) => ChartData(entry.getGraphDate(), entry.weight))
+        .toList());
+
+    return Container(
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      height: 280, // Increased height for better visibility
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Initial W: ${weightHistory.initialWeight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'Current: ${weightHistory.currentWeight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
+                style: const TextStyle(
+                    color: AppColors.buttonColors,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: SfCartesianChart(
+              margin: const EdgeInsets.all(0),
+              primaryXAxis: CategoryAxis(
+                isInversed: false,
+                majorGridLines:
+                    const MajorGridLines(width: 0.5, color: Colors.grey),
+                labelStyle: const TextStyle(color: Colors.white),
+                // labelRotation: 45, // Rotate labels for better readability
+                interval: 1,
+              ),
+              primaryYAxis: NumericAxis(
+                majorGridLines:
+                    const MajorGridLines(width: 0.5, color: Colors.grey),
+                labelStyle: const TextStyle(color: Colors.white),
+                minimum: _getMinWeight(weightHistory) - 1,
+                maximum: _getMaxWeight(weightHistory) + 1,
+                interval: 2, // Set interval for better readability
+              ),
+              tooltipBehavior: TooltipBehavior(
+                enable: true,
+                color: Colors.grey[800],
+                textStyle: const TextStyle(color: Colors.white),
+              ),
+              plotAreaBorderWidth: 0,
+              series: <CartesianSeries>[
+                LineSeries<ChartData, String>(
+                  dataSource: chartData,
+                  xValueMapper: (ChartData data, _) => data.x,
+                  yValueMapper: (ChartData data, _) => data.y,
+                  color: AppColors.buttonColors,
+                  width: 3,
+                  dashArray: const <double>[5, 5],
+                  markerSettings: const MarkerSettings(
+                    isVisible: true,
+                    height: 8,
+                    width: 8,
+                    color: AppColors.buttonColors,
+                    borderColor: Colors.white,
+                    borderWidth: 2,
+                  ),
+                  enableTooltip: true,
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  double _getMinWeight(WeightHistoryModel weightHistory) {
+    double minWeight = weightHistory.initialWeight;
+    for (var entry in weightHistory.history) {
+      if (entry.weight < minWeight) {
+        minWeight = entry.weight;
+      }
+    }
+    return minWeight;
+  }
+
+  double _getMaxWeight(WeightHistoryModel weightHistory) {
+    double maxWeight = weightHistory.initialWeight;
+    for (var entry in weightHistory.history) {
+      if (entry.weight > maxWeight) {
+        maxWeight = entry.weight;
+      }
+    }
+    return maxWeight;
+  }
+
+  Widget _buildWeightEntries(WeightHistoryModel weightHistory) {
+    // Sort entries by date in descending order (newest first)
+    final sortedEntries = List.from(weightHistory.history)
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Initial W: ${weightHistory.initialWeight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
-          style: const TextStyle(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: SfCartesianChart(
-            primaryXAxis: const CategoryAxis(
-              isInversed: true,
-              majorGridLines: MajorGridLines(width: 1),
-              labelStyle: TextStyle(color: Colors.white),
-            ),
-            primaryYAxis: const NumericAxis(
-              majorGridLines: MajorGridLines(width: 1),
-              labelStyle: TextStyle(color: Colors.white),
-            ),
-            plotAreaBorderWidth: 0,
-            series: <CartesianSeries>[
-              LineSeries<ChartData, String>(
-                dataSource: chartData,
-                xValueMapper: (ChartData data, _) => data.x,
-                yValueMapper: (ChartData data, _) => data.y,
-                color: AppColors.buttonColors,
-                width: 3,
-                dashArray: const <double>[5, 5],
-                markerSettings: const MarkerSettings(isVisible: true),
-              )
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Weight History',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '${sortedEntries.length} entries',
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ),
-      ],
-    ),
-  );
-}
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: sortedEntries.length,
+          itemBuilder: (context, index) {
+            final entry = sortedEntries[index];
+            final previousWeight = index < sortedEntries.length - 1
+                ? sortedEntries[index + 1].weight
+                : weightHistory.initialWeight;
+            final weightDiff = entry.weight - previousWeight;
 
-Widget _buildWeightEntries(WeightHistoryModel weightHistory) {
-  // Create a reversed list of entries
-  final reversedEntries = weightHistory.history.reversed.toList();
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Text(
-          'Weight Entry',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+            return _buildWeightEntryItem(
+              entry.getFormattedDate(),
+              '${entry.weight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
+              weightDiff,
+              weightHistory.isMetric,
+            );
+          },
         ),
-      ),
-      ...List.generate(reversedEntries.length, (index) {
-        final entry = reversedEntries[index];
-        final nextWeight = index < reversedEntries.length - 1
-            ? reversedEntries[index + 1].weight
-            : entry.weight;
-        final weightDiff = entry.weight - nextWeight;
-
-        return _buildWeightEntryItem(
-          entry.getFormattedDate(),
-          '${entry.weight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
-          weightDiff,
-          weightHistory.isMetric,
-        );
-      }),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   Widget _buildWeightEntryItem(
       String date, String weight, double weightDiff, bool isMetric) {
@@ -192,27 +262,34 @@ Widget _buildWeightEntries(WeightHistoryModel weightHistory) {
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.transparent,
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(date,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-              if (weightDiff != 0)
-                Text(
-                  isIncrease
-                      ? 'Weight increased by $diffText${isMetric ? 'kg' : 'lbs'}'
-                      : 'Weight decreased by $diffText${isMetric ? 'kg' : 'lbs'}',
-                  style: TextStyle(
-                    color: isIncrease ? Colors.red : Colors.green,
-                    fontSize: 12,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(date,
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+                if (weightDiff != 0)
+                  Text(
+                    isIncrease
+                        ? '↑ Increased by $diffText${isMetric ? 'kg' : 'lbs'}'
+                        : '↓ Decreased by $diffText${isMetric ? 'kg' : 'lbs'}',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
           Text(weight,
               style: const TextStyle(

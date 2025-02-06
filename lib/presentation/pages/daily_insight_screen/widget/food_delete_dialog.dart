@@ -167,15 +167,18 @@ class FoodDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildFoodDetails() {
-    final formattedTime = DateFormat('hh:mm a').format(food.timestamp);
-    final servingText = food.servingInfo != null
-        ? '${food.servingInfo!.size} ${food.servingInfo!.unit}'
-        : '${food.servingSize} serving';
+
+    // DateTime dateTime = DateTime.parse(food.timestamp);
+DateTime localTime = food.timestamp.toLocal();
+final formattedTime = DateFormat('hh:mm a').format(localTime);
+    // final servingText = food.servingInfo != null
+    //     ? '${food.servingInfo!.size} ${food.servingInfo!.unit}'
+    //     : '${food.servingSize} serving';
 
     return Column(
       children: [
         _buildDetailRow('Time Consumed', formattedTime),
-        _buildDetailRow('Serving Size', servingText),
+        // _buildDetailRow('Serving Size', servingText),
         _buildDetailRow(
             'Total Calories', '${food.totalCalories.toStringAsFixed(1)} Cal'),
       ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,6 +16,7 @@ import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_state.dart
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/animated_calorie_count.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/dashboard_widgets.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/metric_dialogbox.dart';
+import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/preferance_class.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/shimmer_effect.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/streak_calendar.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/weight_reminder_dialg.dart';
@@ -46,11 +48,8 @@ class DashboardScreenState extends State<DashboardScreen> {
     return MediaQuery.of(context).size.width * factor;
   }
 
-  late SharedPreferences _prefs;
-  final String _lastDialogDateKey = 'last_dialog_date';
   bool _isInitialized = false;
-  static const String _firstTimeKey = 'is_first_time_user';
-  static const String _accountCreationDateKey = 'account_creation_date';
+  late AppPreferences _appPrefs;
 
   @override
   void initState() {
@@ -60,156 +59,207 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _initializeApp() async {
-    try {
-      if (_isInitialized) return;
-      _isInitialized = true;
+    if (_isInitialized) return;
 
-      // 1. Initialize preferences first
-      await _initializePrefs();
+    try {
+      print('Starting initialization...');
+      // 1. Initialize preferences
+      final prefs = await SharedPreferences.getInstance();
+      _appPrefs = AppPreferences(prefs);
+
       if (!mounted) return;
 
       // 2. Check first time user status
-      bool isFirstTime = _prefs.getBool(_firstTimeKey) ?? true;
+      final isFirstTime = _appPrefs.isFirstTimeUser();
+      print('Is first time user: $isFirstTime');
 
-      // 3. Fetch initial data
-      context.read<HomeBloc>().add(RefreshHomeData());
+      // 3. Wait for home data first
+      final homeBloc = context.read<HomeBloc>()..add(RefreshHomeData());
+      final metricsBloc = context.read<CalorieMetricsBloc>();
 
-      // 4. Handle first time user flow
-      if (isFirstTime) {
-        await for (final state in context.read<HomeBloc>().stream) {
-          if (state is HomeLoaded) {
-            if (mounted) {
-              // Set first time flag immediately
-              await _prefs.setBool(_firstTimeKey, false);
-              await _prefs.setString(
-                  _accountCreationDateKey, state.homeData.calculationDate);
+      HomeLoaded? homeLoadedState;
+      await for (final state in homeBloc.stream) {
+        if (state is HomeLoaded) {
+          homeLoadedState = state;
+          // Update account creation date from API response
+          _appPrefs.setAccountCreationDate(state.homeData.calculationDate);
 
-              // Show welcome dialog
-              await showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const WelcomeDialog(),
-              );
-            }
-            break;
+          if (isFirstTime) {
+            await _handleFirstTimeUser(state.homeData.calculationDate);
           }
-          if (state is HomeError) {
-            _isInitialized = false; // Allow retry on error
-            break;
-          }
+          break;
+        }
+        if (state is HomeError) {
+          _isInitialized = false;
+          return;
         }
       }
 
-      // 5. Initialize other components
-      if (mounted) {
-        // Fetch metrics
-        final metricsBloc = context.read<CalorieMetricsBloc>();
-        metricsBloc.add(FetchCalorieMetrics());
+      // Debug after updating
+      _debugPreferences();
+      _debugDates();
 
-        // Wait for metrics and show dialog if needed
+      // 4. Now fetch metrics and show dialog if needed
+      if (!isFirstTime && mounted && homeLoadedState != null) {
+        metricsBloc.add(FetchCalorieMetrics());
         await for (final state in metricsBloc.stream) {
           if (state is CalorieMetricsLoaded) {
-            if (!isFirstTime) {
-              // Only show metrics dialog for returning users
-              await _checkAndShowDialog();
-            }
+            await _checkAndShowMetricsDialog();
             break;
           }
           if (state is CalorieMetricsError) break;
         }
+      }
 
-        // Check weight reminder last
+      // 5. Check weight reminder
+      if (mounted && homeLoadedState != null) {
         await _checkWeightReminder();
       }
+
+      _isInitialized = true;
+      print('Initialization completed successfully');
     } catch (e) {
       print('Initialization error: $e');
       _isInitialized = false;
     }
   }
 
-// Future<void> _handleFirstTimeUser(String calculationDate) async {
-//   bool isFirstTime = _prefs.getBool(_firstTimeKey) ?? true;
+  Future<void> _handleFirstTimeUser(String calculationDate) async {
+    // Store the calculationDate as account creation date
+    _appPrefs.setFirstTimeUser(false);
+    _appPrefs.setAccountCreationDate(calculationDate);
 
-//   if (isFirstTime) {
-//       await _prefs.setBool(_firstTimeKey, false);
-//     await _prefs.setString(_accountCreationDateKey, calculationDate);
-
-//     if (mounted) {
-//       await showDialog(
-//         context: context,
-//         barrierDismissible: false,
-//         builder: (context) => const WelcomeDialog(),
-//       );
-//     }
-//     return;
-//   }
-// }
-
-  Future<void> _checkAndShowDialog() async {
-    if (!mounted) return;
-
-    final state = context.read<HomeBloc>().state;
-    if (state is HomeLoaded) {
-      String calculationDate = state.homeData.calculationDate;
-      DateTime accountCreationDate = _parseDate(calculationDate);
-      DateTime now = DateTime.now();
-      String today = now.toIso8601String().split('T')[0];
-      String? lastShownDate = _prefs.getString(_lastDialogDateKey);
-
-      // Don't show metrics dialog on account creation date
-      if (_isSameDay(accountCreationDate, now)) {
-        return;
-      }
-
-      // Show metrics dialog only if it hasn't been shown today
-      if (lastShownDate != today) {
-        await _prefs.setString(_lastDialogDateKey, today);
-        if (mounted) {
-          _showMetricsDialog();
-        }
-      }
+    if (mounted) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const WelcomeDialog(),
+      );
     }
   }
 
+  void _debugPreferences() {
+    print('\n--- Debug Preferences ---');
+    _appPrefs.printAllPreferences();
+
+    final homeState = context.read<HomeBloc>().state;
+    if (homeState is HomeLoaded) {
+      print(
+          'Calculation date from home data: ${homeState.homeData.calculationDate}');
+    }
+    print('----------------------\n');
+  }
+
+  void _debugDates() {
+    final homeState = context.read<HomeBloc>().state;
+    if (homeState is HomeLoaded) {
+      final data = homeState.homeData;
+      print('\n--- Debug Dates ---');
+      print('Calculation date: ${data.calculationDate}');
+      // print('Starting date: ${data.startingDate}');
+      print('Current date: ${DateTime.now().toIso8601String()}');
+      print('Last shown date: ${_appPrefs.getLastDialogDate()}');
+      print('Account creation date: ${_appPrefs.getAccountCreationDate()}');
+      print('-------------------\n');
+    }
+  }
+
+  Future<void> _checkAndShowMetricsDialog() async {
+    if (!mounted) {
+      print('Not mounted when checking metrics dialog');
+      return;
+    }
+
+    final homeState = context.read<HomeBloc>().state;
+    if (homeState is! HomeLoaded) {
+      print('Home state not loaded when checking metrics dialog');
+      return;
+    }
+
+    final now = DateTime.now();
+    final today = now.toIso8601String().split('T')[0]; // YYYY-MM-DD
+    final lastShownDate = _appPrefs.getLastDialogDate();
+    final accountCreationDate = _parseDate(homeState.homeData.calculationDate);
+    final isoAccountCreationDate =
+        accountCreationDate.toIso8601String().split('T')[0];
+
+    print('API Creation date: ${homeState.homeData.calculationDate}');
+    print('Parsed Creation date: $isoAccountCreationDate');
+    print('Current date: $today');
+    print('Last shown date: $lastShownDate');
+
+    // Don't show on account creation date
+    if (isoAccountCreationDate == today) {
+      print('Skipping metrics dialog on account creation date');
+      return;
+    }
+
+    // Show if not shown today (either null or different date)
+    if (lastShownDate != today) {
+      print('Showing metrics dialog - not shown today');
+      if (mounted) {
+        _showMetricsDialog(); // Show dialog first
+        _appPrefs.setLastDialogDate(today); // Set date after successful show
+      }
+    } else {
+      print('Metrics dialog already shown today');
+    }
+  }
+
+  Future<void> simulateFutureDate(int daysToAdd) async {
+    final homeState = context.read<HomeBloc>().state;
+    if (homeState is! HomeLoaded) return;
+
+    final accountCreationDate = _parseDate(homeState.homeData.calculationDate);
+    final simulatedDate = accountCreationDate.add(Duration(days: daysToAdd));
+
+    print('\n--- Simulating date ${daysToAdd} days in future ---');
+    print('Original creation date: ${accountCreationDate.toIso8601String()}');
+    print('Simulated current date: ${simulatedDate.toIso8601String()}');
+
+    // Clear last shown dialog date to test dialog showing
+    _appPrefs.clearLastDialogDate();
+
+    // Re-run checks
+    await _checkAndShowMetricsDialog();
+    await _checkWeightReminder();
+  }
+
   Future<void> _checkWeightReminder() async {
-    // Wait for screen to load
-    await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
 
-    final state = context.read<HomeBloc>().state;
-    if (state is HomeLoaded) {
-      String calculationDate = state.homeData.calculationDate;
-      DateTime accountCreationDate = _parseDate(calculationDate);
-      DateTime now = DateTime.now();
+    final homeState = context.read<HomeBloc>().state;
+    if (homeState is! HomeLoaded) return;
 
-      // Don't show weight reminder on the first day
-      if (_isSameDay(accountCreationDate, now)) {
-        return;
-      }
+    // Use calculationDate directly as account creation date
+    final accountCreationDate = _parseDate(homeState.homeData.calculationDate);
+    final now = DateTime.now();
+    final daysSinceCreation = now.difference(accountCreationDate).inDays;
 
+    print('Account Creation Date: ${accountCreationDate.toIso8601String()}');
+    print('Days since creation: $daysSinceCreation');
+
+    // Show reminder only after 7 days of account creation
+    if (daysSinceCreation >= 7) {
       final shouldShow = await WeightReminderManager.shouldShowReminder();
-      if (shouldShow) {
+      print('Should show weight reminder: $shouldShow');
+      if (shouldShow && mounted) {
         final lastUpdate = await WeightReminderManager.getLastWeightUpdate();
-        _showWeightReminderDialog(lastUpdate);
+        await _showWeightReminderDialog(lastUpdate);
       }
+    } else {
+      print(
+          'Not showing weight reminder - only $daysSinceCreation days since creation');
     }
   }
 
   DateTime _parseDate(String date) {
-    // Assuming date format is "dd/MM/yyyy"
     List<String> parts = date.split('/');
     return DateTime(
       int.parse(parts[2]), // year
       int.parse(parts[1]), // month
       int.parse(parts[0]), // day
     );
-  }
-
-  // Helper method to compare dates
-  bool _isSameDay(DateTime date1, DateTime date2) {
-    return date1.year == date2.year &&
-        date1.month == date2.month &&
-        date1.day == date2.day;
   }
 
   Future<void> _showWeightReminderDialog(DateTime lastUpdate) async {
@@ -240,25 +290,6 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  // Future<void> _initializeAndFetch() async {
-  //   if (_isInitialized) return;
-
-  //   try {
-  //     _isInitialized = true;
-  //     await _initializePrefs();
-  //     if (!mounted) return;
-
-  //     // Fetch both metrics and home data concurrently
-  //     await Future.wait([
-  //       _fetchMetricsAndShowDialog(),
-  //       _fetchData(),
-  //     ]);
-  //   } catch (e) {
-  //     print('Initialization error: $e');
-  //     _isInitialized = false;
-  //   }
-  // }
-
   Future<void> _fetchMetricsAndShowDialog() async {
     if (!mounted) return;
 
@@ -268,7 +299,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     // Wait for metrics to load
     await for (final state in metricsBloc.stream) {
       if (state is CalorieMetricsLoaded) {
-        await _checkAndShowDialog();
+        await _checkAndShowMetricsDialog();
         break;
       }
       if (state is CalorieMetricsError) {
@@ -284,42 +315,50 @@ class DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  Future<void> _initializePrefs() async {
-    _prefs = await SharedPreferences.getInstance();
-    // Ensure we have the keys initialized
-    if (!_prefs.containsKey(_firstTimeKey)) {
-      await _prefs.setBool(_firstTimeKey, true);
-    }
-  }
+  // Future<void> _initializePrefs() async {
+  //   _prefs = await SharedPreferences.getInstance();
+  //   // Ensure we have the keys initialized
+  //   if (!_prefs.containsKey(_firstTimeKey)) {
+  //     await _prefs.setBool(_firstTimeKey, true);
+  //   }
+  // }
 
   void _showMetricsDialog() {
     print('Attempting to show metrics dialog');
+    if (!mounted) {
+      print('Not mounted when showing metrics dialog');
+      return;
+    }
 
-    if (!mounted) return;
+    final metricsState = context.read<CalorieMetricsBloc>().state;
+    final homeState = context.read<HomeBloc>().state;
 
-    final state = context.read<CalorieMetricsBloc>().state;
-    if (state is CalorieMetricsLoaded) {
-      print('Showing dialog with metrics: ${state.metrics.consumedCalories}');
-      print(state.metrics.goal);
+    if (metricsState is CalorieMetricsLoaded && homeState is HomeLoaded) {
+      print('Showing metrics dialog with data:');
+      print('Consumed: ${metricsState.metrics.consumedCalories}');
+      print('Goal: ${metricsState.metrics.goal}');
+
       showDialog(
         context: context,
+        barrierDismissible: true,
         builder: (context) => MetricsDialog(
-          isMaintain: state.metrics.goal == 'maintain',
-          consumedCalories: state.metrics.consumedCalories,
-          dailyTargetCalories: state.metrics.dailyTargetCalories,
-          remainingCalories: state.metrics.remainingCalories,
-          goalMessage: state.metrics.message,
-          weightChangeRate: state.metrics.weightChangeRate,
-          caloriesToReachGoal: state.metrics.caloriesToReachGoal,
-          dailyWeightLoss: state.metrics.dailyWeightLoss,
-          ratio: state.metrics.ratio,
-          goal: state.metrics.goal, // or "lose weight"
-          daysLeft: state.metrics.daysLeft,
-          date: state.metrics.date,
+          isMaintain: metricsState.metrics.goal == 'maintain weight',
+          consumedCalories: metricsState.metrics.consumedCalories,
+          dailyTargetCalories: metricsState.metrics.dailyTargetCalories,
+          remainingCalories: metricsState.metrics.remainingCalories,
+          goalMessage: metricsState.metrics.message,
+          weightChangeRate: metricsState.metrics.weightChangeRate,
+          caloriesToReachGoal: metricsState.metrics.caloriesToReachGoal,
+          dailyWeightLoss: metricsState.metrics.dailyWeightLoss,
+          ratio: metricsState.metrics.ratio,
+          goal: metricsState.metrics.goal,
+          daysLeft: metricsState.metrics.daysLeft,
+          date: metricsState.metrics.date,
         ),
       );
     } else {
-      print('Cannot show dialog: State is not loaded (${state.runtimeType})');
+      print(
+          'Cannot show dialog: Metrics state = ${metricsState.runtimeType}, Home state = ${homeState.runtimeType}');
     }
   }
 
@@ -332,10 +371,9 @@ class DashboardScreenState extends State<DashboardScreen> {
     _calorieController.add(newValue);
   }
 
-  // Add this method
-  Future<void> resetLastShownDate() async {
-    await _prefs.remove(_lastDialogDateKey);
-  }
+  // Future<void> resetLastShownDate() async {
+  //   await _appPrefs.clearLastDialogDate();
+  // }
 
   Widget _buildErrorView(String message, VoidCallback onRetry) {
     return Center(
@@ -488,55 +526,55 @@ class DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                flex: 4,
+                                // flex: 4,
                                 child: StreakCalendar(
                                   isMaintain: state.homeData.goalStatus,
                                 ),
                               ),
-                              SizedBox(width: getPadding(context, 0.03)),
-                              Expanded(
-                                flex: 2,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    context.push('/water-intake');
-                                  },
-                                  child: Container(
-                                    height: MediaQuery.of(context).size.height *
-                                        (isSmallScreen ? 0.24 : 0.37),
-                                    constraints: BoxConstraints(
-                                      minHeight: screenWidth * 0.5,
-                                      maxHeight: screenWidth * 0.75,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.tileColor,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          LucideIcons.glassWater,
-                                          color: const Color(0xFFB4D147),
-                                          size: getIconSize(context, 0.16),
-                                        ),
-                                        SizedBox(
-                                            height: getPadding(context, 0.03)),
-                                        Text(
-                                          'Water Intake',
-                                          style: TextStyle(
-                                            color:
-                                                Colors.white.withOpacity(0.9),
-                                            fontSize:
-                                                getFontSize(context, 0.04),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              )
+                              // SizedBox(width: getPadding(context, 0.03)),
+                              // Expanded(
+                              //   flex: 2,
+                              //   child: GestureDetector(
+                              //     onTap: () {
+                              //       context.push('/water-intake');
+                              //     },
+                              //     child: Container(
+                              //       height: MediaQuery.of(context).size.height *
+                              //           (isSmallScreen ? 0.24 : 0.28),
+                              //       constraints: BoxConstraints(
+                              //         minHeight: screenWidth * 0.5,
+                              //         maxHeight: screenWidth * 0.75,
+                              //       ),
+                              //       decoration: BoxDecoration(
+                              //         color: AppColors.tileColor,
+                              //         borderRadius: BorderRadius.circular(20),
+                              //       ),
+                              //       child: Column(
+                              //         mainAxisAlignment:
+                              //             MainAxisAlignment.center,
+                              //         children: [
+                              //           Icon(
+                              //             LucideIcons.glassWater,
+                              //             color: const Color(0xFFB4D147),
+                              //             size: getIconSize(context, 0.25),
+                              //           ),
+                              //           // SizedBox(
+                              //           //     height: getPadding(context, 0.03)),
+                              //           // Text(
+                              //           //   'Water Intake',
+                              //           //   style: TextStyle(
+                              //           //     color:
+                              //           //         Colors.white.withOpacity(0.9),
+                              //           //     fontSize:
+                              //           //         getFontSize(context, 0.04),
+                              //           //     fontWeight: FontWeight.w500,
+                              //           //   ),
+                              //           // ),
+                              //         ],
+                              //       ),
+                              //     ),
+                              //   ),
+                              // )
                             ],
                           ),
                           SizedBox(height: getPadding(context, 0.03)),
@@ -544,43 +582,46 @@ class DashboardScreenState extends State<DashboardScreen> {
                             context,
                             state.homeData,
                           ),
-                          //    SizedBox(height: getPadding(context, 0.03)),
-                          // GestureDetector(
-                          //   onTap: () {
-                          //     context.push('/water-intake');
-                          //   },
-                          //   child: Container(
-                          //     height: MediaQuery.of(context).size.height *
-                          //         (isSmallScreen ? 0.24 : 0.27),
-                          //     constraints: BoxConstraints(
-                          //       minHeight: screenWidth * 0.5,
-                          //       maxHeight: screenWidth * 0.75,
-                          //     ),
-                          //     decoration: BoxDecoration(
-                          //       color: AppColors.tileColor,
-                          //       borderRadius: BorderRadius.circular(20),
-                          //     ),
-                          //     child: Column(
-                          //       mainAxisAlignment: MainAxisAlignment.center,
-                          //       children: [
-                          //         Icon(
-                          //           LucideIcons.glassWater,
-                          //           color: const Color(0xFFB4D147),
-                          //           size: getIconSize(context, 0.16),
-                          //         ),
-                          //         SizedBox(height: getPadding(context, 0.03)),
-                          //         Text(
-                          //           'Water Intake',
-                          //           style: TextStyle(
-                          //             color: Colors.white.withOpacity(0.9),
-                          //             fontSize: getFontSize(context, 0.04),
-                          //             fontWeight: FontWeight.w500,
-                          //           ),
-                          //         ),
-                          //       ],
-                          //     ),
-                          //   ),
-                          // )
+                          SizedBox(height: getPadding(context, 0.03)),
+                          GestureDetector(
+                            onTap: () {
+                               HapticFeedback.mediumImpact();
+                              context.push('/water-intake');
+                            },
+                            child: Container(
+                              height: MediaQuery.of(context).size.height *
+                                  (isSmallScreen ? 0.6 : 0.12),
+                              constraints: BoxConstraints(
+                                minHeight: screenWidth * 0.1,
+                                maxHeight: screenWidth * 0.2,
+                              ),
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: AppColors.tileColor,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    LucideIcons.glassWater,
+                                    color: const Color(0xFFB4D147),
+                                    size: getIconSize(context, 0.1),
+                                  ),
+                                  SizedBox(width: getPadding(context, 0.05)),
+                                  Text(
+                                    'Drink',
+                                    style: GoogleFonts.stickNoBills(
+                                      color: Colors.white,
+                                      fontSize: getFontSize(
+                                          context, isSmallScreen ? 0.07 : 0.08),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -618,11 +659,11 @@ class DashboardScreenState extends State<DashboardScreen> {
           ),
           child: Center(
             child: Text(
-              'Maintain Weight',
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: getFontSize(context, 0.08),
-                fontWeight: FontWeight.w800,
+              'MAINTAIN WEIGHT',
+              style: GoogleFonts.stickNoBills(
+                color: Colors.white,
+                fontSize: getFontSize(context, 0.09),
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -661,7 +702,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                       textStyle: GoogleFonts.stickNoBills(
                         color: Colors.white,
                         fontSize:
-                            getFontSize(context, isSmallScreen ? 0.08 : 0.085),
+                            getFontSize(context, isSmallScreen ? 0.75 : 0.080),
                         fontWeight: FontWeight.bold,
                       ),
                     ),

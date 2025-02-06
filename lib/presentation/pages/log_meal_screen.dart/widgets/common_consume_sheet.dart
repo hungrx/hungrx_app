@@ -21,11 +21,13 @@ class ServingUnit {
   final String name;
   final String label;
   final double grams;
+  final bool isDefault;
 
   ServingUnit({
     required this.name,
     required this.label,
     required this.grams,
+    this.isDefault = false,
   });
 }
 
@@ -71,6 +73,11 @@ class _CommonFoodConsumeBottomSheetState
     caloriesPerGram = widget.calories / widget.servingSize;
     // Initialize serving units list with the custom gram unit based on widget.servingSize
     servingUnits = [
+      ServingUnit(
+          name: 'default',
+          label: 'Default',
+          grams: widget.servingSize,
+          isDefault: true),
       ServingUnit(name: 'g', label: 'Grams (g)', grams: 1),
       ServingUnit(name: 'XS', label: 'Extra Small (30g)', grams: 30),
       ServingUnit(name: 'S', label: 'Small (90g)', grams: 90),
@@ -87,10 +94,10 @@ class _CommonFoodConsumeBottomSheetState
     ];
 
     // Set the initial serving unit to grams
-    selectedServingUnit = 'g';
-    _servingsController.text = widget.servingSize.toString();
+    selectedServingUnit = 'default';
+    _servingsController.text = '1';
+    _updateCalories('1');
     totalCalories = widget.calories;
-    _updateCalories(widget.servingSize.toString());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MealTypeBloc>().add(FetchMealTypes());
@@ -102,6 +109,12 @@ class _CommonFoodConsumeBottomSheetState
     if (newValue != null) {
       setState(() {
         selectedServingUnit = newValue;
+
+        if (selectedServingUnit == 'default') {
+          _servingsController.text = '1';
+          _updateCalories('1');
+          return;
+        }
         // Reset quantity to 1 for all units except initial grams selection
         if (selectedServingUnit != 'g' ||
             numberOfServings != widget.servingSize) {
@@ -148,12 +161,17 @@ class _CommonFoodConsumeBottomSheetState
 
       numberOfServings = servings;
 
+      // if (selectedServingUnit == 'g') {
+      //   _servingsController.text = widget.servingSize.toString();
+      // }
       final ServingUnit unit = servingUnits.firstWhere(
         (u) => u.name == selectedServingUnit,
         orElse: () => servingUnits[0],
       );
 
-      if (selectedServingUnit == 'g') {
+      if (selectedServingUnit == 'default') {
+        totalCalories = widget.calories * servings;
+      } else if (selectedServingUnit == 'g') {
         totalCalories = caloriesPerGram * servings;
       } else {
         double gramsInSelectedServing = unit.grams * servings;
@@ -296,6 +314,9 @@ class _CommonFoodConsumeBottomSheetState
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     return BlocBuilder<ProgressBarBloc, ProgressBarState>(
       builder: (context, progressState) {
         final bool isWithinLimit = progressState is ProgressBarLoaded
@@ -368,57 +389,76 @@ class _CommonFoodConsumeBottomSheetState
                 Flexible(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        16,
+                        16,
+                        bottomPadding + 16,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              SizedBox(
-                                width: 250,
-                                child: Text(
-                                  widget.mealName,
-                                  style: const TextStyle(
-                                    overflow: TextOverflow.clip,
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
+                          // Title and Calories
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  SizedBox(
+                                    width: constraints.maxWidth * 0.6,
+                                    child: Text(
+                                      widget.mealName,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: isSmallScreen ? 20 : 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 2,
+                                    ),
                                   ),
-                                ),
-                              ),
-                              Text(
-                                '${totalCalories.toStringAsFixed(1)} cal',
-                                style: TextStyle(
-                                  color: isWithinLimit
-                                      ? AppColors.buttonColors
-                                      : Colors.red,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                                  Text(
+                                    '${totalCalories.toStringAsFixed(1)} cal',
+                                    style: TextStyle(
+                                      color: isWithinLimit
+                                          ? AppColors.buttonColors
+                                          : Colors.red,
+                                      fontSize: isSmallScreen ? 18 : 22,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                           const SizedBox(height: 4),
                           Text(
                             widget.servingInfo,
-                            style: const TextStyle(color: Colors.grey),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: isSmallScreen ? 12 : 14,
+                            ),
                           ),
                           const SizedBox(height: 24),
-                          Row(
+
+                          // Quantity and Serving Size inputs
+                          Flex(
+                            direction: screenSize.width > 480
+                                ? Axis.horizontal
+                                : Axis.vertical,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Quantity input
-                              Expanded(
-                                flex: 2,
+                              Flexible(
+                                flex: screenSize.width > 480 ? 2 : 0,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Quantity',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 16,
+                                        fontSize: isSmallScreen ? 14 : 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -441,25 +481,27 @@ class _CommonFoodConsumeBottomSheetState
                                         hintText: 'Enter quantity',
                                         hintStyle:
                                             TextStyle(color: Colors.grey[400]),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: isSmallScreen ? 8 : 12,
+                                        ),
                                       ),
                                       onChanged: _updateCalories,
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 16),
-
-                              // Serving unit dropdown
-                              Expanded(
-                                flex: 3,
+                              SizedBox(height: screenSize.width > 480 ? 0 : 16),
+                              Flexible(
+                                flex: screenSize.width > 480 ? 3 : 0,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Serving Size',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 16,
+                                        fontSize: isSmallScreen ? 14 : 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -478,29 +520,25 @@ class _CommonFoodConsumeBottomSheetState
                                           value: selectedServingUnit,
                                           isExpanded: true,
                                           dropdownColor: Colors.grey[800],
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: isSmallScreen ? 8 : 12,
+                                          ),
                                           items: servingUnits
                                               .map((ServingUnit unit) {
                                             return DropdownMenuItem<String>(
                                               value: unit.name,
                                               child: Text(
                                                 unit.label,
-                                                style: const TextStyle(
-                                                    color: Colors.white),
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize:
+                                                      isSmallScreen ? 12 : 14,
+                                                ),
                                               ),
                                             );
                                           }).toList(),
                                           onChanged: _handleServingUnitChange,
-                                          // onChanged: (String? newValue) {
-                                          //   if (newValue != null) {
-                                          //     setState(() {
-                                          //       selectedServingUnit = newValue;
-                                          //       _updateCalories(
-                                          //           _servingsController.text);
-                                          //     });
-                                          //   }
-                                          // },
                                         ),
                                       ),
                                     ),
@@ -552,23 +590,21 @@ class _CommonFoodConsumeBottomSheetState
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Select Meal Type',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 16,
+                                        fontSize: isSmallScreen ? 14 : 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     const SizedBox(height: 16),
                                     Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
+                                      padding: EdgeInsets.all(
+                                          isSmallScreen ? 8 : 12),
                                       child: Wrap(
-                                        spacing: 16,
-                                        runSpacing: 16,
+                                        spacing: isSmallScreen ? 8 : 16,
+                                        runSpacing: isSmallScreen ? 8 : 16,
                                         children:
                                             state.mealTypes.map((mealType) {
                                           bool isSelected =
@@ -586,10 +622,10 @@ class _CommonFoodConsumeBottomSheetState
                                               });
                                             },
                                             child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 8,
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal:
+                                                    isSmallScreen ? 12 : 16,
+                                                vertical: isSmallScreen ? 6 : 8,
                                               ),
                                               decoration: BoxDecoration(
                                                 color: isSelected
@@ -610,12 +646,16 @@ class _CommonFoodConsumeBottomSheetState
                                                     isSelected
                                                         ? Icons.check_circle
                                                         : Icons.circle_outlined,
-                                                    size: 18,
+                                                    size:
+                                                        isSmallScreen ? 16 : 18,
                                                     color: isSelected
                                                         ? Colors.black
                                                         : Colors.grey,
                                                   ),
-                                                  const SizedBox(width: 8),
+                                                  SizedBox(
+                                                      width: isSmallScreen
+                                                          ? 6
+                                                          : 8),
                                                   Text(
                                                     mealType.meal,
                                                     style: TextStyle(
@@ -624,6 +664,9 @@ class _CommonFoodConsumeBottomSheetState
                                                           : Colors.grey,
                                                       fontWeight:
                                                           FontWeight.bold,
+                                                      fontSize: isSmallScreen
+                                                          ? 12
+                                                          : 14,
                                                     ),
                                                   ),
                                                 ],
@@ -636,7 +679,6 @@ class _CommonFoodConsumeBottomSheetState
                                   ],
                                 );
                               }
-
                               return const SizedBox.shrink();
                             },
                           ),
@@ -644,35 +686,55 @@ class _CommonFoodConsumeBottomSheetState
                           const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
-                            height: 50,
+                            height: isSmallScreen ? 40 : 50,
                             child: BlocBuilder<CommonFoodBloc, CommonFoodState>(
                               builder: (context, state) {
+                                final bool isMealSelected =
+                                    selectedMealType != 'CHOOSE';
+
                                 return ElevatedButton(
                                   onPressed: (state is CommonFoodLoading ||
-                                          !isWithinLimit)
+                                          !isWithinLimit ||
+                                          !isMealSelected)
                                       ? null
                                       : _handleAddToMeal,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isWithinLimit
-                                        ? AppColors.buttonColors
-                                        : Colors.grey,
+                                    backgroundColor: isMealSelected
+                                        ? (isWithinLimit
+                                            ? AppColors.buttonColors
+                                            : Colors.grey)
+                                        : Colors.grey[600],
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(25),
                                     ),
                                     elevation: 2,
                                   ),
                                   child: state is CommonFoodLoading
-                                      ? const CircularProgressIndicator()
+                                      ? const Center(
+                                          child: SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      AppColors.buttonColors
+                                                      ),
+                                            ),
+                                          ),
+                                        )
                                       : Text(
                                           selectedMealType == 'CHOOSE'
-                                              ? "CHOOSE MEAL"
+                                              ? "SELECT MEAL TYPE"
                                               : 'ADD TO $selectedMealType',
                                           style: TextStyle(
-                                            color: isWithinLimit
-                                                ? Colors.black
-                                                : Colors.white,
+                                            color: isMealSelected
+                                                ? (isWithinLimit
+                                                    ? Colors.black
+                                                    : Colors.white)
+                                                : Colors.white70,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                            fontSize: isSmallScreen ? 14 : 16,
                                           ),
                                         ),
                                 );

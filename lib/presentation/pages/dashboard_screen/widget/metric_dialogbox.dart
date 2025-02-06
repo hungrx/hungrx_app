@@ -7,7 +7,7 @@ import 'package:hungrx_app/presentation/blocs/change_calorie_goal/change_calorie
 import 'package:hungrx_app/presentation/controller/home_data_notifier.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-class MetricsDialog extends StatelessWidget { 
+class MetricsDialog extends StatelessWidget {
   final bool isMaintain;
   final double consumedCalories;
   final double dailyTargetCalories;
@@ -37,11 +37,12 @@ class MetricsDialog extends StatelessWidget {
     required this.isMaintain,
   });
 
-  bool get isWeightGainGoal => !isMaintain && goal.toLowerCase().contains('gain');
+  bool get isWeightGainGoal =>
+      !isMaintain && goal.toLowerCase().contains('gain');
 
   double get actualWeightChange {
     if (isMaintain) return 0;
-    
+
     final consumptionRatio = consumedCalories / dailyTargetCalories;
     if (isWeightGainGoal) {
       return dailyWeightLoss * consumptionRatio;
@@ -53,7 +54,8 @@ class MetricsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isGaining = isWeightGainGoal;
-    final analysisColor = isGaining ? const Color(0xFF4ECDC4) : const Color(0xFFFF6B6B);
+    final analysisColor =
+        isGaining ? const Color(0xFF4ECDC4) : const Color(0xFFFF6B6B);
 
     return BlocListener<ChangeCalorieGoalBloc, ChangeCalorieGoalState>(
       listener: (context, state) {
@@ -94,7 +96,7 @@ class MetricsDialog extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Daily Progress',
+                              'Progress Update',
                               style: GoogleFonts.inter(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w600,
@@ -104,7 +106,7 @@ class MetricsDialog extends StatelessWidget {
                             Text(
                               'Analysis for $date',
                               style: GoogleFonts.inter(
-                                fontSize: 12,
+                                fontSize: 14,
                                 color: Colors.white.withOpacity(0.6),
                               ),
                             ),
@@ -182,17 +184,21 @@ class MetricsDialog extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             _buildInfoRow(
-                              'Total Goal',
-                              '$caloriesToReachGoal cal',
+                              isGaining
+                                  ? 'Total Surplus Goal'
+                                  : 'Total Burn Goal',
+                              '${(double.tryParse(caloriesToReachGoal) ?? 0).toStringAsFixed(0)} cal',
                               analysisColor,
                             ),
                             _buildInfoRow(
-                              'Target Daily Change',
+                              isGaining
+                                  ? 'Daily Surplus Goal'
+                                  : 'Daily Burn Goal',
                               '${dailyWeightLoss.toStringAsFixed(1)} cal',
-                              const Color(0xFF4ECDC4),
+                              analysisColor,
                             ),
                             _buildInfoRow(
-                              'Actual Daily Change',
+                              isGaining ? 'Achieved Surplus' : 'Achieved Burn',
                               '${actualWeightChange.toStringAsFixed(1)} cal',
                               isGaining
                                   ? const Color(0xFFFF6B6B)
@@ -220,7 +226,7 @@ class MetricsDialog extends StatelessWidget {
                         ),
                       ),
                     ],
-
+                    const SizedBox(height: 8),
                     // Maintenance message or goal message
                     Container(
                       padding: const EdgeInsets.all(12),

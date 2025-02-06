@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_event.dart';
@@ -191,23 +190,16 @@ class _StreakCalendarState extends State<StreakCalendar> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 5, bottom: 5),
-                    child: Row(
-                      children: [
-                        _buildHeader(context, isSmallScreen),
-                      ],
-                    ),
-                  ),
+
                   SizedBox(
-                    height: screenSize.height * (isSmallScreen ? 0.13 : 0.225),
+                    height: screenSize.height * (isSmallScreen ? 0.13 : 0.25),
                     child: _buildHeatMap(startingDate, endingDate, streakMap,
                         screenSize, isSmallScreen),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 3),
-                    child: _buildStats(context, streakData, isSmallScreen),
-                  ),
+                  // Padding(
+                  //   padding: const EdgeInsets.only(left: 3),
+                  //   child: _buildStats(context, streakData, isSmallScreen),
+                  // ),
                 ],
               ),
             ),
@@ -233,51 +225,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isSmallScreen) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(getPadding(context, 0.015)),
-              decoration: BoxDecoration(
-                color: const Color(0xFFB4D147),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                LucideIcons.flame,
-                color: Colors.black,
-                size: getIconSize(context, isSmallScreen ? 0.06 : 0.07),
-              ),
-            ),
-            SizedBox(width: getPadding(context, 0.02)),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Streaks',
-                  style: GoogleFonts.stickNoBills(
-                    color: Colors.white,
-                    fontSize: getFontSize(context, 0.045),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '#beUnstoppable',
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                    color: Colors.grey[500],
-                    fontSize: getFontSize(context, 0.03),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildHeatMap(DateTime startDate, DateTime endDate,
       Map<DateTime, int> datasets, Size screenSize, bool isSmallScreen) {
@@ -299,8 +247,10 @@ class _StreakCalendarState extends State<StreakCalendar> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: HeatMap(
-          borderRadius: 10,
-          fontSize:  screenSize.width * (isSmallScreen ? 0.03 : 0.025),
+          
+           margin: const EdgeInsets.all(4),
+          borderRadius: 20,
+          fontSize:  screenSize.width * (isSmallScreen ? 0.03 : 0.026),
           startDate: startDate,
           endDate: endDate,
           datasets: datasets,
@@ -310,80 +260,11 @@ class _StreakCalendarState extends State<StreakCalendar> {
           showColorTip: false,
           showText: true,
           scrollable: true,
-          size: screenSize.width * (isSmallScreen ? 0.01 : 0.05),
+          size: screenSize.width * (isSmallScreen ? 0.05 : 0.047),
           colorsets: const {
             1: Color.fromARGB(255, 119, 141, 41),
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildStats(
-    BuildContext context,
-    dynamic streakData,
-    bool isSmallScreen,
-  ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        if (!widget.isMaintain) ...[
-          _buildStatContainer(
-            text: '${streakData.daysLeft}',
-            isSmallScreen: isSmallScreen,
-            showIcon: false,
-          ),
-          SizedBox(width: isSmallScreen ? 6 : 8),
-        ],
-        // _buildStatContainer(
-        //   text: '${streakData.daysLeft}',
-        //   isSmallScreen: isSmallScreen,
-        //   showIcon: false,
-        // ),
-        SizedBox(width: isSmallScreen ? 6 : 8),
-        _buildStatContainer(
-          icon: LucideIcons.flame,
-          text: '${streakData.currentStreak}',
-          isSmallScreen: isSmallScreen,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatContainer({
-    IconData? icon,
-    required String text,
-    required bool isSmallScreen,
-    bool showIcon = true,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: getPadding(context, 0.03),
-        vertical: getPadding(context, isSmallScreen ? 0.01 : 0.015),
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          if (showIcon && icon != null) ...[
-            Icon(
-              icon,
-              color: const Color(0xFFB4D147),
-              size: getIconSize(context, isSmallScreen ? 0.04 : 0.05),
-            ),
-            SizedBox(width: getPadding(context, 0.02)),
-          ],
-          Text(
-            text,
-            style: GoogleFonts.stickNoBills(
-              color: Colors.white,
-              fontSize: getFontSize(context, isSmallScreen ? 0.035 : 0.045),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ),
     );
   }

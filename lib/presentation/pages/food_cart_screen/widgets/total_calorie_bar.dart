@@ -18,11 +18,9 @@ class TotalCaloriesBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get screen dimensions
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isSmallScreen = screenWidth < 360;
     
-    // Calculate responsive dimensions
     final double horizontalPadding = screenWidth * 0.04;
     final double containerPadding = screenWidth * 0.035;
     final double borderRadius = screenWidth * 0.07;
@@ -111,8 +109,8 @@ class TotalCaloriesBar extends StatelessWidget {
                 SizedBox(width: screenWidth * 0.02),
                 MealLoggerButton(
                   orderDetails: orderDetails,
-                  totalCalories:
-                      '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
+                  totalCalories: '${nutrition['calories']?.toStringAsFixed(0) ?? 0}',
+                  isEnabled: !isExceeded, // Pass the enabled state based on calories
                 ),
               ],
             ),

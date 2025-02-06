@@ -437,13 +437,16 @@ Widget _buildInfoText() {
           size: 14,
         ),
         const SizedBox(width: 4),
-        Text(
-          "Can't find your food? Add it manually with its nutritional details!",
-          style: TextStyle(
-            overflow: TextOverflow.clip,
-            color: Colors.grey[400],
-            fontSize: 12,
-            fontStyle: FontStyle.italic,
+        SizedBox(
+          width: 200,
+          child: Text(
+            "Can't find your food? Add it manually with its nutritional details!",
+            style: TextStyle(
+              overflow: TextOverflow.ellipsis,
+              color: Colors.grey[400],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ),
       ],

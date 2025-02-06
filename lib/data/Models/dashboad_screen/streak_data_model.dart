@@ -1,9 +1,9 @@
 class StreakDataModel {
   final String userId;
   final String startingDate;
-  final String expectedEndDate;
-  final int totalDays;
-  final int currentStreak;
+  final String? expectedEndDate;  // Make nullable
+  final int? totalDays;          // Make nullable since it's not in the JSON
+  final int? currentStreak;      // Make nullable since it's not in the JSON
   final int daysLeft;
   final List<String> dates;
   final bool status;
@@ -12,9 +12,9 @@ class StreakDataModel {
   StreakDataModel({
     required this.userId,
     required this.startingDate,
-    required this.expectedEndDate,
-    required this.totalDays,
-    required this.currentStreak,
+    this.expectedEndDate,        // Remove required
+    this.totalDays,             // Remove required
+    this.currentStreak,         // Remove required
     required this.daysLeft,
     required this.dates,
     required this.status,
@@ -22,21 +22,24 @@ class StreakDataModel {
   });
 
   factory StreakDataModel.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] as Map<String, dynamic>;
     return StreakDataModel(
-      userId: json['data']['userId'],
-      startingDate: json['data']['startingDate'],
-      expectedEndDate: json['data']['expectedEndDate'],
-      totalDays: json['data']['totalDays'],
-      currentStreak: json['data']['currentStreak'],
-      daysLeft: json['data']['daysLeft'],
-      dates: List<String>.from(json['data']['dates']),
-      status: json['status'],
-      message: json['message'],
+      userId: data['userId'] as String,
+      startingDate: data['startingDate'] as String,
+      expectedEndDate: data['expectedEndDate'] as String?,  // Handle null
+      totalDays: data['totalDays'] as int?,                // Handle null
+      currentStreak: data['currentStreak'] as int?,        // Handle null
+      daysLeft: data['daysLeft'] as int,
+      dates: List<String>.from(data['dates'] ?? []),       // Provide empty list as default
+      status: json['status'] as bool,
+      message: json['message'] as String,
     );
   }
 
   // Convert date string from dd/mm/yyyy to DateTime
-  DateTime _parseDate(String dateString) {
+  DateTime? _parseDate(String? dateString) {
+    if (dateString == null) return null;
+    
     final parts = dateString.split('/');
     if (parts.length != 3) {
       throw FormatException('Invalid date format: $dateString');
@@ -53,25 +56,28 @@ class StreakDataModel {
 
   // Get startingDate as DateTime
   DateTime get startDate {
-    return _parseDate(startingDate);
+    return _parseDate(startingDate)!;  // We know startingDate is required
   }
 
   // Get expectedEndDate as DateTime
-  DateTime get endDate {
-    return _parseDate(expectedEndDate);
+  DateTime? get endDate {
+    return _parseDate(expectedEndDate);  // Return null if expectedEndDate is null
   }
 
   Map<DateTime, int> getStreakMap() {
     Map<DateTime, int> streakMap = {};
     for (String date in dates) {
       final parsedDate = _parseDate(date);
-      streakMap[parsedDate] = 1;
+      if (parsedDate != null) {
+        streakMap[parsedDate] = 1;
+      }
     }
     return streakMap;
   }
 
   // Optional: Add a method to format dates if needed
-  String formatDate(DateTime date) {
+  String? formatDate(DateTime? date) {
+    if (date == null) return null;
     return '${date.day.toString().padLeft(2, '0')}/'
         '${date.month.toString().padLeft(2, '0')}/'
         '${date.year}';

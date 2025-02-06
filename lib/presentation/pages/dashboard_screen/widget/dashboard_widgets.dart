@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
@@ -120,6 +121,7 @@ class DashboardWidgets {
         Expanded(
           child: GestureDetector(
             onTap: () {
+               HapticFeedback.mediumImpact();
               context.pushNamed(RouteNames.dailyInsightScreen);
             },
             child: Container(
@@ -204,6 +206,7 @@ class DashboardWidgets {
         Expanded(
           child: GestureDetector(
             onTap: () {
+               HapticFeedback.mediumImpact();
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
@@ -241,6 +244,7 @@ class DashboardWidgets {
         Expanded(
           child: GestureDetector(
             onTap: () {
+               HapticFeedback.mediumImpact();
               //! Navigate with isMaintain parameter
               context.pushNamed(
                 RouteNames.weightTracking,

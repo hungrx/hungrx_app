@@ -169,15 +169,15 @@ class _RestaurantSearchContent extends StatelessWidget {
 
           return ListView.builder(
             padding: EdgeInsets.symmetric(
-              vertical: padding * 0.75,
-              horizontal: padding * 0.5,
+              vertical: padding * 0.1,
+              horizontal: padding * 0.1,
             ),
             itemCount: state.searchResults.length,
             itemBuilder: (context, index) {
               final restaurant = state.searchResults[index];
               return Padding(
                 padding: EdgeInsets.symmetric(
-                  vertical: padding * 0.25,
+                  vertical: padding * 0.20,
                 ),
                 child: RestaurantItem(
                   ontap: () {

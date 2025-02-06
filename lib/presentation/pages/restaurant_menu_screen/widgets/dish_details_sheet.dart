@@ -594,7 +594,7 @@ Widget _buildNutritionInfo(NutritionInfo nutrition) {
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.black),
+                                AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
                           ),
                         )
                       : Text(

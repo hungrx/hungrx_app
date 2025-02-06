@@ -18,7 +18,7 @@ class GetSearchHistoryLogApi {
         body: jsonEncode({'userId': userId}),
       );
 //       print(userId);
-print(response.body);
+// print(response.body);
       if (response.statusCode == 200) {
         return GetSearchHistoryLogResponse.fromJson(jsonDecode(response.body));
       } else {

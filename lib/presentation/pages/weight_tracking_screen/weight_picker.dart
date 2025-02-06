@@ -2,11 +2,25 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animated_weight_picker/animated_weight_picker.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/data/Models/profile_screen/update_goal_settings_model.dart';
+import 'package:hungrx_app/data/datasources/api/profile_edit_screen/update_goal_settings_api.dart';
+import 'package:hungrx_app/data/repositories/profile_setting_screen/update_goal_settings_repository.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/domain/usecases/profile_screen/update_goal_settings_usecase.dart';
+import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_eat_screen/get_eat_screen_event.dart';
+import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_event.dart';
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_state.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
+import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_event.dart';
+import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_state.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_event.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
@@ -15,6 +29,7 @@ import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_state.
 import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/edit_goal_screen.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/widget/celebration_dialog.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/widget/goal_change_dialog.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 
 class WeightPickerScreen extends StatefulWidget {
   final double currentWeight;
@@ -34,7 +49,7 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
   late AnimationController _dialogAnimationController;
   late ConfettiController _confettiController;
   final ScrollController _scrollController = ScrollController();
-
+  final AuthService _authService = AuthService();
   @override
   void initState() {
     super.initState();
@@ -122,21 +137,22 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
     );
   }
 
-  void showCelebrationDialog(BuildContext context, String currentWeight) {
+  void showCelebrationDialog(BuildContext context, String currentWeight) async {
+    final updateGoalSettingsBloc = context.read<UpdateGoalSettingsBloc>();
+    final userId = await _authService.getUserId();
+    print(userId);
     CelebrationDialog.show(
       context,
       currentWeight: currentWeight,
-      onDialogClosed: (context, setNewGoal) {
+      onDialogClosed: (dialogContext, setNewGoal) {
         if (setNewGoal) {
           final goalSettingsState = context.read<GoalSettingsBloc>().state;
           if (goalSettingsState is GoalSettingsLoaded) {
-            // Update the current weight in goal settings
             Navigator.push(
-              context,
+              context, // Use original context
               MaterialPageRoute(
                 builder: (context) => GoalSettingsEditScreen(
-                  goal:
-                      'maintain weight', // Default to maintain weight for new goal
+                  goal: 'maintain weight',
                   targetWeight: goalSettingsState.settings.targetWeight,
                   weightGainRate: goalSettingsState.settings.weightGainRate,
                   activityLevel: goalSettingsState.settings.activityLevel,
@@ -149,8 +165,24 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
             );
           }
         } else {
-          // If user chooses not to set new goal, just close the dialog
-          Navigator.of(context).pop(true);
+          final goalSettingsState = context.read<GoalSettingsBloc>().state;
+          if (goalSettingsState is GoalSettingsLoaded) {
+            final settings = UpdateGoalSettingsModel(
+              userId: userId,
+              goal: 'maintain weight',
+              targetWeight: goalSettingsState.settings.targetWeight,
+              weightGainRate: goalSettingsState.settings.weightGainRate,
+              activityLevel: goalSettingsState.settings.activityLevel,
+              mealsPerDay: goalSettingsState.settings.mealsPerDay,
+            );
+
+            // Use the bloc instance we captured earlier
+            updateGoalSettingsBloc.add(
+              UpdateGoalSettingsSubmitted(settings: settings),
+            );
+
+            // Navigator.of(dialogContext).pop(true);
+          }
         }
       },
     );
@@ -280,6 +312,8 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
               UpdateWeightRequested(newWeight),
             );
 
+        print(isGoalAchieved);
+
         // Then show celebration dialog
         showCelebrationDialog(context, selectedValue);
         return;
@@ -314,203 +348,268 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
             _weightController.text = selectedValue;
           }
 
-          return Scaffold(
-            backgroundColor: Colors.black,
-            appBar: AppBar(
-              backgroundColor: Colors.black,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
-              title: const Text(
-                'Update Weight',
-                style: TextStyle(color: Colors.white),
+          return BlocProvider<UpdateGoalSettingsBloc>(
+            create: (context) => UpdateGoalSettingsBloc(
+              useCase: UpdateGoalSettingsUseCase(
+                repository: UpdateGoalSettingsRepository(
+                  api: UpdateGoalSettingsApi(),
+                ),
               ),
             ),
-            body: BlocListener<WeightUpdateBloc, WeightUpdateState>(
-              listener: (context, state) {
-                if (state is WeightUpdateSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  context.read<WeightHistoryBloc>().add(FetchWeightHistory());
-                  context.read<HomeBloc>().add(RefreshHomeData());
-                  final goalSettingsState =
-                      context.read<GoalSettingsBloc>().state;
-                  final double newWeight = double.parse(selectedValue);
+            child: Scaffold(
+              backgroundColor: Colors.black,
+              appBar: AppBar(
+                backgroundColor: Colors.black,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                title: const Text(
+                  'Update Weight',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              body: MultiBlocListener(
+                listeners: [
+                  BlocListener<WeightUpdateBloc, WeightUpdateState>(
+                    listener: (context, state) {
+                      if (state is WeightUpdateSuccess) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.message),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        context
+                            .read<WeightHistoryBloc>()
+                            .add(FetchWeightHistory());
+                        context.read<HomeBloc>().add(RefreshHomeData());
+                        context
+                            .read<GoalSettingsBloc>()
+                            .add(FetchGoalSettings());
 
-                  if (goalSettingsState is GoalSettingsLoaded) {
-                    final targetWeight = double.tryParse(
-                            goalSettingsState.settings.targetWeight) ??
-                        0.0;
-                    // Only navigate if we're not at target weight
-                    if (!((targetWeight - newWeight).abs() <= 0.1)) {
-                      Navigator.of(context).pop(true);
-                    }
-                  } else {
-                    Navigator.of(context).pop(true);
-                  }
-                  // Navigator.of(context).pop(true);
-                } else if (state is WeightUpdateError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.error),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: SingleChildScrollView(
-                          controller: _scrollController,
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 50),
-                              _buildCurrentWeightDisplay(),
-                              const SizedBox(height: 20),
-                              Center(
-                                child: AnimatedWeightPicker(
-                                  showSelectedValue: false,
-                                  dialColor: Colors.white,
-                                  dialHeight: 70,
-                                  division: isMetric ? 0.1 : 0.2,
-                                  majorIntervalHeight: 24,
-                                  majorIntervalColor: Colors.red,
-                                  minorIntervalHeight: 14,
-                                  selectedValueColor: AppColors.buttonColors,
-                                  min: isMetric ? 15 : 33,
-                                  max: isMetric ? 300 : 660,
-                                  onChange: (newValue) {
-                                    setState(() {
-                                      selectedValue = newValue;
-                                      _weightController.text = newValue;
-                                    });
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 30),
-                              Text(
-                                '$selectedValue $unit',
-                                style: const TextStyle(
-                                  fontSize: 74,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 30),
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.8,
-                                child: TextField(
-                                  controller: _weightController,
-                                  focusNode: _focusNode,
-                                  keyboardType: TextInputType.number,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
+                        final goalSettingsState =
+                            context.read<GoalSettingsBloc>().state;
+                        if (goalSettingsState is GoalSettingsLoaded) {
+                          final double newWeight = double.parse(selectedValue);
+                          final targetWeight = double.tryParse(
+                                  goalSettingsState.settings.targetWeight) ??
+                              0.0;
+                          bool isGoalAchieved = false;
+                          if (goalSettingsState.settings.goal
+                              .toLowerCase()
+                              .contains('lose')) {
+                            isGoalAchieved = newWeight <= targetWeight;
+                          } else if (goalSettingsState.settings.goal
+                              .toLowerCase()
+                              .contains('gain')) {
+                            isGoalAchieved = newWeight >= targetWeight;
+                          }
+
+                          // Only navigate (pop) if the goal is not achieved
+                          if (!isGoalAchieved) {
+                            Navigator.of(context).pop(true);
+                          }
+                        } else {
+                          Navigator.of(context).pop(true);
+                        }
+                      } else if (state is WeightUpdateError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.error),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  BlocListener<UpdateGoalSettingsBloc, UpdateGoalSettingsState>(
+                    listener: (context, state) {
+                      if (state is UpdateGoalSettingsSuccess) {
+                        context
+                            .read<GetProfileDetailsBloc>()
+                            .add(FetchProfileDetails());
+                        context
+                            .read<GoalSettingsBloc>()
+                            .add(FetchGoalSettings());
+                        context
+                            .read<EatScreenBloc>()
+                            .add(GetEatScreenDataEvent());
+                        context.read<HomeBloc>().add(RefreshHomeData());
+                        if (widget.isMaintain) {
+                          context.read<WeightUpdateBloc>().add(
+                                UpdateWeightRequested(widget.currentWeight),
+                              );
+                          context.read<HomeBloc>().add(RefreshHomeData());
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content:
+                                  Text('Goal settings updated successfully')),
+                        );
+                        context.goNamed(RouteNames.home);
+                        // Navigator.pop(context, state.settings);
+                      } else if (state is UpdateGoalSettingsFailure) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.error)),
+                        );
+                      }
+                    },
+                  ),
+                ],
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            controller: _scrollController,
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 50),
+                                _buildCurrentWeightDisplay(),
+                                const SizedBox(height: 20),
+                                Center(
+                                  child: AnimatedWeightPicker(
+                                    showSelectedValue: false,
+                                    dialColor: Colors.white,
+                                    dialHeight: 70,
+                                    division: isMetric ? 0.1 : 0.2,
+                                    majorIntervalHeight: 24,
+                                    majorIntervalColor: Colors.red,
+                                    minorIntervalHeight: 14,
+                                    selectedValueColor: AppColors.buttonColors,
+                                    min: isMetric ? 15 : 33,
+                                    max: isMetric ? 300 : 660,
+                                    onChange: (newValue) {
+                                      setState(() {
+                                        selectedValue = newValue;
+                                        _weightController.text = newValue;
+                                      });
+                                    },
                                   ),
-                                  textAlign: TextAlign.center,
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter weight in $unit',
-                                    hintStyle:
-                                        TextStyle(color: Colors.grey[400]),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide:
-                                          const BorderSide(color: Colors.white),
+                                ),
+                                const SizedBox(height: 30),
+                                Text(
+                                  '$selectedValue $unit',
+                                  style: const TextStyle(
+                                    fontSize: 74,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 30),
+                                SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.8,
+                                  child: TextField(
+                                    controller: _weightController,
+                                    focusNode: _focusNode,
+                                    keyboardType: TextInputType.number,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
                                     ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(
-                                        color: AppColors.buttonColors,
-                                        width: 2,
+                                    textAlign: TextAlign.center,
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter weight in ',
+                                      hintStyle:
+                                          TextStyle(color: Colors.grey[400]),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: const BorderSide(
+                                            color: Colors.white),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: const BorderSide(
+                                          color: AppColors.buttonColors,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.transparent,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                        horizontal: 16,
+                                      ),
+                                      suffixText: unit,
+                                      suffixStyle:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                    onSubmitted: (value) =>
+                                        _validateAndUpdateWeight(),
+                                    onChanged: (value) {
+                                      if (value.isNotEmpty) {
+                                        double? weight = double.tryParse(value);
+                                        final minWeight =
+                                            isMetric ? 15.0 : 33.0;
+                                        final maxWeight =
+                                            isMetric ? 300.0 : 660.0;
+                                        if (weight != null &&
+                                            weight >= minWeight &&
+                                            weight <= maxWeight) {
+                                          setState(() {
+                                            selectedValue = weight.toString();
+                                          });
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 40),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).padding.bottom + 16,
+                            top: 16,
+                          ),
+                          child: Center(
+                            child: BlocBuilder<WeightUpdateBloc,
+                                WeightUpdateState>(
+                              builder: (context, state) {
+                                return SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.8,
+                                  child: FloatingActionButton.extended(
+                                    onPressed: state is WeightUpdateLoading
+                                        ? null
+                                        : () => _handleWeightSubmission(
+                                            context, state),
+                                    backgroundColor: AppColors.buttonColors,
+                                    icon: state is WeightUpdateLoading
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.black,
+                                            ),
+                                          )
+                                        : const Icon(Icons.check,
+                                            color: Colors.black),
+                                    label: const Text(
+                                      'Submit',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    filled: true,
-                                    fillColor: Colors.transparent,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                      horizontal: 16,
-                                    ),
-                                    suffixText: unit,
-                                    suffixStyle:
-                                        const TextStyle(color: Colors.white),
                                   ),
-                                  onSubmitted: (value) =>
-                                      _validateAndUpdateWeight(),
-                                  onChanged: (value) {
-                                    if (value.isNotEmpty) {
-                                      double? weight = double.tryParse(value);
-                                      final minWeight = isMetric ? 15.0 : 33.0;
-                                      final maxWeight =
-                                          isMetric ? 300.0 : 660.0;
-                                      if (weight != null &&
-                                          weight >= minWeight &&
-                                          weight <= maxWeight) {
-                                        setState(() {
-                                          selectedValue = weight.toString();
-                                        });
-                                      }
-                                    }
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 40),
-                            ],
+                                );
+                              },
+                            ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).padding.bottom + 16,
-                          top: 16,
-                        ),
-                        child: Center(
-                          child:
-                              BlocBuilder<WeightUpdateBloc, WeightUpdateState>(
-                            builder: (context, state) {
-                              return SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.8,
-                                child: FloatingActionButton.extended(
-                                  onPressed: state is WeightUpdateLoading
-                                      ? null
-                                      : () => _handleWeightSubmission(
-                                          context, state),
-                                  backgroundColor: AppColors.buttonColors,
-                                  icon: state is WeightUpdateLoading
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.black,
-                                          ),
-                                        )
-                                      : const Icon(Icons.check,
-                                          color: Colors.black),
-                                  label: const Text(
-                                    'Submit',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
