@@ -513,7 +513,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-// Helper widget for building info rows
+// Helper widget for building info 
   Widget _buildInfoRow({
     required IconData icon,
     required String text,
