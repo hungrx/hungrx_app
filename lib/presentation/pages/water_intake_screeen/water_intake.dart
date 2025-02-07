@@ -71,6 +71,7 @@ class _WaterIntakeScreenState extends State<WaterIntakeScreen> {
               // Reload water intake data after successful deletion
               _loadWaterIntakeData();
             } else if (state is DeleteWaterIntakeError) {
+              print(state.message);
               _showSnackBar(state.message, isError: true);
             }
           },
@@ -85,6 +86,7 @@ class _WaterIntakeScreenState extends State<WaterIntakeScreen> {
               // Reload water intake data after successful addition
               _loadWaterIntakeData();
             } else if (state is WaterIntakeFailure) {
+               print(state.message);
               _showSnackBar(state.message, isError: true);
             }
           },

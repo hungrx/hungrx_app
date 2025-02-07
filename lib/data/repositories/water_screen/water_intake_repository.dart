@@ -16,6 +16,7 @@ class WaterIntakeRepository {
         amount: amount,
       );
     } catch (e) {
+      print(e);
       throw Exception('Repository Error: $e');
       
     }

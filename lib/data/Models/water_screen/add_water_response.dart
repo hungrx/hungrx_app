@@ -18,8 +18,8 @@ class AddWaterResponse {
 class WaterIntakeData {
   final String date;
   final int totalIntake;
-  final int remaining;
-  final int dailyGoal;
+  final double remaining;    // Changed from int to double
+  final double dailyGoal;    // Changed from int to double
   final List<WaterEntry> entries;
   final String percentage;
 
@@ -35,9 +35,9 @@ class WaterIntakeData {
   factory WaterIntakeData.fromJson(Map<String, dynamic> json) {
     return WaterIntakeData(
       date: json['date'] ?? '',
-      totalIntake: json['totalIntake'] ?? 0,
-      remaining: json['remaining'] ?? 0,
-      dailyGoal: json['dailyGoal'] ?? 0,
+      totalIntake: json['totalIntake']?.toInt() ?? 0,
+      remaining: (json['remaining'] ?? 0).toDouble(),
+      dailyGoal: (json['dailyGoal'] ?? 0).toDouble(),
       entries: (json['entries'] as List<dynamic>)
           .map((entry) => WaterEntry.fromJson(entry))
           .toList(),

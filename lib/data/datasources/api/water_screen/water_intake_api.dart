@@ -21,6 +21,7 @@ class WaterIntakeApi {
           'amountInMl': amount,
         }),
       );
+      print(response.body);
 
       if (response.statusCode == 200) {
         return AddWaterResponse.fromJson(json.decode(response.body));
@@ -28,6 +29,7 @@ class WaterIntakeApi {
         throw Exception('Failed to add water intake: ${response.body}');
       }
     } catch (e) {
+      print(e);
       throw Exception('Failed to connect to server: $e');
     }
   }
