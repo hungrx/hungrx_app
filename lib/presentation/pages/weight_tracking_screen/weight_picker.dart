@@ -53,7 +53,9 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
   @override
   void initState() {
     super.initState();
+    context.read<GoalSettingsBloc>().add(FetchGoalSettings());
     _setupControllers();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final goalState = context.read<GoalSettingsBloc>().state;
       if (goalState is GoalSettingsLoaded) {
@@ -619,7 +621,9 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
         return const Scaffold(
           backgroundColor: Colors.black,
           body: Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator(
+              color: AppColors.buttonColors,
+            ),
           ),
         );
       },

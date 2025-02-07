@@ -246,7 +246,6 @@ class _CartScreenState extends State<CartScreen> {
                                 return Column(
                                   children: cart.dishDetails.map((dish) {
                                     return FoodItemCard(
-                            
                                       cartId: cart.cartId,
                                       dish: dish,
                                       showCalorieWarning: _showCalorieWarning,
@@ -461,52 +460,54 @@ class _CartScreenState extends State<CartScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          GestureDetector(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) => AddressDirectionDialog(
-                  restaurant: widget.restaurant,
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.only(left: 10, right: 10),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Go to Restaurant',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+          widget.restaurant != null
+              ? GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) => AddressDirectionDialog(
+                        restaurant: widget.restaurant,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.only(left: 10, right: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.directions,
-                      color: AppColors.buttonColors,
-                      size: 30,
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) =>
-                            AddressDirectionDialog(
-                          restaurant: widget.restaurant,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Go to Restaurant',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      );
-                    },
+                        IconButton(
+                          icon: const Icon(
+                            Icons.directions,
+                            color: AppColors.buttonColors,
+                            size: 30,
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                                  AddressDirectionDialog(
+                                restaurant: widget.restaurant,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-          ),
+                )
+              : SizedBox.shrink(),
         ],
       ),
     );

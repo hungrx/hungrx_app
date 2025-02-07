@@ -94,18 +94,6 @@ class AuthService {
 
       await prefs.clear();
 
-      // List of specific keys to keep (add any other keys that should persist)
-      // final keysToKeep = <String>{installKey};
-
-      // Get all keys and remove everything except those in keysToKeep
-      // final keys = prefs.getKeys();
-
-      // for (final key in keys) {
-      //   if (!keysToKeep.contains(key)) {
-      //     await prefs.remove(key);
-      //   }
-      // }
-
       // Restore installation flag
       await prefs.setBool(installKey, installFlag);
 
@@ -118,9 +106,9 @@ class AuthService {
 
   Future<void> handleAccountDeletion() async {
     try {
-        final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
 
-        await prefs.remove(userIdKey);
+      await prefs.remove(userIdKey);
       await prefs.remove('profile_cache');
       // Get user ID before clearing data
       // final userId = await getUserId();
@@ -133,7 +121,7 @@ class AuthService {
       ]);
 
       // Clear all local storage
-    
+
       final bool installFlag = prefs.getBool(installKey) ?? false;
 
       // Clear all SharedPreferences
@@ -142,17 +130,7 @@ class AuthService {
       // Restore installation flag
       await prefs.setBool(installKey, installFlag);
 
-      // Clear secure storage if you're using it
-      // final storage = FlutterSecureStorage();
-      // await storage.deleteAll();
-
-      // Clear all cached files from app directory
       await _clearAppCache();
-
-      // Delete user data from server (implement API call)
-      // if (userId != null) {
-      //   // await _userProfileApiService.deleteUserData(userId);
-      // }
     } catch (e) {
       print('Error during account deletion: $e');
       rethrow;
