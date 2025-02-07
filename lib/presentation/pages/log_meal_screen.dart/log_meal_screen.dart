@@ -3,49 +3,36 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_event.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_event.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_state.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/bottom_search_bar.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/common_consume_sheet.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/custom_food_dialog.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meal_screen_shimmer.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';
 
-class LogMealScreen extends StatelessWidget {
-  const LogMealScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<UserBloc, UserState>(
-      builder: (context, userState) {
-        if (userState is UserLoaded) {
-          return LogMealView(userId: userState.userId ?? "");
-        }
-        // Show loading or redirect to login if user is not authenticated
-        return const SizedBox();
-      },
-    );
-  }
-}
-
 class LogMealView extends StatefulWidget {
-  final String userId;
-  const LogMealView({super.key, required this.userId});
+  const LogMealView({
+    super.key,
+  });
 
   @override
   State<LogMealView> createState() => _LogMealViewState();
 }
 
 class _LogMealViewState extends State<LogMealView> {
+  final _authService = AuthService();
+  String userId = "";
+
   @override
   void initState() {
     super.initState();
+    _initializeUserId();
     // Trigger search history refresh when screen loads
     context.read<SearchHistoryLogBloc>().add(
           GetSearchHistoryLogRequested(),
@@ -53,8 +40,14 @@ class _LogMealViewState extends State<LogMealView> {
     context.read<ProgressBarBloc>().add(FetchProgressBarData());
   }
 
+  Future<void> _initializeUserId() async {
+    userId = await _authService.getUserId() ?? "";
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    print(userId);
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -118,7 +111,7 @@ class _LogMealViewState extends State<LogMealView> {
               ),
             ),
             BottomCalorieSearchWidget(
-              userId: widget.userId,
+              userId: userId,
               onSearchHistoryRefresh: () {
                 context.read<SearchHistoryLogBloc>().add(
                       GetSearchHistoryLogRequested(),
@@ -136,7 +129,7 @@ class _LogMealViewState extends State<LogMealView> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const CustomFoodDialog();
+        return const CustomFoodDialogContent();
       },
     ).then((value) {
       if (value != null) {
@@ -476,7 +469,7 @@ class _LogMealViewState extends State<LogMealView> {
             child: MealDetailsBottomSheet(
               isHistoryScreen: true,
               productId: foodItem.foodId,
-              userId: widget.userId,
+              userId: userId,
               calories: foodItem.nutritionFacts.calories ?? 0,
               mealName: name,
               servingInfo: description,
@@ -505,31 +498,21 @@ class _LogMealViewState extends State<LogMealView> {
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (BuildContext context) {
-          return BlocBuilder<UserBloc, UserState>(
-            builder: (context, state) {
-              if (state is! UserLoaded) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-// print(food.servingInfo);
-              return SingleChildScrollView(
-                child: Container(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
-                  ),
-                  child: CommonFoodConsumeBottomSheet(
-                    isHistoryScreen: true,
-                    servingSize: food.servingInfo.size ?? 0.0,
-                    productId: food.foodId,
-                    userId: state.userId ?? "",
-                    calories: food.nutritionFacts.calories ?? 0.0,
-                    mealName: name,
-                    servingInfo: description,
-                  ),
-                ),
-              );
-            },
+          return SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: CommonFoodConsumeBottomSheet(
+                isHistoryScreen: true,
+                servingSize: food.servingInfo.size ?? 0.0,
+                productId: food.foodId,
+                userId: userId,
+                calories: food.nutritionFacts.calories ?? 0.0,
+                mealName: name,
+                servingInfo: description,
+              ),
+            ),
           );
         },
       );

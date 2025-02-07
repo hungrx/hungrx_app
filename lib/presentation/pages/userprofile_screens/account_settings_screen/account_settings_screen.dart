@@ -7,9 +7,13 @@ import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_even
 import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_state.dart';
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_event.dart';
+import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_event.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_event.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_state.dart';
+import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_event.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_textfield.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
@@ -99,8 +103,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     });
 
     try {
-      await _authService.logout();
+      if (mounted) {
+        // Clear bloc states
+        context.read<GoalSettingsBloc>().add(ClearGoalSettings());
+        context.read<UserProfileFormBloc>().add(ClearFormData());
+        context.read<MealTypeBloc>().add(ClearMealTypeSelection());
+        // context.read<UserBloc>().add(ClearUserId());
+        // Add other bloc clear events as needed
 
+        // Navigate to login screen
+        GoRouter.of(context).go('/phoneNumber');
+      }
+
+      await _authService.logout();
       if (mounted) {
         // Navigate to login screen
         GoRouter.of(context).go('/phoneNumber');
@@ -108,8 +123,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error logging out. Please try again.'),
+          SnackBar(
+            content: Text('Error logging out: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -204,7 +219,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       ),
     );
   }
-    @override
+
+  @override
   void dispose() {
     reportController.dispose();
     super.dispose();
@@ -217,14 +233,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         BlocListener<DeleteAccountBloc, DeleteAccountState>(
           listener: (context, state) async {
             if (state is DeleteAccountSuccess) {
-              await _authService.handleAccountDeletion();
               context.read<GoalSettingsBloc>().add(ClearGoalSettings());
+              context.read<UserProfileFormBloc>().add(ClearFormData());
+              context.read<MealTypeBloc>().add(ClearMealTypeSelection());
+
+              await _authService.handleAccountDeletion();
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                     backgroundColor: Colors.redAccent,
                     content:
                         Text("Your account has been successfully deleted")),
               );
+
               Navigator.of(context).popUntil((route) => route.isFirst);
               // Navigate to login screen
               GoRouter.of(context).go('/phoneNumber');
@@ -242,7 +263,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         BlocListener<ReportBugBloc, ReportBugState>(
           listener: (context, state) {
             if (state is ReportBugSuccess) {
-               reportController.clear();
+              reportController.clear();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message)),
               );
@@ -311,7 +332,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                     },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
-                                padding: const EdgeInsets.symmetric(vertical: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -322,8 +344,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                            Colors.white),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
                                       ),
                                     )
                                   : const Text(

@@ -13,6 +13,7 @@ import 'package:hungrx_app/data/datasources/api/dashboard_screen/change_calorie_
 import 'package:hungrx_app/data/datasources/api/dashboard_screen/feedback_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/home_meals/add_common_food_history_api.dart';
 import 'package:hungrx_app/data/datasources/api/home_meals/common_consume_food_api.dart';
+import 'package:hungrx_app/data/datasources/api/home_meals/custom_food_entry_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/delete_account_api.dart';
 import 'package:hungrx_app/data/datasources/api/daily_insight_screen/delete_consumed_food_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/eat_screen/eat_screen_api_service.dart';
@@ -52,6 +53,7 @@ import 'package:hungrx_app/data/repositories/dashboad_screen/feedback_repository
 import 'package:hungrx_app/data/repositories/home_meals_screen/add_common_food_history_repository.dart';
 import 'package:hungrx_app/data/repositories/home_meals_screen/common_consume_food_repository.dart';
 import 'package:hungrx_app/data/repositories/home_meals_screen/common_food_repository.dart';
+import 'package:hungrx_app/data/repositories/home_meals_screen/custom_food_entry_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/goal_settings_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/delete_account_repository.dart';
 import 'package:hungrx_app/data/repositories/daily_insight_screen/delete_consumed_food_repository.dart';
@@ -90,6 +92,7 @@ import 'package:hungrx_app/domain/usecases/dashboad_screen/get_calorie_metrics_u
 import 'package:hungrx_app/domain/usecases/home_meals_screen/add_common_food_history_usecase.dart';
 import 'package:hungrx_app/domain/usecases/home_meals_screen/add_logmeal_search_history_usecase.dart';
 import 'package:hungrx_app/domain/usecases/home_meals_screen/common_consume_food_usecase.dart';
+import 'package:hungrx_app/domain/usecases/home_meals_screen/custom_food_entry_usecase.dart';
 import 'package:hungrx_app/domain/usecases/profile_screen/delete_account_usecase.dart';
 import 'package:hungrx_app/domain/usecases/daily_insight_screen/delete_consumed_food_usecase.dart';
 import 'package:hungrx_app/domain/usecases/eat_screen/eat_screen_search_food_usecase.dart';
@@ -122,6 +125,7 @@ import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_sea
 import 'package:hungrx_app/presentation/blocs/consume_cart/consume_cart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/consume_common_food/consume_common_food_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/custom_food_entry/custom_food_entry_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_account/delete_account_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_water/delete_water_bloc.dart';
@@ -157,8 +161,6 @@ import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_event.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/water_intake/water_intake_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
@@ -172,7 +174,7 @@ void main() async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
-    // Add this line to disable split-screen
+  // Add this line to disable split-screen
   await SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.manual,
     overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
@@ -314,7 +316,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        BlocProvider(create: (context) => UserBloc()..add(LoadUserId())),
+        // BlocProvider(create: (context) => UserBloc()..add(LoadUserId())),
         BlocProvider<SignUpBloc>(
           create: (context) => SignUpBloc(
             signUpUseCase: SignUpUseCase(
@@ -361,7 +363,8 @@ class MyApp extends StatelessWidget {
         ),
 
         BlocProvider(
-          create: (context) => GetBasicInfoBloc(getBasicInfoUseCase,authService),
+          create: (context) =>
+              GetBasicInfoBloc(getBasicInfoUseCase, authService),
         ),
         BlocProvider(create: (_) => AddMealBloc()),
         BlocProvider(
@@ -522,6 +525,15 @@ class MyApp extends StatelessWidget {
                 ),
               ),
               authService),
+        ),
+        BlocProvider(
+          create: (context) => CustomFoodEntryBloc(
+            CustomFoodEntryUseCase(
+              CustomFoodEntryRepository(
+                CustomFoodEntryApi(),
+              ),
+            ),
+          ),
         ),
         BlocProvider(
           create: (context) => ConsumeCartBloc(

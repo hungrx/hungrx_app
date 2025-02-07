@@ -20,6 +20,7 @@ class MealTypeApi {
       }
       throw Exception('Failed to fetch meal types');
     } catch (e) {
+      print(e);
       throw Exception('Network error: $e');
     }
   }

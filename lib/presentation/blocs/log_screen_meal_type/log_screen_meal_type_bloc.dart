@@ -9,8 +9,24 @@ class MealTypeBloc extends Bloc<MealTypeEvent, MealTypeState> {
   MealTypeBloc({required this.getMealTypesUseCase}) : super(MealTypeInitial()) {
     on<FetchMealTypes>(_onFetchMealTypes);
     on<SelectMealType>(_onSelectMealType);
+    on<ClearMealTypeSelection>(_onClearMealTypeSelection); // Add this line
   }
 
+  // Add this method
+  Future<void> _onClearMealTypeSelection(
+    ClearMealTypeSelection event,
+    Emitter<MealTypeState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is MealTypeLoaded) {
+      emit(MealTypeLoaded(
+        mealTypes: currentState.mealTypes,
+        selectedMealId: null,
+      ));
+    }
+  }
+
+  // Your existing methods remain the same
   Future<void> _onFetchMealTypes(
     FetchMealTypes event,
     Emitter<MealTypeState> emit,

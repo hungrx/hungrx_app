@@ -46,6 +46,7 @@ dependencies:
   material_symbols_icons: ^4.2801.0
   otp_autofill: ^4.1.0
   package_info_plus: ^8.1.2
+  path_provider: ^2.1.5
   percent_indicator: ^4.2.3
   pinput: ^5.0.0
   rxdart: ^0.28.0
@@ -66,7 +67,7 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/icons/app_icon.png"
+  image_path: "assets/icons/new_hungrx.png"
   min_sdk_android: 21
   adaptive_icon_background: "#ffffff"
   remove_alpha_ios: true

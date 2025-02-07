@@ -13,7 +13,7 @@ class CommonFoodApi {
         body: json.encode(request.toJson()),
       );
       print(response.body);
-
+print(request.userId);
       if (response.statusCode == 200) {
         return CommonFoodResponse.fromJson(json.decode(response.body));
       } else {

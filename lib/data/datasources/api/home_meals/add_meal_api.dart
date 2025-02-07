@@ -13,7 +13,7 @@ class AddMealApi {
       if (!uri.hasAuthority) {
         throw Exception('Invalid URL: $url');
       }
-
+print(request.userId);
       final response = await http.post(
         Uri.parse(ApiConstants.baseUrl + ApiConstants.addConsumedFood),
         headers: {'Content-Type': 'application/json'},

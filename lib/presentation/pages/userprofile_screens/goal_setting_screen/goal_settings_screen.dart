@@ -16,6 +16,11 @@ class GoalSettingsScreen extends StatefulWidget {
 }
 
 class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
+  @override
+  initState() {
+    super.initState();
+    context.read<GoalSettingsBloc>().add(FetchGoalSettings());
+  }
   GoalSettingsModel? _cachedSettings;
   @override
   Widget build(BuildContext context) {

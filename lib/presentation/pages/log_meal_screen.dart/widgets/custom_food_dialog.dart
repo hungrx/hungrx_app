@@ -1,65 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/data/datasources/api/home_meals/custom_food_entry_api.dart';
-import 'package:hungrx_app/data/repositories/home_meals_screen/custom_food_entry_repository.dart';
-import 'package:hungrx_app/domain/usecases/home_meals_screen/custom_food_entry_usecase.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/custom_food_entry/custom_food_entry_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/custom_food_entry/custom_food_entry_event.dart';
 import 'package:hungrx_app/presentation/blocs/custom_food_entry/custom_food_entry_state.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_meal_type_state.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 
-class CustomFoodDialog extends StatelessWidget {
-  const CustomFoodDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<UserBloc, UserState>(
-      builder: (context, userState) {
-        if (userState is UserLoaded) {
-          return BlocProvider(
-            create: (context) => CustomFoodEntryBloc(
-              CustomFoodEntryUseCase(
-                CustomFoodEntryRepository(
-                  CustomFoodEntryApi(),
-                ),
-              ),
-            ),
-            child: _CustomFoodDialogContent(userId: userState.userId ?? ""),
-          );
-        }
-        // Show error if user is not authenticated
-        return const Dialog(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text('Please log in to add custom food'),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _CustomFoodDialogContent extends StatefulWidget {
-  final String userId;
-
-  const _CustomFoodDialogContent({
-    required this.userId,
+class CustomFoodDialogContent extends StatefulWidget {
+  const CustomFoodDialogContent({
+    super.key,
   });
 
   @override
-  State<_CustomFoodDialogContent> createState() =>
-      _CustomFoodDialogContentState();
+  State<CustomFoodDialogContent> createState() =>
+      CustomFoodDialogContentState();
 }
 
-class _CustomFoodDialogContentState extends State<_CustomFoodDialogContent> {
+class CustomFoodDialogContentState extends State<CustomFoodDialogContent> {
   final _nameController = TextEditingController();
   final _caloriesController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? selectedMealType;
+
+  final _authService = AuthService();
+  String userId = "";
+
+  Future<void> _initializeUserId() async {
+    userId = await _authService.getUserId() ?? "";
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeUserId();
+  }
 
   @override
   void dispose() {
@@ -359,7 +336,7 @@ class _CustomFoodDialogContentState extends State<_CustomFoodDialogContent> {
 
       context.read<CustomFoodEntryBloc>().add(
             CustomFoodEntrySubmitted(
-              userId: widget.userId,
+              userId: userId,
               mealType: selectedMealType!,
               foodName: _nameController.text,
               calories: double.parse(_caloriesController.text),

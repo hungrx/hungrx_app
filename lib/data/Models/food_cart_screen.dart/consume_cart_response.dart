@@ -21,7 +21,8 @@ class ConsumeCartResponse {
       message: json['message'] ?? '',
       date: json['date'] ?? '',
       updatedMeal: UpdatedMeal.fromJson(json['updatedMeal'] ?? {}),
-      dailyCalories: (json['dailyCalories']?.toDouble()) ?? 0.0,
+      dailyCalories:
+          json['dailyCalories'] is num ? json['dailyCalories'].toDouble() : 0.0,
       updatedCalories: UpdatedCalories.fromJson(json['updatedCalories'] ?? {}),
     );
   }
@@ -36,7 +37,10 @@ class UpdatedMeal {
   factory UpdatedMeal.fromJson(Map<String, dynamic> json) {
     return UpdatedMeal(
       mealId: json['mealId'] ?? '',
-      foods: (json['foods'] as List?)?.map((food) => Food.fromJson(food)).toList() ?? [],
+      foods: (json['foods'] as List?)
+              ?.map((food) => Food.fromJson(food))
+              .toList() ??
+          [],
     );
   }
 }
@@ -73,8 +77,10 @@ class Food {
       servingSize: json['servingSize'],
       selectedMeal: json['selectedMeal'] ?? '',
       dishId: json['dishId'] ?? '',
-      totalCalories: (json['totalCalories']?.toDouble()) ?? 0.0,
-      timestamp: DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
+      totalCalories:
+          json['totalCalories'] is num ? json['totalCalories'].toDouble() : 0.0,
+      timestamp:
+          DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
       name: json['name'] ?? '',
       brandName: json['brandName'] ?? '',
       image: json['image'],
@@ -115,50 +121,27 @@ class NutritionFacts {
   });
 
   factory NutritionFacts.fromJson(Map<String, dynamic> json) {
-    // Handle null calories
-    final calories = json['calories']?.toDouble() ?? 0.0;
-    
-    // Handle the simplified format
-    if ((json.containsKey('protein') && json['protein'] != null) || 
-        (json.containsKey('carbs') && json['carbs'] != null)) {
-      return NutritionFacts(
-        calories: calories,
-        protein: json['protein']?.toDouble(),
-        carbs: json['carbs']?.toDouble(),
-        fat: json['fat']?.toDouble(),
-      );
+    // Helper function to extract value from either direct number or map
+    double? extractValue(dynamic field) {
+      if (field == null) return null;
+      if (field is num) return field.toDouble();
+      if (field is Map) return (field['value'] as num?)?.toDouble();
+      return null;
     }
-    
-    // Handle the detailed format
+
     return NutritionFacts(
-      calories: calories,
-      protein: json['protein'] is Map ? 
-        (json['protein'] as Map<String, dynamic>)['value']?.toDouble() : 
-        null,
-      sodium: json['sodium'] != null ? 
-        NutritionValue.fromJson(json['sodium']) : 
-        null,
-      sugars: json['sugars'] != null ? 
-        NutritionValue.fromJson(json['sugars']) : 
-        null,
-      totalFat: json['totalFat'] != null ? 
-        NutritionValue.fromJson(json['totalFat']) : 
-        null,
-      dietaryFiber: json['dietaryFiber'] != null ? 
-        NutritionValue.fromJson(json['dietaryFiber']) : 
-        null,
-      saturatedFat: json['saturatedFat'] != null ? 
-        NutritionValue.fromJson(json['saturatedFat']) : 
-        null,
-      totalCarbohydrates: json['totalCarbohydrates'] != null ? 
-        NutritionValue.fromJson(json['totalCarbohydrates']) : 
-        null,
-      transFat: json['transFat'] != null ? 
-        NutritionValue.fromJson(json['transFat']) : 
-        null,
-      cholesterol: json['cholesterol'] != null ? 
-        NutritionValue.fromJson(json['cholesterol']) : 
-        null,
+      calories: json['calories']?.toDouble() ?? 0.0,
+      protein: extractValue(json['protein']),
+      carbs: extractValue(json['carbs']),
+      fat: extractValue(json['fat']),
+      sodium: json['sodium'] != null ? NutritionValue.fromJson(json['sodium']) : null,
+      sugars: json['sugars'] != null ? NutritionValue.fromJson(json['sugars']) : null,
+      totalFat: json['totalFat'] != null ? NutritionValue.fromJson(json['totalFat']) : null,
+      dietaryFiber: json['dietaryFiber'] != null ? NutritionValue.fromJson(json['dietaryFiber']) : null,
+      saturatedFat: json['saturatedFat'] != null ? NutritionValue.fromJson(json['saturatedFat']) : null,
+      totalCarbohydrates: json['totalCarbohydrates'] != null ? NutritionValue.fromJson(json['totalCarbohydrates']) : null,
+      transFat: json['transFat'] != null ? NutritionValue.fromJson(json['transFat']) : null,
+      cholesterol: json['cholesterol'] != null ? NutritionValue.fromJson(json['cholesterol']) : null,
     );
   }
 }
@@ -208,9 +191,26 @@ class Weight {
   });
 
   factory Weight.fromJson(Map<String, dynamic> json) {
+    // First try to handle if the value itself is a number
+    if (json['value'] is num) {
+      return Weight(
+        unit: json['unit'] ?? 'g',
+        value: json['value'].toDouble(),
+      );
+    }
+
+    // If value is not found, try vaule (to handle the typo)
+    if (json['vaule'] is num) {
+      return Weight(
+        unit: json['unit'] ?? 'g',
+        value: json['vaule'].toDouble(),
+      );
+    }
+
+    // If neither is found or if they're not numbers, return a default
     return Weight(
       unit: json['unit'] ?? 'g',
-      value: (json['value']?.toDouble()) ?? 0.0,  // Fixed typo in 'value' key and added null safety
+      value: 0.0,
     );
   }
 }
@@ -228,9 +228,11 @@ class UpdatedCalories {
 
   factory UpdatedCalories.fromJson(Map<String, dynamic> json) {
     return UpdatedCalories(
-      remaining: (json['remaining']?.toDouble()) ?? 0.0,
-      consumed: (json['consumed']?.toDouble()) ?? 0.0,
-      caloriesToReachGoal: (json['caloriesToReachGoal']?.toDouble()) ?? 0.0,
+      remaining: json['remaining'] is num ? json['remaining'].toDouble() : 0.0,
+      consumed: json['consumed'] is num ? json['consumed'].toDouble() : 0.0,
+      caloriesToReachGoal: json['caloriesToReachGoal'] is num
+          ? json['caloriesToReachGoal'].toDouble()
+          : 0.0,
     );
   }
 }

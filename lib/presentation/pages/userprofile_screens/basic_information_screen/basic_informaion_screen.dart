@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/profile_screen/get_basic_info_response.dart';
 import 'package:hungrx_app/data/Models/profile_screen/update_basic_info_request.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_basic_info/get_basic_info_state.dart';
@@ -11,8 +12,6 @@ import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_de
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_state.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/basic_information_screen/widget/formvalidator.dart';
 
 class BasicInformationScreen extends StatefulWidget {
@@ -23,7 +22,7 @@ class BasicInformationScreen extends StatefulWidget {
 }
 
 class BasicInformationScreenState extends State<BasicInformationScreen> {
-  String? userId;
+  String? userId = "";
   late bool isMetric = true;
   late TextEditingController nameController;
   late TextEditingController phoneController;
@@ -32,15 +31,17 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
   late TextEditingController heightController;
   late TextEditingController heightInchController;
   late TextEditingController heightInFeetController;
+  final _authService = AuthService();
   String gender = '';
-   final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
 
-bool _validateFields() {
+  bool _validateFields() {
     if (!_formKey.currentState!.validate()) {
       return false;
     }
     return true;
   }
+
   // Store weight values from GetBasicInfoBloc
   String? weightValue;
   String? targetWeightValue;
@@ -48,17 +49,14 @@ bool _validateFields() {
   @override
   void initState() {
     super.initState();
+    _initializeUserId();
     _initializeControllers();
+    _fetchUserBasicInfo();
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userState = context.read<UserBloc>().state;
-      if (userState.userId != null) {
-        setState(() {
-          userId = userState.userId;
-        });
-        _fetchUserBasicInfo();
-      }
-    });
+  Future<void> _initializeUserId() async {
+    userId = await _authService.getUserId() ?? "";
+    setState(() {});
   }
 
   void _initializeControllers() {
@@ -98,7 +96,7 @@ bool _validateFields() {
   }
 
   void _handleUpdateBasicInfo() {
-     if (!_validateFields()) return;
+    if (!_validateFields()) return;
     if (userId == null) return;
 
     // Get the current state of GetBasicInfoBloc
@@ -141,16 +139,6 @@ bool _validateFields() {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-        BlocListener<UserBloc, UserState>(
-          listener: (context, state) {
-            if (state.userId != null && state.userId != userId) {
-              setState(() {
-                userId = state.userId;
-              });
-              _fetchUserBasicInfo();
-            }
-          },
-        ),
         BlocListener<GetBasicInfoBloc, GetBasicInfoState>(
           listener: (context, state) {
             if (state is GetBasicInfoSuccess) {
@@ -165,7 +153,6 @@ bool _validateFields() {
         BlocListener<UpdateBasicInfoBloc, UpdateBasicInfoState>(
           listener: (context, state) {
             if (state is UpdateBasicInfoSuccess) {
-              
               context.read<GetProfileDetailsBloc>().add(FetchProfileDetails());
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.response.message)),
@@ -194,6 +181,7 @@ bool _validateFields() {
           actions: [
             BlocBuilder<UpdateBasicInfoBloc, UpdateBasicInfoState>(
               builder: (context, state) {
+                print(userId);
                 return TextButton(
                   onPressed: userId == null || state is UpdateBasicInfoLoading
                       ? null
@@ -275,7 +263,7 @@ bool _validateFields() {
     );
   }
 
-   Widget _buildInputField(
+  Widget _buildInputField(
     IconData icon,
     String label,
     TextEditingController controller, {
@@ -353,7 +341,8 @@ bool _validateFields() {
     }
   }
 
-  void _handleOnChanged(String label, String value, TextEditingController controller) {
+  void _handleOnChanged(
+      String label, String value, TextEditingController controller) {
     if (label.toLowerCase() == 'phone number' && value.length > 10) {
       controller.text = value.substring(0, 10);
       controller.selection = TextSelection.fromPosition(

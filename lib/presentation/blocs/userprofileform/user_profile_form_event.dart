@@ -103,3 +103,8 @@ class ActivityLevelChanged extends UserProfileFormEvent {
 }
 
 class SubmitForm extends UserProfileFormEvent {}
+
+class ClearFormData extends UserProfileFormEvent {
+  @override
+  List<Object?> get props => [];
+}

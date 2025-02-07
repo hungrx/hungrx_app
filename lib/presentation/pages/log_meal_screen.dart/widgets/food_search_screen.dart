@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/food_item_model.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_event.dart';
 import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_state.dart';
@@ -12,12 +12,12 @@ import 'package:hungrx_app/presentation/blocs/grocery_food_search/grocery_food_s
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_event.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/common_food_list.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/custom_food_dialog.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/meals_detail_sheet.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/shimmer_effect.dart';
+
+String userId = "";
 
 class FoodSearchScreen extends StatefulWidget {
   const FoodSearchScreen({super.key});
@@ -30,19 +30,22 @@ class _FoodSearchScreenState extends State<FoodSearchScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  final _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
+    _initializeUserId();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
-context.read<ProgressBarBloc>().add(FetchProgressBarData()); // Ad
+    context.read<ProgressBarBloc>().add(FetchProgressBarData()); // Ad
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<SearchBloc>().add(ClearSearch());
       }
     });
   }
+
   Color _getProgressColor(double progress) {
     if (progress <= 0.5) {
       return Colors.green;
@@ -57,6 +60,11 @@ context.read<ProgressBarBloc>().add(FetchProgressBarData()); // Ad
     if (_searchController.text.isNotEmpty) {
       _performSearch(_searchController.text);
     }
+  }
+
+  Future<void> _initializeUserId() async {
+    userId = await _authService.getUserId() ?? "";
+    setState(() {});
   }
 
   void _performSearch(String query) {
@@ -130,10 +138,12 @@ context.read<ProgressBarBloc>().add(FetchProgressBarData()); // Ad
         }
 
         if (state is ProgressBarLoaded) {
-          final progress = (state.data.totalCaloriesConsumed / 
-                          state.data.dailyCalorieGoal).clamp(0.0, 1.0);
+          final progress =
+              (state.data.totalCaloriesConsumed / state.data.dailyCalorieGoal)
+                  .clamp(0.0, 1.0);
           final progressColor = _getProgressColor(progress);
-          final remainingCalories = state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
+          final remainingCalories =
+              state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
 
           return Container(
             padding: const EdgeInsets.all(14),
@@ -204,7 +214,9 @@ context.read<ProgressBarBloc>().add(FetchProgressBarData()); // Ad
                         Text(
                           '${remainingCalories.toInt()} cal',
                           style: TextStyle(
-                            color: remainingCalories > 0 ? Colors.green : Colors.red,
+                            color: remainingCalories > 0
+                                ? Colors.green
+                                : Colors.red,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -232,7 +244,6 @@ context.read<ProgressBarBloc>().add(FetchProgressBarData()); // Ad
       },
     );
   }
-
 
   Widget _buildSearchField(BuildContext context) {
     return TextField(
@@ -398,7 +409,7 @@ Widget _buildAddCustomFoodButton(BuildContext context) {
           onTap: () {
             showDialog(
               context: context,
-              builder: (context) => const CustomFoodDialog(),
+              builder: (context) => const CustomFoodDialogContent(),
             );
           },
           child: Row(
@@ -469,9 +480,10 @@ Widget _buildFoodItem(BuildContext context, FoodItemModel food) {
     builder: (context, state) {
       bool isConsumable = true;
       Color calorieTextColor = Colors.green;
-      
+
       if (state is ProgressBarLoaded) {
-        final remainingCalories = state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
+        final remainingCalories =
+            state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
         isConsumable = food.nutritionFacts.calories <= remainingCalories;
         calorieTextColor = isConsumable ? Colors.green : Colors.red;
       }
@@ -536,14 +548,15 @@ Widget _buildFoodItem(BuildContext context, FoodItemModel food) {
                   color: isConsumable ? AppColors.buttonColors : Colors.grey,
                   size: 35,
                 ),
-                onPressed: isConsumable 
-                  ? () => _showMealDetailsBottomSheet(
-                      food,
-                      context,
-                      food.name,
-                      'serving size : ${food.servingInfo?.size ?? "unknown"} ${food.servingInfo?.unit ?? ""}',
-                    )
-                  : () => _showCalorieWarning(context, food.nutritionFacts.calories),
+                onPressed: isConsumable
+                    ? () => _showMealDetailsBottomSheet(
+                          food,
+                          context,
+                          food.name,
+                          'serving size : ${food.servingInfo?.size ?? "unknown"} ${food.servingInfo?.unit ?? ""}',
+                        )
+                    : () => _showCalorieWarning(
+                        context, food.nutritionFacts.calories),
               ),
             ],
           ),
@@ -618,51 +631,37 @@ void _showMealDetailsBottomSheet(
   String name,
   String description,
 ) {
-  final userState = context.read<UserBloc>().state;
-  String? userId;
+  // final userState = context.read<UserBloc>().state;
 
-  if (userState is UserLoaded) {
-    userId = userState.userId;
-  }
-  if (userId == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('User not authenticated. Please login again.'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    context.go('/login');
-    return;
-  }
+  // if (userId == null) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     const SnackBar(
+  //       content: Text('User not authenticated. Please login again.'),
+  //       backgroundColor: Colors.red,
+  //     ),
+  //   );
+  //   context.go('/login');
+  //   return;
+  // }
 
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (BuildContext context) {
-      return BlocBuilder<UserBloc, UserState>(
-        builder: (context, state) {
-          if (state is! UserLoaded) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-// ! changeaeeeeeee
-          return SingleChildScrollView(
-            child: Container(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: MealDetailsBottomSheet(
-                productId: food.id,
-                userId: state.userId ?? "",
-                calories: food.nutritionFacts.calories,
-                mealName: name,
-                servingInfo: description,
-              ),
-            ),
-          );
-        },
+      return SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: MealDetailsBottomSheet(
+            productId: food.id,
+            userId: userId,
+            calories: food.nutritionFacts.calories,
+            mealName: name,
+            servingInfo: description,
+          ),
+        ),
       );
     },
   );

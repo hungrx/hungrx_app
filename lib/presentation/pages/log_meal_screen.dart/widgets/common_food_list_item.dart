@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/home_meals_screen/common_food_model.dart';
+import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_state.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/user_id_global/user_id_state.dart';
 import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/common_consume_sheet.dart';
 
-class CommonFoodListItem extends StatelessWidget {
+class CommonFoodListItem extends StatefulWidget {
   final CommonFoodModel food;
 
   const CommonFoodListItem({
@@ -17,13 +16,35 @@ class CommonFoodListItem extends StatelessWidget {
   });
 
   @override
+  State<CommonFoodListItem> createState() => _CommonFoodListItemState();
+}
+
+class _CommonFoodListItemState extends State<CommonFoodListItem> {
+  final _authService = AuthService();
+  String userId = "";
+
+  Future<void> _initializeUserId() async {
+    userId = await _authService.getUserId() ?? "";
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _initializeUserId();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<ProgressBarBloc, ProgressBarState>(
       builder: (context, state) {
         bool isWithinLimit = true;
         if (state is ProgressBarLoaded) {
-          final remainingCalories = state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
-          isWithinLimit = food.nutritionFacts.calories <= remainingCalories;
+          final remainingCalories =
+              state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
+          isWithinLimit =
+              widget.food.nutritionFacts.calories <= remainingCalories;
         }
 
         return Container(
@@ -39,15 +60,15 @@ class CommonFoodListItem extends StatelessWidget {
               } else {
                 _showMealDetailsBottomSheet(
                   context,
-                  food,
-                  food.name,
-                  'serving size : ${food.servingInfo.size} ${food.servingInfo.unit}',
+                  widget.food,
+                  widget.food.name,
+                  'serving size : ${widget.food.servingInfo.size} ${widget.food.servingInfo.unit}',
                 );
               }
             },
             contentPadding: const EdgeInsets.all(8),
             title: Text(
-              food.name,
+              widget.food.name,
               style: const TextStyle(
                 overflow: TextOverflow.ellipsis,
                 color: Colors.white,
@@ -58,11 +79,11 @@ class CommonFoodListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'serving size : ${food.servingInfo.size} ${food.servingInfo.unit}',
+                  'serving size : ${widget.food.servingInfo.size} ${widget.food.servingInfo.unit}',
                   style: TextStyle(color: Colors.grey[400]),
                 ),
                 Text(
-                  food.category.main,
+                  widget.food.category.main,
                   style: TextStyle(color: Colors.grey[400]),
                 ),
               ],
@@ -71,7 +92,7 @@ class CommonFoodListItem extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${food.nutritionFacts.calories.toStringAsFixed(1)} Cal',
+                  '${widget.food.nutritionFacts.calories.toStringAsFixed(1)} Cal',
                   style: TextStyle(
                     color: isWithinLimit ? Colors.green : Colors.red,
                     fontSize: 14,
@@ -91,9 +112,9 @@ class CommonFoodListItem extends StatelessWidget {
                     } else {
                       _showMealDetailsBottomSheet(
                         context,
-                        food,
-                        food.name,
-                        'serving size : ${food.servingInfo.size} ${food.servingInfo.unit}',
+                        widget.food,
+                        widget.food.name,
+                        'serving size : ${widget.food.servingInfo.size} ${widget.food.servingInfo.unit}',
                       );
                     }
                   },
@@ -138,9 +159,10 @@ class CommonFoodListItem extends StatelessWidget {
                 BlocBuilder<ProgressBarBloc, ProgressBarState>(
                   builder: (context, state) {
                     if (state is ProgressBarLoaded) {
-                      final remainingCalories = state.data.dailyCalorieGoal - state.data.totalCaloriesConsumed;
+                      final remainingCalories = state.data.dailyCalorieGoal -
+                          state.data.totalCaloriesConsumed;
                       return Text(
-                        'This food (${food.nutritionFacts.calories.toStringAsFixed(1)} Cal) exceeds your remaining calorie limit (${remainingCalories.toStringAsFixed(1)} Cal) for today.',
+                        'This food (${widget.food.nutritionFacts.calories.toStringAsFixed(1)} Cal) exceeds your remaining calorie limit (${remainingCalories.toStringAsFixed(1)} Cal) for today.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.grey[300],
@@ -185,36 +207,24 @@ class CommonFoodListItem extends StatelessWidget {
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (BuildContext context) {
-          return BlocBuilder<UserBloc, UserState>(
-            builder: (context, state) {
-              if (state is! UserLoaded) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-// print(food.servingInfo);
-              return SingleChildScrollView(
-                child: Container(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
-                  ),
-                  child: CommonFoodConsumeBottomSheet(
-                    isHistoryScreen: false,
-                    servingSize: food.servingInfo.size,
-                    productId: food.id,
-                    userId: state.userId ??
-                        "", 
-                    calories: food.nutritionFacts.calories,
-                    mealName: name,
-                    servingInfo: description,
-                  ),
-                ),
-              );
-            },
+          return SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: CommonFoodConsumeBottomSheet(
+                isHistoryScreen: false,
+                servingSize: food.servingInfo.size,
+                productId: food.id,
+                userId: userId,
+                calories: food.nutritionFacts.calories,
+                mealName: name,
+                servingInfo: description,
+              ),
+            ),
           );
         },
       );
     }
   }
 }
-

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hungrx_app/data/Models/home_meals_screen/food_item_model.dart';
-import 'package:hungrx_app/data/Models/home_meals_screen/get_search_history_log_response.dart';
 import 'package:hungrx_app/data/Models/profile_setting_screen/tdee_result_model.dart';
 import 'package:hungrx_app/data/Models/restuarent_screen/nearby_restaurant_model.dart';
 import 'package:hungrx_app/presentation/blocs/search_restaurant/search_restaurant_bloc.dart';
@@ -19,7 +17,6 @@ import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_s
 import 'package:hungrx_app/presentation/pages/eat_screen/eat_screen.dart';
 import 'package:hungrx_app/presentation/pages/eat_screen/widgets/search_widget.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/food_cart_screen.dart';
-import 'package:hungrx_app/presentation/pages/food_details_screen/food_detail_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/dialy_activity_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/goal_pace_screen.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/goal_selection_screen.dart';
@@ -251,34 +248,34 @@ class AppRouter {
           return const PhoneNumberScreen();
         },
       ),
-      GoRoute(
-        path: '/food/:id',
-        name: RouteNames.foodDetail,
-        builder: (BuildContext context, GoRouterState state) {
-          final Map<String, dynamic>? params =
-              state.extra as Map<String, dynamic>?;
+      // GoRoute(
+      //   path: '/food/:id',
+      //   name: RouteNames.foodDetail,
+      //   builder: (BuildContext context, GoRouterState state) {
+      //     final Map<String, dynamic>? params =
+      //         state.extra as Map<String, dynamic>?;
 
-          if (params == null) {
-            return const Scaffold(
-              body: Center(child: Text('Food details not found')),
-            );
-          }
+      //     if (params == null) {
+      //       return const Scaffold(
+      //         body: Center(child: Text('Food details not found')),
+      //       );
+      //     }
 
-          final bool isSearchScreen =
-              params['isSearchScreen'] as bool? ?? false;
-          final searchFood = isSearchScreen
-              ? params['searchFood'] as GetSearchHistoryLogItem?
-              : null;
-          final foodItem =
-              !isSearchScreen ? params['foodItem'] as FoodItemModel? : null;
+      //     final bool isSearchScreen =
+      //         params['isSearchScreen'] as bool? ?? false;
+      //     final searchFood = isSearchScreen
+      //         ? params['searchFood'] as GetSearchHistoryLogItem?
+      //         : null;
+      //     final foodItem =
+      //         !isSearchScreen ? params['foodItem'] as FoodItemModel? : null;
 
-          return FoodDetailScreen(
-            isSearchScreen: isSearchScreen,
-            searchFood: searchFood,
-            foodItem: foodItem,
-          );
-        },
-      ),
+      //     return FoodDetailScreen(
+      //       isSearchScreen: isSearchScreen,
+      //       searchFood: searchFood,
+      //       foodItem: foodItem,
+      //     );
+      //   },
+      // ),
       GoRoute(
         path: '/otpVerify/:phoneNumber',
         name: RouteNames.otpVerify,
@@ -314,7 +311,7 @@ class AppRouter {
         path: '/logMealScreen',
         name: RouteNames.logMealScreen,
         builder: (BuildContext context, GoRouterState state) {
-          return const LogMealScreen(); // Replace with actual RestaurantsScreen
+          return const LogMealView(); // Replace with actual RestaurantsScreen
         },
       ),
       GoRoute(

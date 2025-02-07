@@ -29,6 +29,7 @@ class UserProfileFormBloc
     on<WeightPaceChanged>(_onWeightPaceChanged);
     on<ActivityLevelChanged>(_onActivityLevelChanged);
     on<SubmitForm>(_onSubmitForm);
+    on<ClearFormData>(_onClearFormData); 
   }
   void _onUnitChanged(UnitChanged event, Emitter<UserProfileFormState> emit) {
     emit(state.copyWith(isMetric: event.isMetric));
@@ -90,6 +91,14 @@ class UserProfileFormBloc
       ActivityLevelChanged event, Emitter<UserProfileFormState> emit) {
     emit(state.copyWith(activityLevel: event.activityLevel));
   }
+
+   void _onClearFormData(ClearFormData event, Emitter<UserProfileFormState> emit) {
+    emit(const UserProfileFormState()); // This resets to initial state
+    
+    // Also clear any cached data in SharedPreference
+  }
+
+  
 
   Future<void> _onSubmitForm(
       SubmitForm event, Emitter<UserProfileFormState> emit) async {

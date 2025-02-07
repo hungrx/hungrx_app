@@ -12,14 +12,14 @@ class ConsumeCartApi {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(request.toJson()),
       );
-// print(response.body);
+print(response.body);
       if (response.statusCode == 200) {
         return ConsumeCartResponse.fromJson(jsonDecode(response.body));
       } else {
         throw Exception('Failed to consume cart: ${response.body}');
       }
     } catch (e) {
-      // print(e);
+      print(e);
       throw Exception('Failed to connect to server: $e');
     }
   }

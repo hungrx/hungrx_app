@@ -11,6 +11,7 @@ class MealTypeRepository {
       final response = await api.getMealTypes();
       return response.map((json) => MealType.fromJson(json)).toList();
     } catch (e) {
+      print(e);
       throw Exception('Repository error: $e');
     }
   }
