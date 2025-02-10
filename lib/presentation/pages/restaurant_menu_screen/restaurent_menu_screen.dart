@@ -414,6 +414,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     return BlocBuilder<MenuExpansionBloc, MenuExpansionState>(
       builder: (context, state) {
         return CustomExpansionPanel(
+          leftPadding: 16,
           key: Key(category.id),
           title: category.categoryName,
           isExpanded: state.expandedCategoryId == category.id,
@@ -451,8 +452,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   ToggleSubcategory(parentCategoryId, subCategory.id),
                 );
           },
-          leftPadding: 16,
-          fontSize: 14,
+          
+          leftPadding: 25,
+          fontSize: 12,
           children:
               subCategory.dishes.map((dish) => _buildMenuItem(dish)).toList(),
         );
@@ -460,11 +462,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     );
   }
 
-  Widget _buildMenuItem(Dish dish) { 
-    // print("dish :${dish.id}");
-    // final calories = dish.servingInfos.isNotEmpty
-    //     ? '${dish.servingInfos.first.servingInfo.nutritionFacts.calories.value} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
-    //     : 'N/A';
+  Widget _buildMenuItem(Dish dish) {
     final protine = dish.servingInfos.isNotEmpty
         ? '${dish.servingInfos.first.servingInfo.nutritionFacts.protein.value} '
         : 'N/A';

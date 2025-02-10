@@ -16,7 +16,7 @@ class CustomExpansionPanel extends StatefulWidget {
     required this.children,
     required this.isExpanded,
     required this.onExpansionChanged,
-    this.leftPadding = 0,
+   required this.leftPadding,
     this.fontSize = 18,
     this.backgroundColor = Colors.black,
   });
@@ -73,8 +73,8 @@ class _CustomExpansionPanelState extends State<CustomExpansionPanel>
               enableFeedback: true,
               onTap: () => widget.onExpansionChanged(!widget.isExpanded),
               child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 16,
+                padding:  EdgeInsets.only(
+                  left: widget.leftPadding,
                   right: 16,
                   top: 16,
                   bottom: 16,

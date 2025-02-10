@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -46,10 +47,12 @@ import 'package:hungrx_app/presentation/pages/onboarding_screen/onboarding_scree
 
 class AppRouter {
   static final GetIt getIt = GetIt.instance;
-
   static GoRouter get router => _router;
-
+ static final List<String> _navigationStack = ['/home'];
+ static final _routerKey = GlobalKey<NavigatorState>();
   static final GoRouter _router = GoRouter(
+     navigatorKey: _routerKey,
+    debugLogDiagnostics: true, // Add this for debugging
     routes: <RouteBase>[
       ShellRoute(
         builder: (context, state, child) => RootLayout(child: child),
@@ -399,10 +402,35 @@ class AppRouter {
         },
       ),
     ],
+     observers: [
+      GoRouterObserver(),
+    ],
     // Add any global redirect logic here
-    redirect: (BuildContext context, GoRouterState state) {
-      // Check auth state and redirect if necessary
+    redirect: (context, state) {
+      if (state.fullPath == null) return null;
+      
+      if (!_navigationStack.contains(state.fullPath!)) {
+        _navigationStack.add(state.fullPath!);
+      }
       return null;
     },
   );
+
+    static void popRoute(BuildContext context) {
+    if (_navigationStack.length > 1) {
+      _navigationStack.removeLast();
+      context.go(_navigationStack.last);
+    } else {
+      SystemNavigator.pop();
+    }
+  }
+  
+}
+class GoRouterObserver extends NavigatorObserver {
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route.settings.name != null) {
+      AppRouter._navigationStack.remove(route.settings.name);
+    }
+  }
 }

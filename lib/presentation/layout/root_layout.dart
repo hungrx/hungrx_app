@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 
-class RootLayout extends StatelessWidget {
+class RootLayout extends StatefulWidget {
   final Widget child;
 
   const RootLayout({
@@ -12,11 +12,53 @@ class RootLayout extends StatelessWidget {
   });
 
   @override
+  State<RootLayout> createState() => _RootLayoutState();
+}
+
+class _RootLayoutState extends State<RootLayout> {
+  DateTime? lastBackPressTime;
+
+  Future<bool> _onWillPop() async {
+    final location = GoRouterState.of(context).uri.toString();
+    
+    if (location == '/home') {
+      final now = DateTime.now();
+      if (lastBackPressTime == null || 
+          now.difference(lastBackPressTime!) > const Duration(seconds: 2)) {
+        lastBackPressTime = now;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Press back again to exit'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return false;
+      }
+      return true;
+    }
+    
+    if (!context.mounted) return false;
+    context.go('/home');
+    return false;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: _BottomNavigationBarWidget(
-        currentLocation: GoRouterState.of(context).uri.toString(),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (!didPop) {
+          final shouldPop = await _onWillPop();
+          if (shouldPop) {
+            SystemNavigator.pop();
+          }
+        }
+      },
+      child: Scaffold(
+        body: widget.child,
+        bottomNavigationBar: _BottomNavigationBarWidget(
+          currentLocation: GoRouterState.of(context).uri.toString(),
+        ),
       ),
     );
   }
@@ -105,5 +147,6 @@ class _BottomNavigationBarWidget extends StatelessWidget {
         context.go('/foodcart');
         break;
     }
+    
   }
 }

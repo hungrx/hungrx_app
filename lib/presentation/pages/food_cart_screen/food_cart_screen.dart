@@ -128,7 +128,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               );
             }
-
+    
             if (state is CartLoaded && state.carts.isEmpty) {
               return Center(
                 child: SingleChildScrollView(
@@ -190,7 +190,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               );
             }
-
+    
             if (state is CartLoaded) {
               return Stack(
                 children: [

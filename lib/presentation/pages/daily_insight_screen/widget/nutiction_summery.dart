@@ -79,9 +79,9 @@ class NutritionSummary extends StatelessWidget {
     final double titleFontSize = _getResponsiveValue(
       context: context,
       extraSmall: 10.0,
-      small: 12.0,
-      medium: 14.0,
-      large: 16.0,
+      small: 10.0,
+      medium: 12.0,
+      large: 14.0,
     );
 
     final double valueFontSize = _getResponsiveValue(
@@ -131,7 +131,7 @@ class NutritionSummary extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildProgressContainer(
-                    'Calories',
+                    'Calorie',
                     dailySummary.totalCalories,
                     dailySummary.dailyGoal,
                     AppColors.buttonColors,

@@ -30,87 +30,78 @@ class _EatScreenState extends State<EatScreen> {
     return parsedValue.round().toString();
   }
 
-  Future<bool> _onWillPop() async {
-    // Navigate to dashboard using the correct path
-    context.go('/home');
-    return false; // Prevent app from closing
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: SafeArea(
-          child: BlocConsumer<EatScreenBloc, EatScreenState>(
-            listener: (context, state) {
-              if (state is EatScreenError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    action: SnackBarAction(
-                      label: 'Retry',
-                      onPressed: _loadEatScreenData,
-                    ),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: BlocConsumer<EatScreenBloc, EatScreenState>(
+          listener: (context, state) {
+            if (state is EatScreenError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  action: SnackBarAction(
+                    label: 'Retry',
+                    onPressed: _loadEatScreenData,
                   ),
-                );
-              } else if (state is EatScreenLoaded) {
-                _cachedData = state.data.data;
-              }
-            },
-            builder: (context, state) {
-              if (state is EatScreenInitial) {
-                context.read<EatScreenBloc>().add(GetEatScreenDataEvent());
-              }
-
-              return RefreshIndicator(
-                onRefresh: () async {
-                  _loadEatScreenData();
-                },
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (_cachedData != null || state is EatScreenLoaded)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildHeader((state is EatScreenLoaded)
-                                      ? state.data.data
-                                      : _cachedData!),
-                                  SizedBox(height: size.height * 0.02),
-                                  _buildCalorieBudget(_formatCalories(
-                                      (state is EatScreenLoaded)
-                                          ? state.data.data.dailyCalorieGoal
-                                          : _cachedData!.dailyCalorieGoal)),
-                                  SizedBox(height: size.height * 0.05),
-                                  _buildOptionsGrid(size),
-                                ],
-                              )
-                            else
-                              _buildPlaceholderContent(),
-                            const Spacer(),
-                            _buildEnjoyCalories(size),
-                            if (state is EatScreenError && _cachedData == null)
-                              _buildErrorOverlay("An error occurred"),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               );
-            },
-          ),
+            } else if (state is EatScreenLoaded) {
+              _cachedData = state.data.data;
+            }
+          },
+          builder: (context, state) {
+            if (state is EatScreenInitial) {
+              context.read<EatScreenBloc>().add(GetEatScreenDataEvent());
+            }
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                _loadEatScreenData();
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_cachedData != null || state is EatScreenLoaded)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildHeader((state is EatScreenLoaded)
+                                    ? state.data.data
+                                    : _cachedData!),
+                                SizedBox(height: size.height * 0.02),
+                                _buildCalorieBudget(_formatCalories(
+                                    (state is EatScreenLoaded)
+                                        ? state.data.data.dailyCalorieGoal
+                                        : _cachedData!.dailyCalorieGoal)),
+                                SizedBox(height: size.height * 0.05),
+                                _buildOptionsGrid(size),
+                              ],
+                            )
+                          else
+                            _buildPlaceholderContent(),
+                          const Spacer(),
+                          _buildEnjoyCalories(size),
+                          if (state is EatScreenError && _cachedData == null)
+                            _buildErrorOverlay("An error occurred"),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -197,7 +188,7 @@ class _EatScreenState extends State<EatScreen> {
             'Home',
             'Log what you eat from home or grocery stores for better calorie management.',
             'assets/images/piza.png',
-             Symbols.skillet,
+            Symbols.skillet,
             () {
               context.pushNamed(RouteNames.logMealScreen);
             },
@@ -250,9 +241,8 @@ class _EatScreenState extends State<EatScreen> {
             ),
             const Spacer(),
             Center(
-              
               child: Icon(
-                 icon,
+                icon,
                 // Icons.fastfood_outlined,
                 color: AppColors.buttonColors,
                 size: 110,

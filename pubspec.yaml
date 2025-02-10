@@ -70,7 +70,7 @@ flutter_icons:
   image_path: "assets/icons/new_hungrx.png"
   min_sdk_android: 21
   adaptive_icon_background: "#ffffff"
-  remove_alpha_ios: true
+  remove_alpha_ios: false
 
 flutter:
   uses-material-design: true
