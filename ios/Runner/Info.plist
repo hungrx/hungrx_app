@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>com.apple.developer.applesignin</key>
+    <array>
+        <string>Default</string>
+    </array>
+
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -10,6 +15,15 @@
 				<string>com.googleusercontent.apps.487283706527-0dop9npjm3g2rhoajabadjcv32tpf8ab</string>
 			</array>
 		</dict>
+
+		<dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.hungrx.signin</string>
+            </array>
+        </dict>
 	</array>
 	<key>GIDClientID</key>
 	<string>487283706527-0dop9npjm3g2rhoajabadjcv32tpf8ab.apps.googleusercontent.com</string>

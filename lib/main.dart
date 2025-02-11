@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hungrx_app/data/datasources/api/auth_screen.dart/apple_auth_api.dart';
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/consume_cart_api.dart';
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/delete_dish_cart_api.dart';
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/get_cart_api.dart';
@@ -40,6 +41,7 @@ import 'package:hungrx_app/data/datasources/api/water_screen/get_water_entry_api
 import 'package:hungrx_app/data/datasources/api/water_screen/water_intake_api.dart';
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_history_api.dart';
 import 'package:hungrx_app/data/datasources/api/weight_screen/weight_update_api.dart';
+import 'package:hungrx_app/data/repositories/auth_screen/apple_auth_repository.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/email_signin_repository.dart';
 import 'package:hungrx_app/data/repositories/cart_screen/cart_repository.dart';
 import 'package:hungrx_app/data/repositories/cart_screen/consume_cart_repository.dart';
@@ -83,6 +85,7 @@ import 'package:hungrx_app/data/repositories/water_screen/water_intake_repositor
 import 'package:hungrx_app/data/repositories/weight_screen/weight_history_repository.dart';
 import 'package:hungrx_app/data/repositories/weight_screen/weight_update_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/domain/usecases/auth_screens/apple_sign_in_usecase.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/login_usecase.dart';
 import 'package:hungrx_app/domain/usecases/cart_screen.dart/consume_cart_usecase.dart';
 import 'package:hungrx_app/domain/usecases/cart_screen.dart/delete_dish_cart_usecase.dart';
@@ -118,6 +121,7 @@ import 'package:hungrx_app/presentation/blocs/add_common_food_history/add_common
 import 'package:hungrx_app/presentation/blocs/add_logscreen_search_history/add_logscreen_search_history_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_meal_log_screen/add_meal_log_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/calorie_metrics_dashboad/calorie_metrics_dashboad_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/change_calorie_goal/change_calorie_goal_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_bloc.dart';
@@ -178,9 +182,15 @@ void main() async {
     SystemUiMode.manual,
     overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
   );
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+ try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+  } catch (e) {
+    print('Firebase initialization error: $e');
+  }
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.dumpErrorToConsole(details);
     // print('Flutter Error: ${details.exception}');
@@ -284,6 +294,16 @@ class MyApp extends StatelessWidget {
               AddCommonFoodHistoryUseCase(
                 AddCommonFoodHistoryRepository(
                   AddCommonFoodHistoryApi(),
+                ),
+              ),
+            ),
+          ),
+
+          BlocProvider(
+            create: (context) => AppleAuthBloc(
+              appleSignInUseCase: AppleSignInUseCase(
+                AppleAuthRepository(
+                  api: AppleAuthApi(),
                 ),
               ),
             ),

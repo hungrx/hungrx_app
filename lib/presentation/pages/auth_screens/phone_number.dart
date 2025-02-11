@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_event.dart';
+import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_state.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_event.dart';
 import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_state.dart';
@@ -40,6 +43,47 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
       context.pop();
     }
   }
+
+  void _handleAppleSignIn(BuildContext context) {
+    if (!_termsAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              const Text('Please accept the Terms & Conditions to continue'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    context.read<AppleAuthBloc>().add(AppleSignInRequested());
+  }
+
+  void _handleAppleAuthError(BuildContext context, String error) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(error),
+      backgroundColor: Colors.red,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      action: SnackBarAction(
+        label: 'Retry',
+        textColor: Colors.white,
+        onPressed: () {
+          context.read<AppleAuthBloc>().add(AppleSignInRequested());
+        },
+      ),
+    ),
+  );
+}
 
   void _handleGoogleAuthError(BuildContext context, String error) {
     _hideLoadingOverlay(context);
@@ -120,6 +164,93 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
       ],
       child: MultiBlocListener(
         listeners: [
+      BlocListener<AppleAuthBloc, AppleAuthState>(
+  listener: (context, state) async {
+    if (!mounted) return;
+
+    if (state is AppleAuthSuccess) {
+      final currentContext = context;
+
+      if (!mounted) return;
+
+      final authService = AuthService();
+      final userId = await authService.getUserId();
+
+      if (!mounted) return;
+
+      if (userId != null) {
+        try {
+          final isProfileComplete = await authService.checkProfileCompletion(userId);
+          if (!mounted) return;
+
+          if (isProfileComplete == true) {
+            // Existing user - navigate to home
+            if (mounted) {
+              GoRouter.of(currentContext).go('/home');
+            }
+          } else if (isProfileComplete == false) {
+            // New user - navigate to user info screen
+            if (mounted) {
+              GoRouter.of(currentContext).go('/user-info-one');
+            }
+          } else {
+            // Server error case (isProfileComplete is null)
+            if (mounted) {
+              showDialog(
+                context: currentContext,
+                builder: (context) => AlertDialog(
+                  title: const Text('Connection Error'),
+                  content: const Text(
+                    'Unable to verify your profile status. Please check your internet connection and try again.'
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // Optionally, you could add a retry mechanism here
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(currentContext).showSnackBar(
+              const SnackBar(
+                content: Text('Error checking profile status. Please try again.'),
+                duration: Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            _handleAppleAuthError(currentContext, 'Error during profile check: $e');
+          }
+        }
+      } else {
+        if (mounted) {
+          _handleAppleAuthError(currentContext, 'Failed to get user ID');
+        }
+      }
+    } else if (state is AppleAuthCancelled) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sign in cancelled'),
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } else if (state is AppleAuthFailure) {
+      if (mounted) {
+        _handleAppleAuthError(context, state.error);
+      }
+    }
+  },
+),
+
           BlocListener<OtpAuthBloc, OtpAuthState>(
             listener: (context, state) {
               if (state is OtpSendSuccess) {
@@ -370,7 +501,6 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                                     // Wrap with GestureDetector for better tap handling
                                     behavior: HitTestBehavior.opaque,
                                     child: ClickableTermsAndPolicyText(
-                                      
                                       policyUrl:
                                           "https://www.hungrx.com/privacy-policy.html",
                                       termsUrl:
@@ -434,26 +564,7 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                                         label: 'Apple',
                                         size: 25,
                                         onPressed: () {
-                                          if (!_termsAccepted) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: const Text(
-                                                    'Please accept the Terms & Conditions to continue'),
-                                                backgroundColor: Colors.red,
-                                                behavior:
-                                                    SnackBarBehavior.floating,
-                                                margin:
-                                                    const EdgeInsets.all(16),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                              ),
-                                            );
-                                            return;
-                                          }
-                                          // context.read<GoogleAuthBloc>().add(GoogleSignInRequested());
+                                          _handleAppleSignIn(context);
                                         },
                                         style: SocialButtonStyle.capsule,
                                       ),

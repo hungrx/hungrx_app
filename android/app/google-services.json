@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "487283706527",
     "project_id": "hungrx-app",
-    "storage_bucket": "hungrx-app.appspot.com"
+    "storage_bucket": "hungrx-app.firebasestorage.app"
   },
   "client": [
     {
