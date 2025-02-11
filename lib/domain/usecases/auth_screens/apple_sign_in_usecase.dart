@@ -9,4 +9,7 @@ class AppleSignInUseCase {
   Future<UserCredential> execute() async {
     return await _repository.signInWithApple();
   }
+   Future<void> signOut() async {
+    await _repository.signOut();
+  }
 }

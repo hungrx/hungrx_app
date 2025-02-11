@@ -17,6 +17,7 @@ class AuthService {
 
   static String userIdKey = 'user_id';
   static String installKey = 'installation_check';
+  static const String onboardingKey = 'has_seen_onboarding';
 
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
@@ -76,12 +77,22 @@ class AuthService {
 
   Future<void> logout() async {
     try {
-      // Get SharedPreferences instance
       final prefs = await SharedPreferences.getInstance();
 
-      await prefs.remove(userIdKey);
+      // Save flags before clearing
+      final bool installFlag = prefs.getBool(installKey) ?? false;
+      final bool onboardingFlag = prefs.getBool(onboardingKey) ?? false;
 
-      await prefs.remove('profile_cache');
+      // Remove specific keys instead of clearing everything
+      final keysToRemove = prefs
+          .getKeys()
+          .where((key) => key != installKey && key != onboardingKey);
+
+      // Remove all keys except installation and onboarding
+      for (String key in keysToRemove) {
+        await prefs.remove(key);
+      }
+
       // Clear authentication states
       await Future.wait([
         _emailSignInRepository.logout(),
@@ -89,15 +100,9 @@ class AuthService {
         _otpRepository.logout(),
       ]);
 
-      // Save installation flag before clearing
-      final bool installFlag = prefs.getBool(installKey) ?? false;
-
-      await prefs.clear();
-
-      // Restore installation flag
+      // Restore flags
       await prefs.setBool(installKey, installFlag);
-
-      // Clear cached profile data
+      await prefs.setBool(onboardingKey, onboardingFlag);
     } catch (e) {
       print('Error during logout: $e');
       rethrow;
@@ -108,10 +113,12 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      await prefs.remove(userIdKey);
-      await prefs.remove('profile_cache');
-      // Get user ID before clearing data
-      // final userId = await getUserId();
+      // Save flags before clearing
+      final bool installFlag = prefs.getBool(installKey) ?? false;
+      final bool onboardingFlag = prefs.getBool(onboardingKey) ?? false;
+
+      // Clear all SharedPreferences
+      await prefs.clear();
 
       // Clear authentication states
       await Future.wait([
@@ -120,15 +127,9 @@ class AuthService {
         _otpRepository.logout(),
       ]);
 
-      // Clear all local storage
-
-      final bool installFlag = prefs.getBool(installKey) ?? false;
-
-      // Clear all SharedPreferences
-      await prefs.clear();
-
-      // Restore installation flag
+      // Restore flags
       await prefs.setBool(installKey, installFlag);
+      await prefs.setBool(onboardingKey, onboardingFlag);
 
       await _clearAppCache();
     } catch (e) {

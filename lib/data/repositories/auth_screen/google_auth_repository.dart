@@ -137,25 +137,6 @@ class GoogleAuthRepository {
     }
   }
 
-  Future<String?> getUserId() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString('user_id');
-    } catch (e) {
-      // print('Error getting user ID: $e');
-      return null;
-    }
-  }
-
-  Future<bool> isLoggedIn() async {
-    try {
-      final userId = await getUserId();
-      return userId != null && userId.isNotEmpty;
-    } catch (e) {
-      // print('Error checking login status: $e');
-      return false;
-    }
-  }
 
   Future<void> signOut() async {
     try {

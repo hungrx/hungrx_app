@@ -1,28 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:country_code_picker/country_code_picker.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_event.dart';
 import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_state.dart';
-import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_event.dart';
-import 'package:hungrx_app/presentation/blocs/countrycode_bloc/country_code_bloc_state.dart';
 import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_event.dart';
 import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_state.dart';
-import 'package:hungrx_app/presentation/blocs/otp_verify_bloc/auth_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/otp_verify_bloc/auth_event.dart';
-import 'package:hungrx_app/presentation/blocs/otp_verify_bloc/auth_state.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_button.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/widget/custom_textfield.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/header_text.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/pivacy_policy_botton.dart';
-import 'package:hungrx_app/presentation/pages/auth_screens/widget/social_login_btn.dart';
-import 'package:hungrx_app/routes/route_names.dart';
 
 class PhoneNumberScreen extends StatefulWidget {
   final bool isSignUp;
@@ -34,8 +23,6 @@ class PhoneNumberScreen extends StatefulWidget {
 }
 
 class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
-  final TextEditingController _phoneController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _termsAccepted = false;
 
   void _hideLoadingOverlay(BuildContext context) {
@@ -46,44 +33,46 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
 
   void _handleAppleSignIn(BuildContext context) {
     if (!_termsAccepted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              const Text('Please accept the Terms & Conditions to continue'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
+      _showTermsAcceptanceError(context);
       return;
     }
-
     context.read<AppleAuthBloc>().add(AppleSignInRequested());
   }
 
+  void _showTermsAcceptanceError(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Please accept the Terms & Conditions to continue'),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
   void _handleAppleAuthError(BuildContext context, String error) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(error),
-      backgroundColor: Colors.red,
-      behavior: SnackBarBehavior.floating,
-      margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        action: SnackBarAction(
+          label: 'Retry',
+          textColor: Colors.white,
+          onPressed: () {
+            context.read<AppleAuthBloc>().add(AppleSignInRequested());
+          },
+        ),
       ),
-      action: SnackBarAction(
-        label: 'Retry',
-        textColor: Colors.white,
-        onPressed: () {
-          context.read<AppleAuthBloc>().add(AppleSignInRequested());
-        },
-      ),
-    ),
-  );
-}
+    );
+  }
 
   void _handleGoogleAuthError(BuildContext context, String error) {
     _hideLoadingOverlay(context);
@@ -107,502 +96,350 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
     );
   }
 
-  String? _validatePhoneNumber(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter a phone number';
+  Future<void> _handleAuthSuccess(BuildContext context, String? userId) async {
+    if (userId != null) {
+      try {
+        final authService = AuthService();
+        final isProfileComplete =
+            await authService.checkProfileCompletion(userId);
+
+        if (!mounted) return;
+
+        if (isProfileComplete == true) {
+          GoRouter.of(context).go('/home');
+        } else if (isProfileComplete == false) {
+          GoRouter.of(context).go('/user-info-one');
+        } else {
+          _showConnectionError(context);
+        }
+      } catch (e) {
+        if (!mounted) return;
+        _showProfileCheckError(context, e.toString());
+      }
+    } else {
+      if (!mounted) return;
+      _handleAuthError(context, 'Failed to get user ID');
     }
-
-    // Remove any non-digit characters
-    final cleanNumber = value.replaceAll(RegExp(r'\D'), '');
-
-    // Check for valid US number length (10 digits)
-    if (cleanNumber.length != 10) {
-      return 'Please enter a valid 10-digit US phone number';
-    }
-
-    // Validate area code (first 3 digits)
-    final areaCode = int.parse(cleanNumber.substring(0, 3));
-    if (areaCode < 200 || // Area codes don't start with 0 or 1
-        areaCode >= 1000 ||
-        areaCode == 666 || // Restricted area code
-        cleanNumber.substring(3, 6) == '555') {
-      // 555 is reserved
-      return 'Please enter a valid US area code';
-    }
-
-    return null;
   }
 
-  Future<bool> _onWillPop() async {
-    // Check if keyboard is visible
-    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom != 0;
+  void _showConnectionError(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Connection Error'),
+        content: const Text(
+            'Unable to verify your profile status. Please check your internet connection and try again.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
-    if (isKeyboardVisible) {
-      // If keyboard is visible, close it
-      FocusScope.of(context).unfocus();
-      return false; // Prevents app from closing
+  void _showProfileCheckError(BuildContext context, String error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Error checking profile status. Please try again.'),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    _handleAuthError(context, 'Error during profile check: $error');
+  }
+
+  void _handleAuthError(BuildContext context, String error) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
     }
-
-    // If Google Auth is loading, hide loading overlay
-    if (context.read<GoogleAuthBloc>().state is GoogleAuthLoading) {
-      _hideLoadingOverlay(context);
-      return false;
-    }
-
-    // If keyboard is not visible and no loading state, allow app to close
-    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => CountryCodeBloc(),
-        ),
-      ],
-      child: MultiBlocListener(
-        listeners: [
-      BlocListener<AppleAuthBloc, AppleAuthState>(
-  listener: (context, state) async {
-    if (!mounted) return;
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AppleAuthBloc, AppleAuthState>(
+          listener: (context, state) async {
+            if (!mounted) return;
 
-    if (state is AppleAuthSuccess) {
-      final currentContext = context;
-
-      if (!mounted) return;
-
-      final authService = AuthService();
-      final userId = await authService.getUserId();
-
-      if (!mounted) return;
-
-      if (userId != null) {
-        try {
-          final isProfileComplete = await authService.checkProfileCompletion(userId);
-          if (!mounted) return;
-
-          if (isProfileComplete == true) {
-            // Existing user - navigate to home
-            if (mounted) {
-              GoRouter.of(currentContext).go('/home');
-            }
-          } else if (isProfileComplete == false) {
-            // New user - navigate to user info screen
-            if (mounted) {
-              GoRouter.of(currentContext).go('/user-info-one');
-            }
-          } else {
-            // Server error case (isProfileComplete is null)
-            if (mounted) {
-              showDialog(
-                context: currentContext,
-                builder: (context) => AlertDialog(
-                  title: const Text('Connection Error'),
-                  content: const Text(
-                    'Unable to verify your profile status. Please check your internet connection and try again.'
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        // Optionally, you could add a retry mechanism here
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
-              );
-            }
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(currentContext).showSnackBar(
-              const SnackBar(
-                content: Text('Error checking profile status. Please try again.'),
-                duration: Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-            _handleAppleAuthError(currentContext, 'Error during profile check: $e');
-          }
-        }
-      } else {
-        if (mounted) {
-          _handleAppleAuthError(currentContext, 'Failed to get user ID');
-        }
-      }
-    } else if (state is AppleAuthCancelled) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sign in cancelled'),
-            duration: Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } else if (state is AppleAuthFailure) {
-      if (mounted) {
-        _handleAppleAuthError(context, state.error);
-      }
-    }
-  },
-),
-
-          BlocListener<OtpAuthBloc, OtpAuthState>(
-            listener: (context, state) {
-              if (state is OtpSendSuccess) {
-                context.pushNamed(
-                  RouteNames.otpVerify,
-                  pathParameters: {
-                    'phoneNumber': context
-                            .read<CountryCodeBloc>()
-                            .state
-                            .selectedCountryCode +
-                        _phoneController.text
-                  },
-                );
-              } else if (state is OtpSendFailure) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.error),
-                    backgroundColor: Colors.red,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
-            },
-          ),
-          BlocListener<GoogleAuthBloc, GoogleAuthState>(
-            listener: (context, state) async {
-              if (!mounted) return;
-
-              if (state is GoogleAuthSuccess) {
-                final currentContext = context;
-
-                if (!mounted) return;
-
+            if (state is AppleAuthSuccess) {
+              try {
                 final authService = AuthService();
                 final userId = await authService.getUserId();
-
                 if (!mounted) return;
 
-                if (userId != null) {
-                  try {
-                    final isProfileComplete =
-                        await authService.checkProfileCompletion(userId);
-                    if (!mounted) return;
-
-                    if (isProfileComplete == true) {
-                      // Existing user - navigate to home
-                      if (mounted) {
-                        GoRouter.of(currentContext).go('/home');
-                      }
-                    } else if (isProfileComplete == false) {
-                      // New user - navigate to user info screen
-                      if (mounted) {
-                        GoRouter.of(currentContext).go('/user-info-one');
-                      }
-                    } else {
-                      // Server error case (isProfileComplete is null)
-                      if (mounted) {
-                        // Show error dialog
-                        showDialog(
-                          context: currentContext,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Connection Error'),
-                            content: const Text(
-                                'Unable to verify your profile status. Please check your internet connection and try again.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  // Optionally, you could add a retry mechanism here
-                                },
-                                child: const Text('OK'),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(currentContext).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'Error checking profile status. Please try again.'),
-                          duration: Duration(seconds: 2),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                      _handleGoogleAuthError(
-                          currentContext, 'Error during profile check: $e');
-                    }
-                  }
-                } else {
-                  if (mounted) {
-                    _handleGoogleAuthError(
-                        currentContext, 'Failed to get user ID');
-                  }
-                }
-              } else if (state is GoogleAuthCancelled) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Sign in cancelled'),
-                      duration: Duration(seconds: 2),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              } else if (state is GoogleAuthFailure) {
-                if (mounted) {
-                  _handleGoogleAuthError(context, state.error);
-                }
+                await _handleAuthSuccess(context, userId);
+              } catch (e) {
+                if (!mounted) return;
+                _handleAppleAuthError(
+                    context, 'Failed to process sign in: ${e.toString()}');
               }
-            },
-          ),
-        ],
-        child: Builder(
-          builder: (context) {
-            return WillPopScope(
-              onWillPop: _onWillPop,
-              child: Scaffold(
-                resizeToAvoidBottomInset: false,
-                body: Stack(
-                  children: [
-                    GradientContainer(
-                      top: size.height * 0.09,
-                      left: size.height * 0.04,
-                      right: size.height * 0.04,
-                      bottom: size.height * 0.04,
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            HeaderText(
-                              mainHeading: widget.isSignUp
-                                  ? "Create Account"
-                                  : "Welcome,",
-                              subHeading: widget.isSignUp
-                                  ? "Let's get started"
-                                  : "Glad You're here",
-                            ),
-                            SizedBox(height: size.height * 0.07),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[800],
-                                borderRadius: BorderRadius.circular(25),
-                              ),
-                              child: Row(
-                                children: [
-                                  BlocBuilder<CountryCodeBloc,
-                                      CountryCodeState>(
-                                    builder: (context, countryCodeState) {
-                                      return CountryCodePicker(
-                                        onChanged: (CountryCode countryCode) {
-                                          context.read<CountryCodeBloc>().add(
-                                                CountryCodeChanged(
-                                                    countryCode.dialCode ??
-                                                        '+1'),
-                                              );
-                                        },
-                                        initialSelection: 'US',
-                                        favorite: const ['+1', '+91'],
-                                        showCountryOnly: false,
-                                        showOnlyCountryWhenClosed: false,
-                                        alignLeft: false,
-                                        padding: EdgeInsets.zero,
-                                        textStyle: const TextStyle(
-                                            color: Colors.white),
-                                      );
-                                    },
-                                  ),
-                                  Container(
-                                      height: 30,
-                                      width: 1,
-                                      color: Colors.grey[600]),
-                                  Expanded(
-                                    child: CustomTextFormField(
-                                      controller: _phoneController,
-                                      keyboardType: TextInputType.phone,
-                                      hintText: "Enter your phone number",
-                                      validator: _validatePhoneNumber,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Spacer(),
-                            BlocBuilder<OtpAuthBloc, OtpAuthState>(
-                              builder: (context, state) {
-                                return CustomButton(
-                                  data: widget.isSignUp
-                                      ? "Agree & Sign Up"
-                                      : "Agree & Login",
-                                  onPressed: () {
-                                    if (!_termsAccepted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: const Text(
-                                              'Please accept the Terms & Conditions to continue'),
-                                          backgroundColor: Colors.red,
-                                          behavior: SnackBarBehavior.floating,
-                                          margin: const EdgeInsets.all(16),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                        ),
-                                      );
-                                      return;
-                                    }
+            } else if (state is AppleAuthCancelled) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Sign in cancelled'),
+                  duration: Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            } else if (state is AppleAuthFailure) {
+              _handleAppleAuthError(context, state.error);
+            }
+          },
+        ),
+        BlocListener<GoogleAuthBloc, GoogleAuthState>(
+          listener: (context, state) async {
+            if (!mounted) return;
 
-                                    if (_formKey.currentState!.validate()) {
-                                      final countryCode = context
-                                          .read<CountryCodeBloc>()
-                                          .state
-                                          .selectedCountryCode;
-                                      final phoneNumber =
-                                          countryCode + _phoneController.text;
-                                      context
-                                          .read<OtpAuthBloc>()
-                                          .add(SendOtpEvent(phoneNumber));
-                                    }
-                                  },
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Checkbox(
-                                  value: _termsAccepted,
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      _termsAccepted = value ?? false;
-                                    });
-                                  },
-                                  fillColor: MaterialStateProperty.resolveWith(
-                                    (states) =>
-                                        states.contains(MaterialState.selected)
-                                            ? AppColors.buttonColors
-                                            : Colors.grey,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: GestureDetector(
-                                    // Wrap with GestureDetector for better tap handling
-                                    behavior: HitTestBehavior.opaque,
-                                    child: ClickableTermsAndPolicyText(
-                                      policyUrl:
-                                          "https://www.hungrx.com/privacy-policy.html",
-                                      termsUrl:
-                                          "https://www.hungrx.com/terms-and-conditions.html",
-                                      textStyle: TextStyle(
-                                          color: Colors.grey[400],
-                                          fontSize: 12),
-                                      linkStyle: const TextStyle(
-                                        color: Colors.blue,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                const SizedBox(height: 20),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: SocialLoginBotton(
-                                        iconPath: 'assets/icons/google.png',
-                                        label: 'Google',
-                                        size: 25,
-                                        onPressed: () {
-                                          if (!_termsAccepted) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: const Text(
-                                                    'Please accept the Terms & Conditions to continue'),
-                                                backgroundColor: Colors.red,
-                                                behavior:
-                                                    SnackBarBehavior.floating,
-                                                margin:
-                                                    const EdgeInsets.all(16),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                              ),
-                                            );
-                                            return;
-                                          }
-                                          context
-                                              .read<GoogleAuthBloc>()
-                                              .add(GoogleSignInRequested());
-                                        },
-                                        style: SocialButtonStyle.capsule,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: SocialLoginBotton(
-                                        iconPath: 'assets/icons/apple.png',
-                                        label: 'Apple',
-                                        size: 25,
-                                        onPressed: () {
-                                          _handleAppleSignIn(context);
-                                        },
-                                        style: SocialButtonStyle.capsule,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                          ],
+            if (state is GoogleAuthSuccess) {
+              final authService = AuthService();
+              final userId = await authService.getUserId();
+              if (!mounted) return;
+              await _handleAuthSuccess(context, userId);
+            } else if (state is GoogleAuthCancelled) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Sign in cancelled'),
+                  duration: Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            } else if (state is GoogleAuthFailure) {
+              _handleGoogleAuthError(context, state.error);
+            }
+          },
+        ),
+      ],
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          children: [
+            GradientContainer(
+              top: size.height * 0.09,
+              left: size.height * 0.04,
+              right: size.height * 0.04,
+              bottom: size.height * 0.04,
+              child: Column(
+                children: [
+                  // Improved Header with Animation
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 500),
+                    opacity: 1.0,
+                    child: HeaderText(
+                      mainHeading:
+                          widget.isSignUp ? "Create Account" : "Welcome",
+                      subHeading: widget.isSignUp
+                          ? "Let's get started"
+                          : "Glad You're here",
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.08),
+
+                  // Improved Social Login Container
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: size.width * 0.06,
+                        vertical: size.height * 0.04,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: AppColors.buttonColors.withOpacity(0.2),
+                          width: 1.5,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 15,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Improved Google Button
+                          _buildSocialButton(
+                            context: context,
+                            iconPath: 'assets/icons/google.png',
+                            label: 'Continue with Google',
+                            onPressed: () {
+                              if (!_termsAccepted) {
+                                _showTermsAcceptanceError(context);
+                                return;
+                              }
+                              context
+                                  .read<GoogleAuthBloc>()
+                                  .add(GoogleSignInRequested());
+                            },
+                          ),
+                          SizedBox(height: size.height * 0.025),
+
+                          // Improved Apple Button
+                          _buildSocialButton(
+                            context: context,
+                            iconPath: 'assets/icons/apple.png',
+                            label: 'Continue with Apple',
+                            onPressed: () => _handleAppleSignIn(context),
+                          ),
+                        ],
                       ),
                     ),
-                    // Loading overlays
-                    if (context.watch<OtpAuthBloc>().state is OtpSendLoading ||
-                        context.watch<GoogleAuthBloc>().state
-                            is GoogleAuthLoading)
-                      Container(
-                        color: Colors.black.withOpacity(0.5),
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.buttonColors,
+                  ),
+
+                  SizedBox(height: size.height * 0.04),
+
+                  // Improved Terms and Conditions Container
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.04,
+                      vertical: size.height * 0.015,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.buttonColors.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Transform.scale(
+                          scale: 0.9,
+                          child: Checkbox(
+                            value: _termsAccepted,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _termsAccepted = value ?? false;
+                              });
+                            },
+                            fillColor: MaterialStateProperty.resolveWith(
+                              (states) =>
+                                  states.contains(MaterialState.selected)
+                                      ? AppColors.buttonColors
+                                      : Colors.grey.withOpacity(0.5),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                        Expanded(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            child: ClickableTermsAndPolicyText(
+                              policyUrl:
+                                  "https://www.hungrx.com/privacy-policy.html",
+                              termsUrl:
+                                  "https://www.hungrx.com/terms-and-conditions.html",
+                              textStyle: TextStyle(
+                                color: Colors.grey[300],
+                                fontSize: 13,
+                                height: 1.3,
+                              ),
+                              linkStyle: TextStyle(
+                                color: Colors.blue[300],
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.02),
+                ],
+              ),
+            ),
+            if (context.watch<GoogleAuthBloc>().state is GoogleAuthLoading ||
+                context.watch<AppleAuthBloc>().state is AppleAuthLoading)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.buttonColors,
+                  ),
                 ),
               ),
-            );
-          },
+          ],
         ),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _phoneController.dispose();
-    super.dispose();
+  Widget _buildSocialButton({
+    required BuildContext context,
+    required String iconPath,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(30),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: AppColors.buttonColors.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  iconPath,
+                  height: 24,
+                  width: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hungrx_app/data/datasources/api/auth_screen.dart/apple_auth_api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'dart:convert';
 import 'dart:math';
@@ -44,7 +45,7 @@ class AppleAuthRepository {
           AppleIDAuthorizationScopes.fullName,
         ],
         webAuthenticationOptions: WebAuthenticationOptions(
-          clientId: 'com.hungrx.signin',  // Updated to match the aud claim
+          clientId: 'com.hungrx.signin', // Updated to match the aud claim
           redirectUri: Uri.parse(
             'https://hungrx-app.firebaseapp.com/__/auth/handler',
           ),
@@ -91,11 +92,14 @@ class AppleAuthRepository {
           // Only proceed with backend API call if Firebase auth succeeded
 
           try {
-            await _api.loginWithApple(
+            final apiResponse = await _api.loginWithApple(
               idToken: appleCredential.identityToken!,
               authCode: appleCredential.authorizationCode,
-             
             );
+
+            if (apiResponse.data.user?.id != null) {
+              await _saveUserId(apiResponse.data.user!.id);
+            }
           } catch (e) {
             print('Backend API error (non-fatal): $e');
           }
@@ -119,6 +123,34 @@ class AppleAuthRepository {
     } catch (e) {
       print('Unexpected error during Apple Sign In: $e');
       rethrow;
+    }
+  }
+
+  Future<void> _saveUserId(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_id', userId);
+      print('Successfully saved Apple user ID to SharedPreferences');
+    } catch (e) {
+      print('Error saving Apple user ID: $e');
+      throw Exception('Failed to save Apple user ID locally');
+    }
+  }
+
+  // Add this function for sign out
+  Future<void> signOut() async {
+    try {
+      // Sign out from Firebase
+      await _firebaseAuth.signOut();
+
+      // Clear stored user ID
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_id');
+
+      print('Successfully signed out from Apple');
+    } catch (error) {
+      print('Error signing out from Apple: $error');
+      throw Exception('Failed to sign out from Apple: $error');
     }
   }
 }

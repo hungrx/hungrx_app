@@ -23,7 +23,7 @@ class AppleAuthData {
     return AppleAuthData(
       message: json['message'] as String,
       token: json['token'] as String?,
-      user: json['user'] != null ? AppleUser.fromJson(json['user']) : null,
+      user: json['user'] != null ? AppleUser.fromJson(json['user'] as Map<String, dynamic>) : null,
     );
   }
 }
@@ -31,15 +31,19 @@ class AppleAuthData {
 class AppleUser {
   final String id;
   final String email;
-  final String name;
+  final String? name; // Made name optional
 
-  AppleUser({required this.id, required this.email, required this.name});
+  AppleUser({
+    required this.id, 
+    required this.email, 
+    this.name, // Remove required keyword
+  });
 
   factory AppleUser.fromJson(Map<String, dynamic> json) {
     return AppleUser(
       id: json['id'] as String,
       email: json['email'] as String,
-      name: json['name'] as String,
+      name: json['name'] as String?, // Make it nullable
     );
   }
 }
