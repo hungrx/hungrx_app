@@ -12,6 +12,7 @@ import 'package:hungrx_app/presentation/layout/root_layout.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
+import 'package:hungrx_app/presentation/pages/subcription_screen/old_subcription_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/basic_information_screen/basic_informaion_screen.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/widgets/feedbacks_widget.dart';
@@ -31,7 +32,6 @@ import 'package:hungrx_app/presentation/pages/log_meal_screen.dart/widgets/food_
 import 'package:hungrx_app/presentation/pages/restaurant_menu_screen/restaurent_menu_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/restaurant_screen.dart';
 import 'package:hungrx_app/presentation/pages/restaurant_screen/widgets/restaurant_search_screen.dart';
-import 'package:hungrx_app/presentation/pages/subcription_screen/subcription_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/about_screen/about_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/account_settings_screen/account_settings_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/edit_goal_screen.dart';
@@ -45,13 +45,14 @@ import 'package:hungrx_app/routes/route_names.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/splash_screen.dart';
 import 'package:hungrx_app/presentation/pages/onboarding_screen/onboarding_screen.dart';
 
+
 class AppRouter {
   static final GetIt getIt = GetIt.instance;
   static GoRouter get router => _router;
- static final List<String> _navigationStack = ['/home'];
- static final _routerKey = GlobalKey<NavigatorState>();
+  static final List<String> _navigationStack = ['/home'];
+  static final _routerKey = GlobalKey<NavigatorState>();
   static final GoRouter _router = GoRouter(
-     navigatorKey: _routerKey,
+    navigatorKey: _routerKey,
     debugLogDiagnostics: true, // Add this for debugging
     routes: <RouteBase>[
       ShellRoute(
@@ -147,11 +148,6 @@ class AppRouter {
           return const FeedbackDialog();
         },
       ),
-      // GoRoute(
-      //   path: '/restaurant-search',
-      //   name: RouteNames.restarantSearch,
-      //   builder: (context, state) => const RestaurantSearchScreen(),
-      // ),
       GoRoute(
         path: '/weight-tracking',
         name: RouteNames.weightTracking,
@@ -173,20 +169,6 @@ class AppRouter {
           return const OnboardingPage();
         },
       ),
-      // GoRoute(
-      //   path: '/login',
-      //   name: RouteNames.login,
-      //   builder: (BuildContext context, GoRouterState state) {
-      //     return const EmailAuthScreen();
-      //   },
-      // ),
-      // GoRoute(
-      //   path: '/signup',
-      //   name: RouteNames.signup,
-      //   builder: (BuildContext context, GoRouterState state) {
-      //     return const EmailAuthScreen(isSignUp: true);
-      //   },
-      // ),
       GoRoute(
         path: '/health-profile',
         name: RouteNames.healthProfile,
@@ -251,34 +233,6 @@ class AppRouter {
           return const PhoneNumberScreen();
         },
       ),
-      // GoRoute(
-      //   path: '/food/:id',
-      //   name: RouteNames.foodDetail,
-      //   builder: (BuildContext context, GoRouterState state) {
-      //     final Map<String, dynamic>? params =
-      //         state.extra as Map<String, dynamic>?;
-
-      //     if (params == null) {
-      //       return const Scaffold(
-      //         body: Center(child: Text('Food details not found')),
-      //       );
-      //     }
-
-      //     final bool isSearchScreen =
-      //         params['isSearchScreen'] as bool? ?? false;
-      //     final searchFood = isSearchScreen
-      //         ? params['searchFood'] as GetSearchHistoryLogItem?
-      //         : null;
-      //     final foodItem =
-      //         !isSearchScreen ? params['foodItem'] as FoodItemModel? : null;
-
-      //     return FoodDetailScreen(
-      //       isSearchScreen: isSearchScreen,
-      //       searchFood: searchFood,
-      //       foodItem: foodItem,
-      //     );
-      //   },
-      // ),
       GoRoute(
         path: '/otpVerify/:phoneNumber',
         name: RouteNames.otpVerify,
@@ -402,13 +356,13 @@ class AppRouter {
         },
       ),
     ],
-     observers: [
+    observers: [
       GoRouterObserver(),
     ],
     // Add any global redirect logic here
     redirect: (context, state) {
       if (state.fullPath == null) return null;
-      
+
       if (!_navigationStack.contains(state.fullPath!)) {
         _navigationStack.add(state.fullPath!);
       }
@@ -416,7 +370,7 @@ class AppRouter {
     },
   );
 
-    static void popRoute(BuildContext context) {
+  static void popRoute(BuildContext context) {
     if (_navigationStack.length > 1) {
       _navigationStack.removeLast();
       context.go(_navigationStack.last);
@@ -424,8 +378,8 @@ class AppRouter {
       SystemNavigator.pop();
     }
   }
-  
 }
+
 class GoRouterObserver extends NavigatorObserver {
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {

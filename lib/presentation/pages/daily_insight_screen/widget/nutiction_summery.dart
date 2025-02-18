@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/daily_insight_screen/daily_food_response.dart';
-import 'package:intl/intl.dart';
+
 
 class NutritionSummary extends StatelessWidget {
+  final String dateTime;
   final ConsumedFood consumedFood;
   final DailySummary dailySummary;
 
   const NutritionSummary({
     super.key,
     required this.consumedFood,
+    required this.dateTime,
     required this.dailySummary,
   });
 
@@ -105,7 +107,7 @@ class NutritionSummary extends StatelessWidget {
     calculateTotalNutrition(consumedFood.dinner.foods, nutritionTotals);
     calculateTotalNutrition(consumedFood.snacks.foods, nutritionTotals);
 
-    final formattedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+    // final formattedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
 
     return LayoutBuilder(builder: (context, constraints) {
       final containerWidth = constraints.maxWidth;
@@ -213,7 +215,7 @@ class NutritionSummary extends StatelessWidget {
                   _buildSummaryRow(
                     Icons.calendar_month,
                     'Date',
-                    formattedDate,
+                    dateTime,
                     titleFontSize,
                     valueFontSize,
                   ),

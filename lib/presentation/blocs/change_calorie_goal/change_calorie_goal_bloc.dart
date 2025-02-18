@@ -7,11 +7,11 @@ import 'package:hungrx_app/presentation/blocs/change_calorie_goal/change_calorie
 class ChangeCalorieGoalBloc
     extends Bloc<ChangeCalorieGoalEvent, ChangeCalorieGoalState> {
   final ChangeCalorieGoalUseCase _useCase;
-  final AuthService _authService; // Add AuthService
+  final AuthService _authService;
 
   ChangeCalorieGoalBloc(
     this._useCase,
-    this._authService, // Inject AuthService
+    this._authService,
   ) : super(ChangeCalorieGoalInitial()) {
     on<SubmitChangeCalorieGoal>(_onSubmitChangeCalorieGoal);
   }
@@ -23,7 +23,6 @@ class ChangeCalorieGoalBloc
     emit(ChangeCalorieGoalLoading());
 
     try {
-      // Get userId from AuthService
       final userId = await _authService.getUserId();
 
       if (userId == null) {
@@ -34,7 +33,9 @@ class ChangeCalorieGoalBloc
       final result = await _useCase.execute(
         userId: userId,
         calorie: event.calorie,
-        day: event.day, // Added day parameter
+        day: event.day,
+        isShown: event.isShown,
+        date: event.date,
       );
       emit(ChangeCalorieGoalSuccess(result));
     } catch (e) {

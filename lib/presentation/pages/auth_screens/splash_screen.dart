@@ -12,6 +12,9 @@ import 'package:hungrx_app/presentation/blocs/internet_connection/internet_conne
 import 'package:hungrx_app/presentation/blocs/internet_connection/internet_connection_state.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_event.dart';
+import 'package:hungrx_app/presentation/blocs/timezone/timezone_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/timezone/timezone_event.dart';
+import 'package:hungrx_app/presentation/blocs/timezone/timezone_state.dart';
 import 'package:hungrx_app/presentation/no_internet_screen/no_internet_screen.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -34,9 +37,20 @@ class SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initializeApp() async {
+    final userId = await _authService.getUserId();
+    if (userId != null) {
+      print("hello there ");
+      await _updateUserTimezone(userId);
+    }
+
     // Initialize auth service first
     await _authService.initialize();
     _checkConnectivityAndNavigate();
+  }
+
+  Future<void> _updateUserTimezone(String userId) async {
+    
+    context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
   }
 
   Future<void> _checkConnectivityAndNavigate() async {
@@ -59,6 +73,7 @@ class SplashScreenState extends State<SplashScreen> {
         final userId = await _authService.getUserId();
         print("splash :$userId");
         if (userId != null) {
+          await _updateUserTimezone(userId);
           // Check profile completion with improved error handling
           final bool? isProfileComplete =
               await _authService.checkProfileCompletion(userId);
@@ -160,12 +175,28 @@ class SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ConnectivityBloc, ConnectivityState>(
-      listener: (context, state) {
-        if (state is ConnectivityConnected) {
-          _navigateToNextScreen();
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ConnectivityBloc, ConnectivityState>(
+          listener: (context, state) {
+            if (state is ConnectivityConnected) {
+              _navigateToNextScreen();
+            }
+          },
+        ),
+        BlocListener<TimezoneBloc, TimezoneState>(
+          listener: (context, state) {
+            if (state is TimezoneUpdateFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to update timezone: ${state.error}'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<ConnectivityBloc, ConnectivityState>(
         builder: (context, state) {
           if (state is ConnectivityDisconnected) {

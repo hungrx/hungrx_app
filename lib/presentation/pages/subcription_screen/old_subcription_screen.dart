@@ -70,31 +70,32 @@ class SubscriptionScreen extends StatelessWidget {
                 // Subscription Plans
                 _buildPlanCard(
                   'Try 7 Days',
-                  '99¢',
+                  '49¢',
                   'Trial period',
                   true,
                   AppColors.buttonColors,
                   context,
                 ),
                 const SizedBox(height: 12),
-                _buildPlanCard(
+                   _buildPlanCard(
+                  'MONTHLY',
+                  '\$3.99',
+                  'Billed monthly',
+                  false,
+                  Colors.grey,
+                  context,
+                ),
+          
+                const SizedBox(height: 12),
+                   _buildPlanCard(
                   'YEARLY',
-                  '\$20.00',
+                  '\$19.99',
                   'Most popular',
                   false,
                   AppColors.buttonColors,
                   context,
                   savings: '58% SAVINGS',
-                  originalPrice: '\$7.99/mo',
-                ),
-                const SizedBox(height: 12),
-                _buildPlanCard(
-                  'MONTHLY',
-                  '\$7.99',
-                  'Billed monthly',
-                  false,
-                  Colors.grey,
-                  context,
+                  originalPrice: '\$59.88/mo',
                 ),
             
                 // const Spacer(),

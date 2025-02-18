@@ -11,7 +11,7 @@ class StreakApiService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );
-    // print(" track user${response.body}");
+    print(" track user${response.body}");
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {

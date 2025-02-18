@@ -14,6 +14,8 @@ import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_bloc.d
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
+import 'package:hungrx_app/presentation/blocs/timezone/timezone_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/timezone/timezone_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_goal_settings/update_goal_settings_state.dart';
@@ -76,10 +78,18 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
   }
 
   Future<void> _initializeUserId() async {
+
     final userId = await _authService.getUserId();
+    print("new user id form aco$userId");
+    _updateUserTimezone(userId??"");
     setState(() {
       _userId = userId;
     });
+  }
+
+    Future<void> _updateUserTimezone(String userId) async {
+    
+    context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
   }
 
   @override

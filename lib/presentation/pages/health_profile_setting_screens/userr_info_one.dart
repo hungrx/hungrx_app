@@ -7,6 +7,8 @@ import 'package:hungrx_app/data/datasources/api/profile_setting_screens/user_pro
 import 'package:hungrx_app/data/repositories/profile_setting_screen/tdee_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/user_info_profile_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/presentation/blocs/timezone/timezone_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/timezone/timezone_event.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_event.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_state.dart';
@@ -67,6 +69,19 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
     }
   }
 
+    Future<void> _initializeUserId() async {
+
+    final userId = await _authService.getUserId();
+    print("new user id form aco$userId");
+    _updateUserTimezone(userId??"");
+   
+  }
+
+    Future<void> _updateUserTimezone(String userId) async {
+    
+    context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
+  }
+
   Future<void> _showLogoutConfirmationDialog() async {
     if (!mounted) return;
 
@@ -125,6 +140,7 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
   @override
   void initState() {
     super.initState();
+    _initializeUserId();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),

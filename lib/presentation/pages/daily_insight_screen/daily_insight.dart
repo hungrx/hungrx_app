@@ -239,6 +239,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         NutritionSummary(
+          dateTime: DateFormat('dd/MM/yyyy').format(selectedDate),
           consumedFood: data.consumedFood,
           dailySummary: data.dailySummary,
         ),

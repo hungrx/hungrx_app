@@ -164,6 +164,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    //  final screenSize = MediaQuery.of(context).size;
+    // final isSmallScreen = screenSize.width < 360;
     return BlocProvider(
       create: (context) => MenuExpansionBloc(),
       child: Scaffold(
@@ -229,17 +231,18 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+      final textScaleFactor = MediaQuery.of(context).textScaleFactor;
     return AppBar(
       backgroundColor: Colors.black,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () => Navigator.of(context).pop(),
       ),
-      title: const Text(
+      title:  Text(
         'Menu',
         style: TextStyle(
           color: Colors.white,
-          fontSize: 24,
+          fontSize: 24 / textScaleFactor,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -270,11 +273,13 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Widget _buildRestaurantInfoCard(RestaurantMenu menu) {
+     final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = screenWidth * 0.04; // 4% of screen width
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey[900],
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(horizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -399,6 +404,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Widget _buildMenuList(BuildContext context, RestaurantMenu menu) {
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -463,6 +469,12 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Widget _buildMenuItem(Dish dish) {
+
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+    final imageSize = screenWidth * (isSmallScreen ? 0.2 : 0.25); 
+
     final protine = dish.servingInfos.isNotEmpty
         ? '${dish.servingInfos.first.servingInfo.nutritionFacts.protein.value} '
         : 'N/A';
@@ -518,8 +530,11 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     //             .calories.value) ??
     //         0.0
     //     : 0.0;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    return  Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: screenWidth * 0.02,
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.tileColor,
@@ -571,12 +586,12 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
               }
             },
             child: Padding(
-              padding: const EdgeInsets.all(4.0),
+              padding: EdgeInsets.all(screenWidth * 0.02),
               child: Row(
                 children: [
                   Container(
-                    width: 100,
-                    height: 100,
+                    width: imageSize,
+                    height: imageSize,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
@@ -616,15 +631,15 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                       children: [
                         Text(
                           dish.dishName,
-                          style: const TextStyle(
+                          style:  TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: isSmallScreen ? 14 : 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Row(
-                          spacing: 4,
+                           spacing: MediaQuery.of(context).size.width * 0.01,
                           children: [
                             BlocBuilder<GetCartBloc, GetCartState>(
                               builder: (context, getCartState) {
@@ -671,7 +686,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                                                   remainingCalories
                                               ? Colors.red
                                               : AppColors.buttonColors,
-                                          fontSize: 14,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -693,7 +708,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                                 "P$protine",
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -711,7 +726,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                                 "C$cards",
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -730,7 +745,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                         icon: const Icon(
                           Icons.add_circle_outline,
                           color: AppColors.buttonColors,
-                          size: 30,
+                          size: 28,
                         ),
                         onPressed: () {
                           if (_checkCalorieLimit(context, defaultCalories)) {

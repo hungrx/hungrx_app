@@ -6,7 +6,9 @@ class ChangeCalorieGoalApi {
   Future<Map<String, dynamic>> changeCalorieGoal({
     required String userId,
     required double calorie,
-    required int day,  // Added day parameter
+    required int day,
+    required bool isShown,
+    required String date,
   }) async {
     try {
       final response = await http.post(
@@ -15,7 +17,9 @@ class ChangeCalorieGoalApi {
         body: jsonEncode({
           'userId': userId,
           'calorie': calorie.toString(),
-          'day': day.toString(),  // Added day to request body
+          'day': day.toString(),
+          'isShown': isShown,
+          'date': date,
         }),
       );
 

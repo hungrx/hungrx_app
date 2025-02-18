@@ -2,10 +2,14 @@ abstract class ChangeCalorieGoalEvent {}
 
 class SubmitChangeCalorieGoal extends ChangeCalorieGoalEvent {
   final double calorie;
-  final int day;  // Added day parameter
+  final int day;
+  final bool isShown;
+  final String date;
 
   SubmitChangeCalorieGoal({
     required this.calorie,
-    required this.day,  // Added day parameter
+    required this.day,
+    required this.isShown,
+    required this.date,
   });
 }

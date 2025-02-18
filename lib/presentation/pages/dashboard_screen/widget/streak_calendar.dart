@@ -98,7 +98,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
       context,
       child: SizedBox(
         width: MediaQuery.of(context).size.width * 0.6,
-        height: MediaQuery.of(context).size.height * 0.25,
+        height: MediaQuery.of(context).size.height * 0.27,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -179,20 +179,22 @@ class _StreakCalendarState extends State<StreakCalendar> {
           final startingDate = streakData.startDate;
           final endingDate = DateTime.now().add(
               const Duration(days: 365)); // Show one year ahead for unlimited
-
+print(startingDate);
+print(endingDate);
           // final endingDate = streakData.endDate();
 
           return _buildContainer(
             context,
             child: SizedBox(
-              width: 240,
+              
+              // width: 240,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
 
                   SizedBox(
-                    height: screenSize.height * (isSmallScreen ? 0.13 : 0.25),
+                    height: screenSize.width * (isSmallScreen ? 0.50 : 0.56),
                     child: _buildHeatMap(startingDate, endingDate, streakMap,
                         screenSize, isSmallScreen),
                   ),
@@ -260,7 +262,7 @@ class _StreakCalendarState extends State<StreakCalendar> {
           showColorTip: false,
           showText: true,
           scrollable: true,
-          size: screenSize.width * (isSmallScreen ? 0.05 : 0.047),
+          size: screenSize.width * (isSmallScreen ? 0.04 : 0.047),
           colorsets: const {
             1: Color.fromARGB(255, 119, 141, 41),
           },

@@ -94,7 +94,7 @@ class DashboardWidgets {
                       style: GoogleFonts.stickNoBills(
                         color: Colors.white,
                         fontSize:
-                            getFontSize(context, isSmallScreen ? 0.09 : 0.1),
+                            getFontSize(context, isSmallScreen ? 0.07 : 0.08),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -138,7 +138,7 @@ class DashboardWidgets {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CircularPercentIndicator(
-                    radius: isSmallScreen ? 18 : 22,
+                    radius: isSmallScreen ? 18 : 20,
                     lineWidth: isSmallScreen ? 3 : 4,
                     percent: data.remaining / data.dailyCalorieGoal,
                     progressColor: Colors.grey[700], // Corrected line
@@ -165,7 +165,7 @@ class DashboardWidgets {
                             style: GoogleFonts.stickNoBills(
                               color: Colors.white,
                               fontSize: getFontSize(
-                                  context, isSmallScreen ? 0.09 : 0.1),
+                                  context, isSmallScreen ? 0.07 : 0.08),
                               fontWeight: FontWeight.bold,
                             ),
                           ),

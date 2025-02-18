@@ -10,15 +10,14 @@ class CalorieMetricsApi {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'userId': userId}),
       );
-      print(response.body);
+      
+      print("Raw response: ${response.body}");
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        if (data['status'] == true) {
-          return data['data'];
-        }
-        throw Exception('API returned false status');
+        print("Decoded data: $data");
+        return data; // Return the complete response
       }
-      throw Exception('Failed to fetch calorie metrics');
+      throw Exception('Failed to fetch calorie metrics: ${response.statusCode}');
     } catch (e) {
       throw Exception('Error fetching calorie metrics: $e');
     }

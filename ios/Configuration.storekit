@@ -1,0 +1,29 @@
+{
+  "identifier": "hungrx_storekit_config",
+  "products": [
+    {
+      "id": "com.hungrx.premium.monthly",
+      "type": "subscription",
+      "duration": "P1M",
+      "displayName": "Monthly Premium",
+      "description": "Unlimited access for a month",
+      "price": 3.99,
+      "subscriptionGroup": "premium_group"
+    },
+    {
+      "id": "com.hungrx.premium.annual",
+      "type": "subscription",
+      "duration": "P1Y",
+      "displayName": "Annual Premium",
+      "description": "Unlimited access for a year",
+      "price": 19.99,
+      "subscriptionGroup": "premium_group"
+    }
+  ],
+  "subscriptionGroups": [
+    {
+      "id": "premium_group",
+      "name": "Premium Features"
+    }
+  ]
+}

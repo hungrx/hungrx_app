@@ -8,9 +8,10 @@ class CalorieMetricsRepository {
 
   Future<CalorieMetricsModel> getCalorieMetrics(String userId) async {
     try {
-      final data = await _api.getCalorieMetrics(userId);
-      return CalorieMetricsModel.fromJson(data);
+      final Map<String, dynamic> response = await _api.getCalorieMetrics(userId);
+      return CalorieMetricsModel.fromJson(response);
     } catch (e) {
+      print("new error $e");
       throw Exception('Repository error: $e');
     }
   }

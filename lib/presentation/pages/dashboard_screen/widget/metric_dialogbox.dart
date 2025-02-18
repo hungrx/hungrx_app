@@ -20,6 +20,7 @@ class MetricsDialog extends StatelessWidget {
   final String goal;
   final int daysLeft;
   final String date;
+  final bool isShown;
 
   const MetricsDialog({
     super.key,
@@ -35,6 +36,7 @@ class MetricsDialog extends StatelessWidget {
     required this.daysLeft,
     required this.date,
     required this.isMaintain,
+    required this.isShown,
   });
 
   bool get isWeightGainGoal =>
@@ -56,6 +58,14 @@ class MetricsDialog extends StatelessWidget {
     final bool isGaining = isWeightGainGoal;
     final analysisColor =
         isGaining ? const Color(0xFF4ECDC4) : const Color(0xFFFF6B6B);
+
+    // void handleDialogClose() {
+    //   Navigator.pop(context);
+    // }
+
+    final String dialogTitle =
+        isShown ? 'Previous Progress' : 'Progress Update';
+    final String dateLabel = isShown ? 'Last recorded on' : 'Analysis for';
 
     return BlocListener<ChangeCalorieGoalBloc, ChangeCalorieGoalState>(
       listener: (context, state) {
@@ -92,25 +102,52 @@ class MetricsDialog extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Progress Update',
-                              style: GoogleFonts.inter(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    dialogTitle,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  if (isShown) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF4ECDC4)
+                                            .withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        'Previous',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: const Color(0xFF4ECDC4),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ),
-                            Text(
-                              'Analysis for $date',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: Colors.white.withOpacity(0.6),
+                              Text(
+                                '$dateLabel $date',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: Colors.white.withOpacity(0.6),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(context),
@@ -258,47 +295,89 @@ class MetricsDialog extends StatelessWidget {
                     ),
 
                     // OK Button
-                    Container(
-                      margin: const EdgeInsets.only(top: 16),
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: state is ChangeCalorieGoalLoading
-                            ? null
-                            : () {
-                                context.read<ChangeCalorieGoalBloc>().add(
-                                      SubmitChangeCalorieGoal(
-                                        day: 1,
-                                        calorie: actualWeightChange,
-                                      ),
-                                    );
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4ECDC4),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    if (!isShown)
+                      Container(
+                        margin: const EdgeInsets.only(top: 16),
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: state is ChangeCalorieGoalLoading
+                              ? null
+                              : () {
+                                  final now = DateTime.now();
+                                  final formattedDate =
+                                      "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
+                                  context.read<ChangeCalorieGoalBloc>().add(
+                                        SubmitChangeCalorieGoal(
+                                          day: 1,
+                                          calorie: actualWeightChange,
+                                          date: formattedDate,
+                                          isShown: true,
+                                        ),
+                                      );
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4ECDC4),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: state is ChangeCalorieGoalLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : Text(
+                                  'Save Progress',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                      )
+                    else
+                      Container(
+                        margin: const EdgeInsets.only(top: 16),
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.1),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Close',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                        child: state is ChangeCalorieGoalLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                ),
-                              )
-                            : Text(
-                                'OK',
-                                style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
                       ),
-                    ),
+
+                    if (isShown)
+                      Container(
+                        margin: const EdgeInsets.only(top: 12),
+                        child: Text(
+                          'This is your last recorded progress. Continue using the app to track your new progress.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.6),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

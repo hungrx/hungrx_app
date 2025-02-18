@@ -9,12 +9,16 @@ class ChangeCalorieGoalUseCase {
   Future<ChangeCalorieGoalModel> execute({
     required String userId,
     required double calorie,
-    required int day,  // Added day parameter
+    required int day,
+    required bool isShown,
+    required String date,
   }) async {
     return await _repository.changeCalorieGoal(
       userId: userId,
       calorie: calorie,
-      day: day,  // Added day parameter
+      day: day,
+      isShown: isShown,
+      date: date,
     );
   }
 }

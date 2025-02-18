@@ -18,6 +18,9 @@ class AuthService {
   static String userIdKey = 'user_id';
   static String installKey = 'installation_check';
   static const String onboardingKey = 'has_seen_onboarding';
+  static const String firstTimeKey = 'is_first_time_user';
+  static const String lastDialogDateKey = 'last_dialog_date';
+  static const String accountCreationDateKey = 'account_creation_date';
 
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
@@ -82,13 +85,20 @@ class AuthService {
       // Save flags before clearing
       final bool installFlag = prefs.getBool(installKey) ?? false;
       final bool onboardingFlag = prefs.getBool(onboardingKey) ?? false;
+      final bool firstTimeFlag = prefs.getBool(firstTimeKey) ?? false;
+      final String? lastDialogDate = prefs.getString(lastDialogDateKey);
+      final String? accountCreationDate =
+          prefs.getString(accountCreationDateKey);
 
-      // Remove specific keys instead of clearing everything
-      final keysToRemove = prefs
-          .getKeys()
-          .where((key) => key != installKey && key != onboardingKey);
+      // Remove specific keys except the preserved ones
+      final keysToRemove = prefs.getKeys().where((key) =>
+          key != installKey &&
+          key != onboardingKey &&
+          key != firstTimeKey &&
+          key != lastDialogDateKey &&
+          key != accountCreationDateKey);
 
-      // Remove all keys except installation and onboarding
+      // Remove all keys except preserved ones
       for (String key in keysToRemove) {
         await prefs.remove(key);
       }
@@ -100,9 +110,16 @@ class AuthService {
         _otpRepository.logout(),
       ]);
 
-      // Restore flags
+      // Restore preserved flags and values
       await prefs.setBool(installKey, installFlag);
       await prefs.setBool(onboardingKey, onboardingFlag);
+      await prefs.setBool(firstTimeKey, firstTimeFlag);
+      if (lastDialogDate != null) {
+        await prefs.setString(lastDialogDateKey, lastDialogDate);
+      }
+      if (accountCreationDate != null) {
+        await prefs.setString(accountCreationDateKey, accountCreationDate);
+      }
     } catch (e) {
       print('Error during logout: $e');
       rethrow;

@@ -579,7 +579,7 @@ Widget _buildNutritionInfo(NutritionInfo nutrition) {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     minimumSize: const Size(double.infinity, 50),
                   ),
                   onPressed: state is AddToCartLoading

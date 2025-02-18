@@ -22,6 +22,7 @@ import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/streak_cal
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/weight_reminder_dialg.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/weight_reminder_manager.dart';
 import 'package:hungrx_app/presentation/pages/dashboard_screen/widget/welcome_dialog.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -56,7 +57,58 @@ class DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     // Single initialization point
     _initializeApp();
+    _refreshTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _checkDateChange();
+    });
   }
+
+  DateTime? _lastCheckedDate;
+
+ void _checkDateChange() async {
+  print('\n--- Date Change Check ---');
+  final now = DateTime.now();
+  final today = DateFormat('dd/MM/yyyy').format(now);
+  
+  print('Current time: ${now.toIso8601String()}');
+  print('Today formatted: $today');
+  print('Last checked date: ${_lastCheckedDate?.toIso8601String() ?? "null"}');
+  
+  if (_lastCheckedDate == null) {
+    print('Initializing last checked date');
+    _lastCheckedDate = now;
+    return;
+  }
+
+  final lastCheckedFormatted = DateFormat('dd/MM/yyyy').format(_lastCheckedDate!);
+  
+  if (lastCheckedFormatted != today) {
+    print('Date changed from $lastCheckedFormatted to $today');
+    _lastCheckedDate = now;
+    
+    try {
+      // First refresh home data
+      await _fetchData();
+      
+      // Give time for the home data to update
+      await Future.delayed(const Duration(seconds: 1));
+      
+      if (!mounted) return;
+      
+      // Clear the last dialog date to ensure dialog shows
+      await _appPrefs.clearLastDialogDate();
+      print('Cleared last dialog date for new day');
+      
+      // Then fetch metrics and show dialog
+      await _fetchMetricsAndShowDialog();
+      
+    } catch (e) {
+      print('Error handling date change: $e');
+    }
+  } else {
+    print('No date change detected');
+  }
+  print('------------------------\n');
+}
 
   Future<void> _initializeApp() async {
     if (_isInitialized) return;
@@ -126,8 +178,8 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _handleFirstTimeUser(String calculationDate) async {
     // Store the calculationDate as account creation date
-    _appPrefs.setFirstTimeUser(false);
-    _appPrefs.setAccountCreationDate(calculationDate);
+   await _appPrefs.setFirstTimeUser(false);
+  await  _appPrefs.setAccountCreationDate(calculationDate);
 
     if (mounted) {
       await showDialog(
@@ -177,19 +229,16 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
 
     final now = DateTime.now();
-    final today = now.toIso8601String().split('T')[0]; // YYYY-MM-DD
+    final today = DateFormat('dd/MM/yyyy').format(now); // Match API date format
     final lastShownDate = _appPrefs.getLastDialogDate();
-    final accountCreationDate = _parseDate(homeState.homeData.calculationDate);
-    final isoAccountCreationDate =
-        accountCreationDate.toIso8601String().split('T')[0];
+    // final accountCreationDate = _parseDate(homeState.homeData.calculationDate);
 
+    print('Today\'s date (formatted): $today');
     print('API Creation date: ${homeState.homeData.calculationDate}');
-    print('Parsed Creation date: $isoAccountCreationDate');
-    print('Current date: $today');
     print('Last shown date: $lastShownDate');
 
     // Don't show on account creation date
-    if (isoAccountCreationDate == today) {
+    if (homeState.homeData.calculationDate == today) {
       print('Skipping metrics dialog on account creation date');
       return;
     }
@@ -198,8 +247,10 @@ class DashboardScreenState extends State<DashboardScreen> {
     if (lastShownDate != today) {
       print('Showing metrics dialog - not shown today');
       if (mounted) {
-        _showMetricsDialog(); // Show dialog first
-        _appPrefs.setLastDialogDate(today); // Set date after successful show
+        await _showMetricsDialog(); // Make this async
+      await  _appPrefs
+            .setLastDialogDate(today); 
+            print('Dialog shown and date updated to: $today');// Store in same format as comparison
       }
     } else {
       print('Metrics dialog already shown today');
@@ -293,18 +344,31 @@ class DashboardScreenState extends State<DashboardScreen> {
   Future<void> _fetchMetricsAndShowDialog() async {
     if (!mounted) return;
 
+    print('Fetching metrics and showing dialog...');
     final metricsBloc = context.read<CalorieMetricsBloc>();
     metricsBloc.add(FetchCalorieMetrics());
 
-    // Wait for metrics to load
-    await for (final state in metricsBloc.stream) {
-      if (state is CalorieMetricsLoaded) {
-        await _checkAndShowMetricsDialog();
-        break;
+    try {
+      // Wait for metrics to load with timeout
+      await for (final state in metricsBloc.stream.timeout(
+        const Duration(seconds: 10),
+        onTimeout: (sink) {
+          print('Metrics fetch timeout');
+          sink.close();
+        },
+      )) {
+        if (state is CalorieMetricsLoaded) {
+          print('Metrics loaded successfully');
+          await _checkAndShowMetricsDialog();
+          break;
+        }
+        if (state is CalorieMetricsError) {
+          print('Error loading metrics');
+          break;
+        }
       }
-      if (state is CalorieMetricsError) {
-        break;
-      }
+    } catch (e) {
+      print('Error in _fetchMetricsAndShowDialog: $e');
     }
   }
 
@@ -315,52 +379,51 @@ class DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  // Future<void> _initializePrefs() async {
-  //   _prefs = await SharedPreferences.getInstance();
-  //   // Ensure we have the keys initialized
-  //   if (!_prefs.containsKey(_firstTimeKey)) {
-  //     await _prefs.setBool(_firstTimeKey, true);
-  //   }
-  // }
+Future<void> _showMetricsDialog() async {
+  print('Attempting to show metrics dialog');
+  if (!mounted) {
+    print('Not mounted when showing metrics dialog');
+    return;
+  }
 
-  void _showMetricsDialog() {
-    print('Attempting to show metrics dialog');
-    if (!mounted) {
-      print('Not mounted when showing metrics dialog');
-      return;
-    }
+  final metricsState = context.read<CalorieMetricsBloc>().state;
+  final homeState = context.read<HomeBloc>().state;
 
-    final metricsState = context.read<CalorieMetricsBloc>().state;
-    final homeState = context.read<HomeBloc>().state;
+  print('Current states - Metrics: ${metricsState.runtimeType}, Home: ${homeState.runtimeType}');
 
-    if (metricsState is CalorieMetricsLoaded && homeState is HomeLoaded) {
-      print('Showing metrics dialog with data:');
-      print('Consumed: ${metricsState.metrics.consumedCalories}');
-      print('Goal: ${metricsState.metrics.goal}');
-
-      showDialog(
+  if (metricsState is CalorieMetricsLoaded && homeState is HomeLoaded) {
+    print('Showing metrics dialog with data:');
+    print('Consumed: ${metricsState.metrics.data.consumedCalories}');
+    print('Goal: ${metricsState.metrics.data.goal}');
+    
+    try {
+      await showDialog(
         context: context,
         barrierDismissible: true,
         builder: (context) => MetricsDialog(
-          isMaintain: metricsState.metrics.goal == 'maintain weight',
-          consumedCalories: metricsState.metrics.consumedCalories,
-          dailyTargetCalories: metricsState.metrics.dailyTargetCalories,
-          remainingCalories: metricsState.metrics.remainingCalories,
-          goalMessage: metricsState.metrics.message,
-          weightChangeRate: metricsState.metrics.weightChangeRate,
-          caloriesToReachGoal: metricsState.metrics.caloriesToReachGoal,
-          dailyWeightLoss: metricsState.metrics.dailyWeightLoss,
-          ratio: metricsState.metrics.ratio,
-          goal: metricsState.metrics.goal,
-          daysLeft: metricsState.metrics.daysLeft,
-          date: metricsState.metrics.date,
+          isMaintain: metricsState.metrics.data.goal == 'maintain weight',
+          consumedCalories: metricsState.metrics.data.consumedCalories,
+          dailyTargetCalories: metricsState.metrics.data.dailyTargetCalories,
+          remainingCalories: metricsState.metrics.data.remainingCalories,
+          goalMessage: metricsState.metrics.data.message,
+          weightChangeRate: metricsState.metrics.data.weightChangeRate,
+          caloriesToReachGoal: metricsState.metrics.data.caloriesToReachGoal,
+          dailyWeightLoss: metricsState.metrics.data.dailyWeightLoss,
+          ratio: metricsState.metrics.data.ratio,
+          goal: metricsState.metrics.data.goal,
+          daysLeft: metricsState.metrics.data.daysLeft,
+          date: metricsState.metrics.data.date,
+          isShown: metricsState.metrics.data.isShown,
         ),
       );
-    } else {
-      print(
-          'Cannot show dialog: Metrics state = ${metricsState.runtimeType}, Home state = ${homeState.runtimeType}');
+      print('Dialog shown successfully');
+    } catch (e) {
+      print('Error showing dialog: $e');
     }
+  } else {
+    print('Cannot show dialog: Metrics state = ${metricsState.runtimeType}, Home state = ${homeState.runtimeType}');
   }
+}
 
   Future<void> _fetchData() async {
     if (!mounted) return;
@@ -585,7 +648,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                           SizedBox(height: getPadding(context, 0.03)),
                           GestureDetector(
                             onTap: () {
-                               HapticFeedback.mediumImpact();
+                              HapticFeedback.mediumImpact();
                               context.push('/water-intake');
                             },
                             child: Container(

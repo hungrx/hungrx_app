@@ -36,6 +36,7 @@ import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/restauran
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/nearby_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/request_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/suggested_restaurants_api.dart';
+import 'package:hungrx_app/data/datasources/api/timezone/timezone_api.dart';
 import 'package:hungrx_app/data/datasources/api/water_screen/delete_water_api.dart';
 import 'package:hungrx_app/data/datasources/api/water_screen/get_water_entry_api.dart';
 import 'package:hungrx_app/data/datasources/api/water_screen/water_intake_api.dart';
@@ -79,12 +80,14 @@ import 'package:hungrx_app/data/repositories/dashboad_screen/streak_repository.d
 import 'package:hungrx_app/data/repositories/profile_setting_screen/tdee_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/update_basic_info_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/user_info_profile_repository.dart';
+import 'package:hungrx_app/data/repositories/timezone/timezone_repository.dart';
 import 'package:hungrx_app/data/repositories/water_screen/delete_water_repository.dart';
 import 'package:hungrx_app/data/repositories/water_screen/get_water_entry_repository.dart';
 import 'package:hungrx_app/data/repositories/water_screen/water_intake_repository.dart';
 import 'package:hungrx_app/data/repositories/weight_screen/weight_history_repository.dart';
 import 'package:hungrx_app/data/repositories/weight_screen/weight_update_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/data/services/purchase_service.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/apple_sign_in_usecase.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/login_usecase.dart';
 import 'package:hungrx_app/domain/usecases/cart_screen.dart/consume_cart_usecase.dart';
@@ -108,6 +111,7 @@ import 'package:hungrx_app/domain/usecases/restaurant_menu.dart/add_to_cart_usec
 import 'package:hungrx_app/domain/usecases/restaurant_screen/get_suggested_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/dashboad_screen/submit_feedback_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_screen/request_restaurant_usecase.dart';
+import 'package:hungrx_app/domain/usecases/timezone/update_timezone_usecase.dart';
 import 'package:hungrx_app/domain/usecases/water_screen/delete_water_entry_usecase.dart';
 import 'package:hungrx_app/domain/usecases/water_screen/get_water_entry_usecase.dart';
 import 'package:hungrx_app/domain/usecases/weight_screen/get_weight_history_usecase.dart';
@@ -163,6 +167,7 @@ import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_event.dart';
+import 'package:hungrx_app/presentation/blocs/timezone/timezone_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/water_intake/water_intake_bloc.dart';
@@ -174,6 +179,7 @@ import 'package:hungrx_app/data/repositories/auth_screen/email_sign_up_repositor
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+   await PurchaseService.init();
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
@@ -298,6 +304,16 @@ class MyApp extends StatelessWidget {
               ),
             ),
           ),
+
+           BlocProvider(
+          create: (context) => TimezoneBloc(
+            UpdateTimezoneUseCase(
+              TimezoneRepository(
+                TimezoneApi(),
+              ),
+            ),
+          ),
+        ),
 
           BlocProvider(
             create: (context) => AppleAuthBloc(

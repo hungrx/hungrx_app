@@ -102,7 +102,7 @@ class CalorieSummaryWidget extends StatelessWidget {
                           Text(
                             ' ${currentRemaining.round()} cal',
                             style: TextStyle(
-                              color: _getProgressColor(progress),
+                              color: AppColors.buttonColors,
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
@@ -241,7 +241,7 @@ class AnimatedOrderButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         ),
         onPressed: onPressed,
         child: AnimatedSlideFade(

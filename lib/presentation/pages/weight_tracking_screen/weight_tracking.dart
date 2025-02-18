@@ -128,6 +128,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
           const SizedBox(height: 16),
           Expanded(
             child: SfCartesianChart(
+
               margin: const EdgeInsets.all(0),
               primaryXAxis: CategoryAxis(
                 isInversed: false,
@@ -138,6 +139,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
                 interval: 1,
               ),
               primaryYAxis: NumericAxis(
+                autoScrollingMode: AutoScrollingMode.end,
                 majorGridLines:
                     const MajorGridLines(width: 0.5, color: Colors.grey),
                 labelStyle: const TextStyle(color: Colors.white),
@@ -153,6 +155,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
               plotAreaBorderWidth: 0,
               series: <CartesianSeries>[
                 LineSeries<ChartData, String>(
+
                   dataSource: chartData,
                   xValueMapper: (ChartData data, _) => data.x,
                   yValueMapper: (ChartData data, _) => data.y,
