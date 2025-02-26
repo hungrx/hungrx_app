@@ -55,6 +55,12 @@ class MetricsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+    final padding = isSmallScreen ? 12.0 : 20.0;
+    // final titleFontSize = isSmallScreen ? 18.0 : 20.0;
+    // final metricCardPadding = isSmallScreen ? 12.0 : 16.0;
+    print("ishown now :$isShown");
     final bool isGaining = isWeightGainGoal;
     final analysisColor =
         isGaining ? const Color(0xFF4ECDC4) : const Color(0xFFFF6B6B);
@@ -84,8 +90,16 @@ class MetricsDialog extends StatelessWidget {
         builder: (context, state) {
           return Dialog(
             backgroundColor: Colors.transparent,
+            insetPadding: EdgeInsets.symmetric(
+              horizontal: screenSize.width * 0.05,
+              vertical: screenSize.height * 0.03,
+            ),
             child: Container(
-              padding: const EdgeInsets.all(20),
+              constraints: BoxConstraints(
+                maxHeight: screenSize.height * 0.9,
+                maxWidth: screenSize.width * 0.9,
+              ),
+              padding: EdgeInsets.all(padding),
               decoration: BoxDecoration(
                 color: const Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.circular(20),
@@ -111,17 +125,17 @@ class MetricsDialog extends StatelessWidget {
                                   Text(
                                     dialogTitle,
                                     style: GoogleFonts.inter(
-                                      fontSize: 20,
+                                      fontSize: isSmallScreen ? 14 : 18,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,
                                     ),
                                   ),
                                   if (isShown) ...[
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: isSmallScreen ? 4 : 8),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: isSmallScreen ? 6 : 8,
+                                        vertical: isSmallScreen ? 2 : 4,
                                       ),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF4ECDC4)
@@ -131,7 +145,7 @@ class MetricsDialog extends StatelessWidget {
                                       child: Text(
                                         'Previous',
                                         style: GoogleFonts.inter(
-                                          fontSize: 12,
+                                          fontSize: isSmallScreen ? 8 : 10,
                                           color: const Color(0xFF4ECDC4),
                                         ),
                                       ),
@@ -142,7 +156,7 @@ class MetricsDialog extends StatelessWidget {
                               Text(
                                 '$dateLabel $date',
                                 style: GoogleFonts.inter(
-                                  fontSize: 14,
+                                  fontSize: isSmallScreen ? 10 : 12,
                                   color: Colors.white.withOpacity(0.6),
                                 ),
                               ),
@@ -303,14 +317,14 @@ class MetricsDialog extends StatelessWidget {
                           onPressed: state is ChangeCalorieGoalLoading
                               ? null
                               : () {
-                                  final now = DateTime.now();
-                                  final formattedDate =
-                                      "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
+                                  // final now = DateTime.now();
+                                  // final formattedDate =
+                                  //     "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
                                   context.read<ChangeCalorieGoalBloc>().add(
                                         SubmitChangeCalorieGoal(
                                           day: 1,
                                           calorie: actualWeightChange,
-                                          date: formattedDate,
+                                          date: date,
                                           isShown: true,
                                         ),
                                       );

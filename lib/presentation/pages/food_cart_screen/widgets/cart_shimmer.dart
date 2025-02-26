@@ -192,11 +192,11 @@ class CartScreenShimmer extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            Container(
-                              width: iconSize * 1.3,
-                              height: iconSize,
-                              color: Colors.white,
-                            ),
+                            // Container(
+                            //   width: iconSize * 1.3,
+                            //   height: iconSize,
+                            //   color: Colors.white,
+                            // ),
                             Container(
                               width: iconSize,
                               height: iconSize,

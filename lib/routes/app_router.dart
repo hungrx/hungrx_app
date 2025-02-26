@@ -12,7 +12,7 @@ import 'package:hungrx_app/presentation/layout/root_layout.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
-import 'package:hungrx_app/presentation/pages/subcription_screen/old_subcription_screen.dart';
+import 'package:hungrx_app/presentation/pages/subcription_screen/subscription_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/basic_information_screen/basic_informaion_screen.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/widgets/feedbacks_widget.dart';
@@ -44,7 +44,6 @@ import 'package:hungrx_app/presentation/pages/weight_tracking_screen/weight_trac
 import 'package:hungrx_app/routes/route_names.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/splash_screen.dart';
 import 'package:hungrx_app/presentation/pages/onboarding_screen/onboarding_screen.dart';
-
 
 class AppRouter {
   static final GetIt getIt = GetIt.instance;

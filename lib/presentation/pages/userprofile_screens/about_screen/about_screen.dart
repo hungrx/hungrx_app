@@ -26,7 +26,8 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
     });
   }
 
-  Future<void> launchUrlInBrowser(BuildContext context, String urlString) async {
+  Future<void> launchUrlInBrowser(
+      BuildContext context, String urlString) async {
     try {
       final Uri url = Uri.parse(urlString);
       if (!await launchUrl(
@@ -36,7 +37,8 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Could not launch the webpage. Please try again later.'),
+              content:
+                  Text('Could not launch the webpage. Please try again later.'),
               duration: Duration(seconds: 3),
             ),
           );
@@ -115,19 +117,31 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
               context,
               icon: Icons.description_outlined,
               title: 'Terms of Service',
-              onTap: () => launchUrlInBrowser(context,'https://www.hungrx.com/terms-and-conditions.html'),
+              onTap: () => launchUrlInBrowser(
+                  context, 'https://www.hungrx.com/terms-and-conditions.html'),
             ),
             _buildPolicyItem(
               context,
               icon: Icons.security_outlined,
               title: 'Privacy Policy',
-              onTap: () => launchUrlInBrowser(context,'https://www.hungrx.com/privacy-policy.html'),
+              onTap: () => launchUrlInBrowser(
+                  context, 'https://www.hungrx.com/privacy-policy.html'),
             ),
             _buildPolicyItem(
               context,
               icon: Icons.cookie_outlined,
               title: 'Cookie Policy',
-              onTap: () => launchUrlInBrowser(context,'https://www.hungrx.com/cookie-policy.html'),
+              onTap: () => launchUrlInBrowser(
+                  context, 'https://www.hungrx.com/cookie-policy.html'),
+            ),
+            // Add this right after the Cookie Policy list tile and before the About list tile
+            _buildPolicyItem(
+              context,
+              icon:
+                  Icons.medical_information_outlined, // Using medical info icon
+              title: 'References & Citations',
+              onTap: () => launchUrlInBrowser(context,
+                  'https://www.hungrx.com/citations.html'),
             ),
             _buildPolicyItem(
               context,
@@ -135,6 +149,7 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
               title: 'About',
               onTap: () => _showAboutDialog(context),
             ),
+
             const Spacer(),
             Padding(
               padding: const EdgeInsets.all(16.0),

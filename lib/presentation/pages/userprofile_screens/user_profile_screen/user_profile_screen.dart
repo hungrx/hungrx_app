@@ -321,14 +321,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget _buildInviteSection() {
     // Text to share
     const String inviteText =
-        "Block Shorts, Apps, & Notifications to Regain your Focus. Join me now: https://regainapp.ai/download";
+        "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights! Join me now: https://www.hungrx.com/";
 
     // Function to handle sharing
     void handleShare() async {
       try {
         await Share.share(
           inviteText,
-          subject: 'Join Regain App!',
+          subject: 'Join hungrX App!',
         );
       } catch (e) {
         debugPrint('Error sharing: $e');

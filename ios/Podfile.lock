@@ -233,7 +233,7 @@ SPEC CHECKSUMS:
   flutter_secure_storage: d33dac7ae2ea08509be337e775f6b59f1ff45f12
   flutter_timezone: ac3da59ac941ff1c98a2e1f0293420e020120282
   geolocator_apple: 9bcea1918ff7f0062d98345d238ae12718acfbc1
-  google_sign_in_ios: 07375bfbf2620bc93a602c0e27160d6afc6ead38
+  google_sign_in_ios: 4111e87aa5e24a4404f00ea13479f35e571969cc
   GoogleSignIn: d4281ab6cf21542b1cfaff85c191f230b399d2db
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de

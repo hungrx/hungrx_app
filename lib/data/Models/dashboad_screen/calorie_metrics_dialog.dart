@@ -1,6 +1,6 @@
 class CalorieMetricsModel {
   final bool status;
-  final CalorieMetricsData data;
+  final CalorieMetricsData? data;
 
   CalorieMetricsModel({
     required this.status,
@@ -10,7 +10,7 @@ class CalorieMetricsModel {
   factory CalorieMetricsModel.fromJson(Map<String, dynamic> json) {
     return CalorieMetricsModel(
       status: json['status'] ?? false,
-      data: CalorieMetricsData.fromJson(json['data'] ?? {}),
+      data: json['data'] != null ? CalorieMetricsData.fromJson(json['data']) : null,
     );
   }
 }
@@ -46,6 +46,7 @@ class CalorieMetricsData {
     required this.isShown,
   });
 
+  // Define both helper methods inside the class
   static double _safeDouble(dynamic value) {
     if (value == null) return 0.0;
     if (value is num) {
@@ -62,6 +63,21 @@ class CalorieMetricsData {
     return 0.0;
   }
 
+  static int _safeInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) {
+      if (value.isFinite) return value.toInt();
+      return 0;
+    }
+    if (value is String) {
+      try {
+        final int parsed = int.parse(value);
+        if (parsed.isFinite) return parsed;
+      } catch (_) {}
+    }
+    return 0;
+  }
+
   factory CalorieMetricsData.fromJson(Map<String, dynamic> json) {
     print("Parsing CalorieMetricsData from: $json");
     try {
@@ -70,7 +86,7 @@ class CalorieMetricsData {
         dailyTargetCalories: _safeDouble(json['dailyTargetCalories']),
         remainingCalories: _safeDouble(json['remainingCalories']),
         weightChangeRate: json['weightChangeRate']?.toString() ?? '',
-        daysLeft: json['daysLeft'] is num ? (json['daysLeft'] as num).toInt() : 0,
+        daysLeft: _safeInt(json['daysLeft']),
         goal: json['goal']?.toString() ?? '',
         date: json['date']?.toString() ?? '',
         calorieStatus: json['calorieStatus']?.toString() ?? '',

@@ -46,7 +46,7 @@ class FeedbackDialogState extends State<FeedbackDialog> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'We appreciate your feedback',
+                      'We appreciate \nyour feedback',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,

@@ -223,9 +223,9 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
                     _buildInputField(Icons.person, 'Name', nameController),
                     const SizedBox(height: 16),
                     _buildGenderSelector(),
-                    const SizedBox(height: 16),
-                    _buildInputField(
-                        Icons.phone, 'Phone number', phoneController),
+                    // const SizedBox(height: 16),
+                    // _buildInputField(
+                    //     Icons.phone, 'Phone number', phoneController),
                     const SizedBox(height: 16),
                     _buildInputField(Icons.email, 'Email', emailController),
                     const SizedBox(height: 16),

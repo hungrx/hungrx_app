@@ -222,7 +222,7 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
                       FadeTransition(
                         opacity: _opacityAnimation,
                         child: const HeaderTextDataScreen(
-                          data: 'Hey there! \nTell Us About Yourself',
+                          data: 'Hey there! \nWhat should we call you?',
                         ),
                       ),
 
@@ -232,7 +232,7 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
                       FadeTransition(
                         opacity: _opacityAnimation,
                         child: Text(
-                          "What's your Name ?",
+                          "Enter a name below :",
                           style: TextStyle(
                             color: Colors.grey,
                             fontSize: size.width * 0.04,
@@ -255,10 +255,10 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
                                     .add(NameChanged(value));
                               },
                               controller: _nameController,
-                              hintText: 'Enter Your Name',
+                              hintText: 'Enter a name',
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter your name';
+                                  return 'Please Enter a preferred name';
                                 }
                                 return null;
                               },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/core/widgets/citation_ibutton.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_event.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_state.dart';
@@ -223,13 +224,30 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          'Your BMI: ${bmi.toStringAsFixed(1)}',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: isSmallScreen ? 14 : 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  'Your BMI: ${bmi.toStringAsFixed(1)}',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize:
+                                                        isSmallScreen ? 14 : 16,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                InfoButton(
+                                                  compact: true,
+                                                  metricType: 'bmi',
+                                                  size: isSmallScreen ? 16 : 18,
+                                                ),
+                                              ],
+                                            ),
+                                          ],
                                         ),
                                         SizedBox(height: 8),
                                         Text(
@@ -306,13 +324,25 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
                                             fontStyle: FontStyle.italic,
                                           ),
                                         ),
-                                        Text(
-                                          'Your ideal weight range is $idealWeightRange',
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: isSmallScreen ? 11 : 12,
-                                            fontStyle: FontStyle.italic,
-                                          ),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              'Your ideal weight range is $idealWeightRange',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize:
+                                                    isSmallScreen ? 11 : 12,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            // InfoButton(
+                                            //   compact: true,
+                                            //   metricType: 'weight_range',
+                                            //   size: isSmallScreen ? 14 : 16,
+                                            //   color: Colors.grey[600],
+                                            // ),
+                                          ],
                                         ),
                                       ],
                                       SizedBox(height: size.height * 0.01),

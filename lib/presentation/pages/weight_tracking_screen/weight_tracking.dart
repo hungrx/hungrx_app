@@ -113,14 +113,14 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
                 'Initial W: ${weightHistory.initialWeight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
                 style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold),
               ),
               Text(
                 'Current: ${weightHistory.currentWeight}${weightHistory.isMetric ? 'kg' : 'lbs'}',
                 style: const TextStyle(
                     color: AppColors.buttonColors,
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold),
               ),
             ],

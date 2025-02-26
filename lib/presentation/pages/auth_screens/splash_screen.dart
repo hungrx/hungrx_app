@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_null_comparison
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -37,20 +39,22 @@ class SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initializeApp() async {
+     await _authService.initialize();
     final userId = await _authService.getUserId();
     if (userId != null) {
       print("hello there ");
-      await _updateUserTimezone(userId);
+      
     }
 
     // Initialize auth service first
-    await _authService.initialize();
+    // await _authService.initialize();
     _checkConnectivityAndNavigate();
   }
 
   Future<void> _updateUserTimezone(String userId) async {
-    
-    context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
+    if (mounted && userId !=null) {
+      context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
+    }
   }
 
   Future<void> _checkConnectivityAndNavigate() async {
@@ -66,9 +70,11 @@ class SplashScreenState extends State<SplashScreen> {
 
     final bool isLoggedIn = await _authService.isLoggedIn();
     final bool hasSeenOnboarding = await _onboardingService.hasSeenOnboarding();
+    print(hasSeenOnboarding);
     String route = '/phoneNumber';
-
-    if (isLoggedIn) {
+if (!hasSeenOnboarding) {
+        route = '/onboarding';
+      } else if (isLoggedIn) {
       try {
         final userId = await _authService.getUserId();
         print("splash :$userId");
@@ -124,7 +130,7 @@ class SplashScreenState extends State<SplashScreen> {
 
           // Determine route based on profile completion
           route = isProfileComplete ? '/home' : '/user-info-one';
-        }
+        } 
       } catch (e) {
         print('Error during navigation checks: $e');
         if (mounted) {

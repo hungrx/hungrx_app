@@ -4,6 +4,7 @@ import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_s
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:io' show Platform;
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -27,7 +28,7 @@ class HelpSupportScreen extends StatelessWidget {
   }
 
   final String inviteText =
-      "Block Shorts, Apps, & Notifications to Regain your Focus. Join me now: https://regainapp.ai/download";
+      "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights! Join me now: https://www.hungrx.com/";
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +74,7 @@ class HelpSupportScreen extends StatelessWidget {
                       LucideIcons.linkedin,
                       () => _launchUrl(
                           'https://www.linkedin.com/company/hungrx/posts/?feedView=all')),
-                  _buildSocialButton(LucideIcons.twitter,
+                  _buildSocialButton(LucideIcons.x,
                       () => _launchUrl('https://x.com/hungr_x')),
                 ],
               ),
@@ -93,7 +94,7 @@ class HelpSupportScreen extends StatelessWidget {
                   _buildSupportItem(
                     icon: Icons.lightbulb_outline,
                     title: 'Tutorials',
-                    onTap: () => _launchUrl('https://hungrx.com/tutorials'),
+                    onTap: () => _launchUrl('https://hungrx.com/'),
                   ),
                   _buildDivider(),
                   // _buildSupportItem(
@@ -140,12 +141,17 @@ class HelpSupportScreen extends StatelessWidget {
                     },
                   ),
                   _buildDivider(),
-                  _buildSupportItem(
-                    icon: Icons.star_outline,
-                    title: 'Rate us on play store',
-                    onTap: () => _launchUrl(
-                        'https://play.google.com/store/apps/details?id=com.hungrx.app'),
-                  ),
+                _buildSupportItem(
+  icon: Icons.star_outline,
+  title: Platform.isIOS 
+      ? 'Rate us on App Store'
+      : 'Rate us on Play Store',
+  onTap: () => _launchUrl(
+    Platform.isIOS
+        ? 'https://apps.apple.com/app/hungrX' // Replace with your actual App Store ID
+        : 'https://play.google.com/store/apps/details?id=com.hungrx.app'
+  ),
+),
                   // _buildDivider(),
                   // _buildSupportItem(
                   //   icon: Icons.poll_outlined,
@@ -165,7 +171,7 @@ class HelpSupportScreen extends StatelessWidget {
     try {
       await Share.share(
         inviteText,
-        subject: 'Join Regain App!',
+        subject: 'Join hungrX App!',
       );
     } catch (e) {
       debugPrint('Error sharing: $e');

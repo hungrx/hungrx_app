@@ -1,8 +1,11 @@
+// import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:hungrx_app/core/constants/subcription_const/subscription_constants.dart';
 import 'package:hungrx_app/data/datasources/api/auth_screen.dart/apple_auth_api.dart';
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/consume_cart_api.dart';
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/delete_dish_cart_api.dart';
@@ -80,6 +83,7 @@ import 'package:hungrx_app/data/repositories/dashboad_screen/streak_repository.d
 import 'package:hungrx_app/data/repositories/profile_setting_screen/tdee_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/update_basic_info_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/user_info_profile_repository.dart';
+import 'package:hungrx_app/data/repositories/subscription/subscription_repository.dart';
 import 'package:hungrx_app/data/repositories/timezone/timezone_repository.dart';
 import 'package:hungrx_app/data/repositories/water_screen/delete_water_repository.dart';
 import 'package:hungrx_app/data/repositories/water_screen/get_water_entry_repository.dart';
@@ -111,6 +115,7 @@ import 'package:hungrx_app/domain/usecases/restaurant_menu.dart/add_to_cart_usec
 import 'package:hungrx_app/domain/usecases/restaurant_screen/get_suggested_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/dashboad_screen/submit_feedback_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_screen/request_restaurant_usecase.dart';
+import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/subscriptiion_usecase.dart';
 import 'package:hungrx_app/domain/usecases/timezone/update_timezone_usecase.dart';
 import 'package:hungrx_app/domain/usecases/water_screen/delete_water_entry_usecase.dart';
 import 'package:hungrx_app/domain/usecases/water_screen/get_water_entry_usecase.dart';
@@ -165,6 +170,7 @@ import 'package:hungrx_app/presentation/blocs/result_bloc/result_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/search_history_log/search_history_log_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/signup_bloc/signup_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/subscription/subscription_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_restaurants_event.dart';
 import 'package:hungrx_app/presentation/blocs/timezone/timezone_bloc.dart';
@@ -176,25 +182,31 @@ import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.d
 import 'package:hungrx_app/routes/app_router.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/sign_up_usecase.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/email_sign_up_repository.dart';
+// import 'package:purchases_flutter/purchases_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-   await PurchaseService.init();
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+  await PurchaseService.initialize();
+  // await Purchases.setLogLevel(LogLevel.debug);
+  // await Purchases.configure(PurchasesConfiguration(Platform.isAndroid
+  //     ? SubscriptionConstants.revenueCatApiKeyAndroid
+  //     : SubscriptionConstants.revenueCatApiKeyIOS));
+  // await SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.portraitUp,
+  // ]);
   // Add this line to disable split-screen
   await SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.manual,
     overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
   );
- try {
+  try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
     }
   } catch (e) {
+    // ignore: avoid_print
     print('Firebase initialization error: $e');
   }
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -305,15 +317,15 @@ class MyApp extends StatelessWidget {
             ),
           ),
 
-           BlocProvider(
-          create: (context) => TimezoneBloc(
-            UpdateTimezoneUseCase(
-              TimezoneRepository(
-                TimezoneApi(),
+          BlocProvider(
+            create: (context) => TimezoneBloc(
+              UpdateTimezoneUseCase(
+                TimezoneRepository(
+                  TimezoneApi(),
+                ),
               ),
             ),
           ),
-        ),
 
           BlocProvider(
             create: (context) => AppleAuthBloc(
@@ -321,6 +333,13 @@ class MyApp extends StatelessWidget {
                 AppleAuthRepository(
                   api: AppleAuthApi(),
                 ),
+              ),
+            ),
+          ),
+          BlocProvider(
+            create: (context) => SubscriptionBloc(
+              SubscriptionUseCase(
+                SubscriptionRepository(),
               ),
             ),
           ),

@@ -671,7 +671,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
                                     return Container(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
+                                        horizontal: 4,
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
@@ -686,7 +686,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                                                   remainingCalories
                                               ? Colors.red
                                               : AppColors.buttonColors,
-                                          fontSize: 12,
+                                          fontSize: 10,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -697,7 +697,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                                horizontal: 4,
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
@@ -708,14 +708,14 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                                 "P$protine",
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                                horizontal: 4,
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
@@ -726,7 +726,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                                 "C$cards",
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

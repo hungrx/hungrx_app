@@ -1,12 +1,25 @@
 import 'package:hungrx_app/data/Models/dashboad_screen/home_screen_model.dart';
 import 'package:hungrx_app/data/datasources/api/dashboard_screen/home_screen_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/service_api/user_profile_api_service.dart';
-import 'package:hungrx_app/data/datasources/api/weight_screen/weight_history_api.dart';
+import 'package:hungrx_app/data/repositories/auth_screen/onboarding_service.dart';
+// import 'package:hungrx_app/data/datasources/api/weight_screen/weight_history_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/email_signin_repository.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/google_auth_repository.dart';
 import 'package:hungrx_app/data/repositories/otp_auth_screen/otp_repository.dart';
 import 'package:path_provider/path_provider.dart';
+
+class SharedKeys {
+  static const String onboardingKey = 'has_seen_onboarding';
+  static const String installKey = 'installation_check';
+  static const String userIdKey = 'user_id';
+  static const String firstTimeKey = 'is_first_time_user';
+  static const String lastDialogDateKey = 'last_dialog_date';
+  static const String accountCreationDateKey = 'account_creation_date';
+  static const String profileCompletionKey = 'profile_completion_status';
+}
+
+
 
 class AuthService {
   final HomeApiService _homeApiService = HomeApiService();
@@ -14,6 +27,8 @@ class AuthService {
   final GoogleAuthRepository _googleAuthRepository = GoogleAuthRepository();
   final OtpRepository _otpRepository = OtpRepository();
   final UserProfileApiService _userProfileApiService = UserProfileApiService();
+  final OnboardingService _onboardingService = OnboardingService();
+
 
   static String userIdKey = 'user_id';
   static String installKey = 'installation_check';
@@ -21,14 +36,18 @@ class AuthService {
   static const String firstTimeKey = 'is_first_time_user';
   static const String lastDialogDateKey = 'last_dialog_date';
   static const String accountCreationDateKey = 'account_creation_date';
+  static const String profileCompletionKey = 'profile_completion_status';
 
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
-    final bool isExistingInstall = prefs.getBool(installKey) ?? false;
 
-    if (!isExistingInstall) {
+    // Check for fresh install
+    if (!prefs.containsKey(installKey)) {
+      // New installation - clear everything and set initial state
       await prefs.clear();
       await prefs.setBool(installKey, true);
+     await _onboardingService.resetOnboarding();// Ensure onboarding shows for new installs
+      await prefs.setBool(firstTimeKey, true);
     }
   }
 
@@ -36,23 +55,28 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString(userIdKey);
+      final profileComplete = prefs.getBool(profileCompletionKey) ?? false;
 
-      if (userId == null || userId.isEmpty) {
-        return false;
-      }
-      return true;
+      return userId != null && userId.isNotEmpty && profileComplete;
     } catch (e) {
-      await logout();
+      print('Error checking login status: $e');
       return false;
     }
   }
 
   Future<bool?> checkProfileCompletion(String userId) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Always check with server to ensure latest status
       final response = await _userProfileApiService.checkUserProfile(userId);
-      return response.status;
-    } on ServerException {
-      // Return null instead of false for server errors
+
+      // ignore: unnecessary_null_comparison
+      if (response.status != null) {
+        // Cache the profile status
+        await prefs.setBool(profileCompletionKey, response.status);
+        return response.status;
+      }
       return null;
     } catch (e) {
       print('Error checking profile completion: $e');
@@ -61,19 +85,27 @@ class AuthService {
   }
 
   Future<String?> getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(userIdKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(userIdKey);
+    } catch (e) {
+      print('Error getting user ID: $e');
+      return null;
+    }
   }
 
   Future<HomeData?> fetchHomeData() async {
     try {
       final userId = await getUserId();
-      print("userId :$userId");
       if (userId != null) {
-        return await _homeApiService.fetchHomeData(userId);
+        final isProfileComplete = await checkProfileCompletion(userId);
+        if (isProfileComplete ?? false) {
+          return await _homeApiService.fetchHomeData(userId);
+        }
       }
       return null;
     } catch (e) {
+      print('Error fetching home data: $e');
       return null;
     }
   }
@@ -86,7 +118,7 @@ class AuthService {
       final bool installFlag = prefs.getBool(installKey) ?? false;
       final bool onboardingFlag = prefs.getBool(onboardingKey) ?? false;
       final bool firstTimeFlag = prefs.getBool(firstTimeKey) ?? false;
-      final String? lastDialogDate = prefs.getString(lastDialogDateKey);
+      // final String? lastDialogDate = prefs.getString(lastDialogDateKey);
       final String? accountCreationDate =
           prefs.getString(accountCreationDateKey);
 
@@ -95,7 +127,6 @@ class AuthService {
           key != installKey &&
           key != onboardingKey &&
           key != firstTimeKey &&
-          key != lastDialogDateKey &&
           key != accountCreationDateKey);
 
       // Remove all keys except preserved ones
@@ -114,9 +145,9 @@ class AuthService {
       await prefs.setBool(installKey, installFlag);
       await prefs.setBool(onboardingKey, onboardingFlag);
       await prefs.setBool(firstTimeKey, firstTimeFlag);
-      if (lastDialogDate != null) {
-        await prefs.setString(lastDialogDateKey, lastDialogDate);
-      }
+      // if (lastDialogDate != null) {
+      //   await prefs.setString(lastDialogDateKey, lastDialogDate);
+      // }
       if (accountCreationDate != null) {
         await prefs.setString(accountCreationDateKey, accountCreationDate);
       }
@@ -132,7 +163,7 @@ class AuthService {
 
       // Save flags before clearing
       final bool installFlag = prefs.getBool(installKey) ?? false;
-      final bool onboardingFlag = prefs.getBool(onboardingKey) ?? false;
+      // final bool onboardingFlag = prefs.getBool(onboardingKey) ?? false;
 
       // Clear all SharedPreferences
       await prefs.clear();
@@ -146,7 +177,14 @@ class AuthService {
 
       // Restore flags
       await prefs.setBool(installKey, installFlag);
-      await prefs.setBool(onboardingKey, onboardingFlag);
+        await _onboardingService.resetOnboarding();    // Force onboarding on next login
+      await prefs.setBool(firstTimeKey, true);
+
+      await Future.wait([
+        _emailSignInRepository.logout(),
+        _googleAuthRepository.signOut(),
+        _otpRepository.logout(),
+      ]);
 
       await _clearAppCache();
     } catch (e) {

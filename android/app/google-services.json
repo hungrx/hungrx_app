@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "487283706527-s1vv52jvfpcpbupe4ebmj421jm246ou2.apps.googleusercontent.com",
+          "client_id": "487283706527-u8ss5a0o20d1mrg3mobrsi71jhfisf26.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.hungrx.hungrx_app",
-            "certificate_hash": "210d53297de42b372a0d24d4f292d8d85272de31"
+            "certificate_hash": "8039ac6ed2a2272e36396abf404ec1364b578051"
           }
         },
         {

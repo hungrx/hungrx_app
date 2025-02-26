@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/core/widgets/citation_ibutton.dart';
 import 'package:hungrx_app/data/Models/profile_setting_screen/tdee_result_model.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
@@ -26,7 +27,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
-   bool _isNavigating = false;
+  bool _isNavigating = false;
 
   @override
   void initState() {
@@ -49,9 +50,10 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
       CurvedAnimation(parent: _controller, curve: const Interval(0.5, 1.0)),
     );
   }
+
   Future<bool> _onWillPop() async {
     if (_isNavigating) return false;
-    
+
     _isNavigating = true;
     await _navigateToHome(context);
     return false;
@@ -102,7 +104,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    return  WillPopScope(
+    return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -185,7 +187,15 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
           // Motivational greeting based on goal
           _buildMotivationalGreeting(result.goal),
           const SizedBox(height: 10),
-
+    Align(
+            alignment: Alignment.centerLeft,  // Changed to align left
+            child: InfoButton(
+              metricType: 'all_metrics',
+              compact: false,
+              size: 24,
+              color: AppColors.buttonColors,
+            ),
+          ),
           // Basic stats
           _buildResultCard('Goal', _formatGoal(result.goal)),
           _buildResultCard('Height', result.height),
@@ -271,6 +281,8 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
             ),
             textAlign: TextAlign.center,
           ),
+          // const SizedBox(width: 20),
+      
         ],
       ),
     );
