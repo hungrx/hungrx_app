@@ -417,7 +417,9 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
                           Navigator.of(context).pop(true);
                         }
                       } else if (state is WeightUpdateError) {
+                        print(state.error);
                         ScaffoldMessenger.of(context).showSnackBar(
+                          
                           SnackBar(
                             content: Text(state.error),
                             backgroundColor: Colors.red,

@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>HungrX</string>
+	<string>hungrX</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -53,7 +53,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app needs access to location to show nearby restaurants and provide location-based recommendations.</string>
+	<string>hungrX needs your location to find nearby restaurants and show personalized food recommendations in your area. Your location is only used while the app is open and is not stored permanently.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>hungrX needs your location to find nearby restaurants and show personalized food recommendations in your area.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>hungrX needs your location to find nearby restaurants and show personalized food recommendations in your area. Your location is only used while the app is open and is not stored permanently.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
