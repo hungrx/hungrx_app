@@ -7,6 +7,9 @@ import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'dart:async';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/onboarding_service.dart';
+import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscription_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscription_event.dart';
+import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscription_state.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
 import 'package:hungrx_app/presentation/blocs/internet_connection/internet_connection_bloc.dart';
@@ -42,12 +45,9 @@ class SplashScreenState extends State<SplashScreen> {
      await _authService.initialize();
     final userId = await _authService.getUserId();
     if (userId != null) {
-      print("hello there ");
+
       
     }
-
-    // Initialize auth service first
-    // await _authService.initialize();
     _checkConnectivityAndNavigate();
   }
 
@@ -59,6 +59,12 @@ class SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkConnectivityAndNavigate() async {
     context.read<ConnectivityBloc>().add(CheckConnectivity());
+  }
+
+  Future<void> _checkSubscriptionStatus(String userId) async {
+    if (mounted) {
+      context.read<CheckStatusSubscriptionBloc>().add(CheckSubscription(userId));
+    }
   }
 
 // Inside SplashScreenState class, update the _navigateToNextScreen method:
@@ -78,8 +84,10 @@ if (!hasSeenOnboarding) {
       try {
         final userId = await _authService.getUserId();
         print("splash :$userId");
+
         if (userId != null) {
           await _updateUserTimezone(userId);
+           await _checkSubscriptionStatus(userId);
           // Check profile completion with improved error handling
           final bool? isProfileComplete =
               await _authService.checkProfileCompletion(userId);
@@ -183,6 +191,7 @@ if (!hasSeenOnboarding) {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
+
         BlocListener<ConnectivityBloc, ConnectivityState>(
           listener: (context, state) {
             if (state is ConnectivityConnected) {
@@ -196,6 +205,18 @@ if (!hasSeenOnboarding) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Failed to update timezone: ${state.error}'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+        ),
+           BlocListener<CheckStatusSubscriptionBloc, CheckStatusSubscriptionState>(
+          listener: (context, state) {
+            if (state is SubscriptionError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Subscription check failed: ${state.error}'),
                   behavior: SnackBarBehavior.floating,
                 ),
               );

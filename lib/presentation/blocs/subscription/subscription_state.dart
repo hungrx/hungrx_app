@@ -17,14 +17,24 @@ class SubscriptionInitialized extends SubscriptionState {}
 
 class SubscriptionsLoaded extends SubscriptionState {
   final List<SubscriptionModel> subscriptions;
+  final bool isPremium;
 
-  const SubscriptionsLoaded(this.subscriptions);
+  const SubscriptionsLoaded(this.subscriptions, {this.isPremium = false});
 
   @override
-  List<Object?> get props => [subscriptions];
+  List<Object?> get props => [subscriptions, isPremium];
 }
 
-class SubscriptionPurchased extends SubscriptionState {}
+
+class SubscriptionPurchased extends SubscriptionState {
+  final bool isSubscribed;
+  final String subscriptionLevel;
+
+  const SubscriptionPurchased({
+    required this.isSubscribed,
+    required this.subscriptionLevel,
+  });
+}
 
 class SubscriptionError extends SubscriptionState {
   final String message;

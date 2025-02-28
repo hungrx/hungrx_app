@@ -28,6 +28,7 @@ class WeightReminderDialog extends StatelessWidget {
   }
 
   void _handleUpdateWeight(BuildContext context) {
+    print("when press $currentWeight"); // Debugging
     // Ensure we always have a valid map for navigation
     final Map<String, dynamic> extraData = {
       'currentWeight': currentWeight ?? 0.0, // Provide a default if null

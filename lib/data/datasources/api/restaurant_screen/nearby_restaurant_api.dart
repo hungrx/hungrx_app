@@ -6,9 +6,10 @@ class NearbyRestaurantApi {
   Future<Map<String, dynamic>> getNearbyRestaurants({
     required double latitude,
     required double longitude,
-    double radius = 5000,
+   required double radius,
     String category = 'all',
   }) async {
+    print(radius);
     try {
       final Uri uri =
           Uri.parse(ApiConstants.baseUrl + ApiConstants.nearby).replace(

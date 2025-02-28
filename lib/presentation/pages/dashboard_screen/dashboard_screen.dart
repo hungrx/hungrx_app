@@ -295,12 +295,22 @@ class DashboardScreenState extends State<DashboardScreen> {
     // Show reminder only after 7 days of account creation
     if (daysSinceCreation >= 7) {
       final shouldShow = await WeightReminderManager.shouldShowReminder();
-      print('Should show weight reminder: $shouldShow');
+
       if (shouldShow && mounted) {
         final lastUpdate = await WeightReminderManager.getLastWeightUpdate();
-        final double weightValue =
-            double.tryParse(homeState.homeData.weight) ?? 0.0;
 
+        double parseWeightValue(String weightString) {
+          // Remove any non-numeric characters except for the decimal point
+          // This regex keeps only digits and decimal points
+          final numericString = weightString.replaceAll(RegExp(r'[^0-9.]'), '');
+
+          // Convert to double or return 0.0 if parsing fails
+          return double.tryParse(numericString) ?? 0.0;
+        }
+
+        final double weightValue = parseWeightValue(homeState.homeData.weight);
+
+        print("from $weightValue");
         await _showWeightReminderDialog(
             lastUpdate, weightValue, homeState.homeData.goalStatus);
       }
@@ -338,13 +348,13 @@ class DashboardScreenState extends State<DashboardScreen> {
 
     if (result == true && mounted) {
       // Navigate to weight picker screen
-     await context.pushNamed(
-      RouteNames.weightPicker,
-      extra: {
-        'currentWeight': currentWeight,
-        'isMaintain': isMaintain,
-      },
-    );
+      await context.pushNamed(
+        RouteNames.weightPicker,
+        extra: {
+          'currentWeight': currentWeight,
+          'isMaintain': isMaintain,
+        },
+      );
 
       // After returning from weight picker, update the last weight update time
       await WeightReminderManager.updateLastWeightUpdate();

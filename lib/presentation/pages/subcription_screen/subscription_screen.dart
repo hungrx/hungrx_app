@@ -7,6 +7,7 @@ import 'package:hungrx_app/data/services/purchase_service.dart';
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_event.dart';
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_state.dart';
+import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/active_subscriptiion_screen.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/feature_item_widget.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/legal_section_widget.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/subscription_plan_card.dart';
@@ -25,24 +26,36 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   @override
   void initState() {
     super.initState();
+    //  BlocProvider.of<SubscriptionBloc>(context).add(CheckPremiumStatus());
     PurchaseService.debugOfferings();
+
     _initializeAndLoadSubscriptions();
   }
 
-void _initializeAndLoadSubscriptions() {
-  // Only trigger initialization, which will now also load subscriptions
-  BlocProvider.of<SubscriptionBloc>(context).add(InitializeSubscriptionService());
-}
-
- Future<bool> purchaseSubscription(SubscriptionModel subscription) async {
-  try {
-    print("Purchasing subscription: ${subscription.id} with product ID: ${subscription.package.storeProduct.identifier}");
-    return await PurchaseService.purchasePackage(subscription.package);
-  } catch (e) {
-    print('❌ Error purchasing subscription: $e');
-    rethrow;
+  void _initializeAndLoadSubscriptions() {
+    // Only trigger initialization, which will now also load subscriptions
+    BlocProvider.of<SubscriptionBloc>(context)
+        .add(InitializeSubscriptionService());
   }
-}
+
+  Future<void> purchaseSubscription(SubscriptionModel subscription) async {
+    try {
+      // print(
+      //     "Purchasing subscription: ${subscription.id} with product ID: ${subscription.package.storeProduct.identifier}");
+      // Dispatch the purchase event to the BLoC instead of calling the service directly
+      BlocProvider.of<SubscriptionBloc>(context)
+          .add(PurchaseSubscription(subscription));
+    } catch (e) {
+      // print('❌ Error purchasing subscription: $e');
+      // Show an error message to the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to purchase subscription: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   // Helper method to get sorted subscriptions
   List<Widget> _getSortedSubscriptions(List<SubscriptionModel> subscriptions) {
@@ -58,8 +71,9 @@ void _initializeAndLoadSubscriptions() {
       if (!a.title.contains('Annual') && b.title.contains('Annual')) return 1;
 
       // Then Monthly
-      if (a.title.contains('Monthly') && !b.title.contains('Monthly'))
+      if (a.title.contains('Monthly') && !b.title.contains('Monthly')) {
         return -1;
+      }
       if (!a.title.contains('Monthly') && b.title.contains('Monthly')) return 1;
 
       return 0;
@@ -103,7 +117,7 @@ void _initializeAndLoadSubscriptions() {
       body: SafeArea(
         child: BlocConsumer<SubscriptionBloc, SubscriptionState>(
           listener: (context, state) {
-            print("Current subscription state: ${state.runtimeType}");
+            // print("Current subscription state: ${state.runtimeType}");
             if (state is SubscriptionLoading) {
               setState(() {
                 _isLoading = true;
@@ -124,19 +138,78 @@ void _initializeAndLoadSubscriptions() {
             }
 
             if (state is SubscriptionPurchased) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                      'Welcome to HungrX Premium! Enjoy your personalized health journey.'),
-                  backgroundColor: AppColors.buttonColors,
-                  duration: Duration(seconds: 2),
+              // print("Subscription purchased, navigating to dashboard");
+
+              // Enhanced Snackbar with animation, icon, and better styling
+              final snackBar = SnackBar(
+                content: Row(
+                  children: [
+                    // Add success icon
+                    const Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    // Message with rich text styling
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Text(
+                            'Welcome to HungrX Premium!',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Enjoy your personalized health journey.',
+                            style: TextStyle(color: Colors.black87),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: AppColors.buttonColors.withOpacity(0.95),
+                duration: const Duration(seconds: 3),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.all(12),
+                elevation: 6,
+                action: SnackBarAction(
+                  label: 'EXPLORE',
+                  textColor: Colors.black,
+                  onPressed: () {
+                    context.go('/home');
+                  },
                 ),
               );
-              context.go('/dashboard');
+
+              // Show enhanced snackbar
+              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+              // Add a slightly longer delay for better UX
+              Future.delayed(const Duration(milliseconds: 1000), () {
+                // ignore: use_build_context_synchronously
+                context.go('/home');
+              });
             }
           },
           builder: (context, state) {
-            print("Building UI for state: ${state.runtimeType}");
+            // print(
+            //     "Building UI for state: ${state.runtimeType}, isPremium check: ${state is PremiumStatusChecked ? state.isPremium : 'N/A'}");
+            if (state is SubscriptionsLoaded && state.isPremium) {
+              return ActiveSubscriptionWidget();
+            }
+
+            // print("Building UI for state: ${state.runtimeType}");
             return Stack(
               children: [
                 Padding(
@@ -188,7 +261,6 @@ void _initializeAndLoadSubscriptions() {
                         // Subscription plans section
                         if (state is SubscriptionsLoaded)
                           if (state.subscriptions.isEmpty)
-                          
                             Center(
                               child: Column(
                                 children: [
@@ -260,5 +332,4 @@ void _initializeAndLoadSubscriptions() {
       ),
     );
   }
-  
 }

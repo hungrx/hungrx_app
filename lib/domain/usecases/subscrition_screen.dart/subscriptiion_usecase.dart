@@ -15,9 +15,14 @@ class SubscriptionUseCase {
     return await _repository.getSubscriptions();
   }
 
-  Future<bool> purchaseSubscription(SubscriptionModel subscription) async {
+ Future<Map<String, dynamic>> purchaseSubscription(SubscriptionModel subscription) async {
+  try {
     return await _repository.purchaseSubscription(subscription);
+  } catch (e) {
+    print('❌ Error purchasing subscription: $e');
+    rethrow;
   }
+}
 
   Future<bool> isPremiumUser() async {
     return await _repository.isPremiumUser();

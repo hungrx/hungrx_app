@@ -25,7 +25,7 @@ class _DistanceDialogState extends State<DistanceDialog> {
   @override
   void initState() {
     super.initState();
-    distanceController = TextEditingController(text: widget.initialDistanceInMiles.toStringAsFixed(1));
+    distanceController = TextEditingController();
   }
 
   @override

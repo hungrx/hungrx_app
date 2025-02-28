@@ -468,334 +468,270 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     );
   }
 
-  Widget _buildMenuItem(Dish dish) {
+Widget _buildMenuItem(Dish dish) {
+  // Get screen metrics
+  final screenWidth = MediaQuery.of(context).size.width;
+  
+  // Define responsive breakpoints
+  final isExtraSmall = screenWidth < 320;
+  final isSmall = screenWidth >= 320 && screenWidth < 375;
+  final isMedium = screenWidth >= 375 && screenWidth < 428;
+  // final isLarge = screenWidth >= 428;
+  
+  // Define responsive sizes
+  final imageSize = screenWidth * (isExtraSmall ? 0.18 : isSmall ? 0.2 : 0.25);
+  
+  // Define responsive text sizes
+  final titleFontSize = isExtraSmall ? 13.0 : isSmall ? 14.0 : isMedium ? 16.0 : 17.0;
+  final nutritionInfoFontSize = isExtraSmall ? 11.0 : isSmall ? 13.0 : 14.0;
+  
+  // Define responsive padding
+  final tilePaddingHorizontal = screenWidth * (isExtraSmall ? 0.03 : 0.04);
+  final tilePaddingVertical = screenWidth * (isExtraSmall ? 0.015 : 0.02);
+  final contentPadding = screenWidth * (isExtraSmall ? 0.015 : 0.02);
+  
+  // Nutrition information
+  final protein = dish.servingInfos.isNotEmpty
+      ? '${dish.servingInfos.first.servingInfo.nutritionFacts.protein.value} '
+      : 'N/A';
+  final carbs = dish.servingInfos.isNotEmpty
+      ? '${dish.servingInfos.first.servingInfo.nutritionFacts.carbs.value} '
+      : 'N/A';
 
+  // final getCartState = context.read<GetCartBloc>().state;
+  // final menuState = context.read<RestaurantMenuBloc>().state;
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 360;
-    final imageSize = screenWidth * (isSmallScreen ? 0.2 : 0.25); 
+  final defaultCalories = dish.servingInfos.isNotEmpty
+      ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts
+              .calories.value) ??
+          0.0
+      : 0.0;
 
-    final protine = dish.servingInfos.isNotEmpty
-        ? '${dish.servingInfos.first.servingInfo.nutritionFacts.protein.value} '
-        : 'N/A';
-    final cards = dish.servingInfos.isNotEmpty
-        ? '${dish.servingInfos.first.servingInfo.nutritionFacts.carbs.value} '
-        : 'N/A';
+  final calories = dish.servingInfos.isNotEmpty
+      ? '${(double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts.calories.value) ?? 0).round()} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
+      : 'N/A';
 
-    final getCartState = context.read<GetCartBloc>().state;
-    final menuState = context.read<RestaurantMenuBloc>().state;
+  // Helper function to create NutritionInfo from ServingInfo
+  NutritionInfo createNutritionInfo(ServingDetails servingDetails) {
+    return NutritionInfo(
+      calories:
+          double.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
+      protein:
+          double.tryParse(servingDetails.nutritionFacts.protein.value) ?? 0,
+      carbs: double.tryParse(servingDetails.nutritionFacts.carbs.value) ?? 0,
+      fat: double.tryParse(servingDetails.nutritionFacts.totalFat.value) ?? 0,
+      sodium: 0,
+      sugar: 0,
+      fiber: 0,
+    );
+  }
 
-    // Calculate remaining calories
-    if (menuState is RestaurantMenuLoaded) {
-      // Get calories from cart
-      if (getCartState is CartLoaded) {}
+  // Create size options map from servingInfos
+  Map<String, NutritionInfo> sizeOptions = {};
+  for (var servingInfo in dish.servingInfos) {
+    sizeOptions[servingInfo.servingInfo.size] =
+        createNutritionInfo(servingInfo.servingInfo);
+  }
 
-      // Calculate remaining calories
-    }
-
-    final defaultCalories = dish.servingInfos.isNotEmpty
-        ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts
-                .calories.value) ??
-            0.0
-        : 0.0;
-
-    final calories = dish.servingInfos.isNotEmpty
-        ? '${(double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts.calories.value) ?? 0).round()} ${dish.servingInfos.first.servingInfo.nutritionFacts.calories.unit}'
-        : 'N/A';
-
-    // Helper function to create NutritionInfo from ServingInfo
-    NutritionInfo createNutritionInfo(ServingDetails servingDetails) {
-      return NutritionInfo(
-        calories:
-            double.tryParse(servingDetails.nutritionFacts.calories.value) ?? 0,
-        protein:
-            double.tryParse(servingDetails.nutritionFacts.protein.value) ?? 0,
-        carbs: double.tryParse(servingDetails.nutritionFacts.carbs.value) ?? 0,
-        fat: double.tryParse(servingDetails.nutritionFacts.totalFat.value) ?? 0,
-        // Since these values aren't in your model, you might want to add them or handle differently
-        sodium: 0,
-        sugar: 0,
-        fiber: 0,
-      );
-    }
-
-    // Create size options map from servingInfos
-    Map<String, NutritionInfo> sizeOptions = {};
-    for (var servingInfo in dish.servingInfos) {
-      sizeOptions[servingInfo.servingInfo.size] =
-          createNutritionInfo(servingInfo.servingInfo);
-    }
-    // final defaultCalories = dish.servingInfos.isNotEmpty
-    //     ? double.tryParse(dish.servingInfos.first.servingInfo.nutritionFacts
-    //             .calories.value) ??
-    //         0.0
-    //     : 0.0;
-    return  Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
-        vertical: screenWidth * 0.02,
+  return Padding(
+    padding: EdgeInsets.symmetric(
+      horizontal: tilePaddingHorizontal,
+      vertical: tilePaddingVertical,
+    ),
+    child: Container(
+      decoration: BoxDecoration(
+        color: AppColors.tileColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.tileColor,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () {
-              if (_checkCalorieLimit(context, defaultCalories)) {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true, // Enables full-screen bottom sheet
-                  backgroundColor: Colors.transparent,
-                  builder: (context) {
-                    return FractionallySizedBox(
-                      heightFactor: 0.7, // Adjust height as needed
-                      child: DishDetails(
-                        servingInfos: dish.servingInfos,
-                        calories: defaultCalories,
-                        dishId: dish.id,
-                        restaurantId: widget.restaurantId,
-                        name: dish.dishName,
-                        description: dish.description,
-                        // You might want to add an imageUrl field to your Dish model
-                        imageUrl: dish.servingInfos.isNotEmpty
-                            ? dish.servingInfos.first.servingInfo.url
-                            : null,
-                        // Get all available serving sizes
-                        servingSizes: dish.servingInfos
-                            .map((info) => info.servingInfo.size)
-                            .toList(),
-                        sizeOptions: sizeOptions,
-                        // If you have ingredients data, add it to your model
-                        // For now, passing an empty list or you can add a default value
-                        ingredients: const [],
-                      ),
-                    );
-                  },
-                );
-              }
-            },
-            child: Padding(
-              padding: EdgeInsets.all(screenWidth * 0.02),
-              child: Row(
-                children: [
-                  Container(
-                    width: imageSize,
-                    height: imageSize,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ClipRRect(
-                      // Added ClipRRect to clip the image
-                      borderRadius:
-                          BorderRadius.circular(8), // Same radius as container
-                      child: dish.servingInfos.first.servingInfo.url != null
-                          ? Image.network(
-                              dish.servingInfos.first.servingInfo.url!,
-                              fit: BoxFit
-                                  .cover, // Changed to cover for better image filling
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Center(
-                                  child: Icon(
-                                    Icons.fastfood,
-                                    color: Colors.grey,
-                                    size: 32,
-                                  ),
-                                );
-                              },
-                            )
-                          : const Center(
-                              child: Icon(
+          onTap: () {
+            if (_checkCalorieLimit(context, defaultCalories)) {
+              _showDishDetails(context, dish, defaultCalories, sizeOptions);
+            }
+          },
+          child: Padding(
+            padding: EdgeInsets.all(contentPadding),
+            child: Row(
+              children: [
+                // Food image
+                Container(
+                  width: imageSize,
+                  height: imageSize,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: dish.servingInfos.isNotEmpty && dish.servingInfos.first.servingInfo.url != null
+                        ? Image.network(
+                            dish.servingInfos.first.servingInfo.url!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
                                 Icons.fastfood,
                                 color: Colors.grey,
-                                size: 32,
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          dish.dishName,
-                          style:  TextStyle(
-                            color: Colors.white,
-                            fontSize: isSmallScreen ? 14 : 16,
-                            fontWeight: FontWeight.bold,
+                                size: isExtraSmall ? 24 : isSmall ? 28 : 32,
+                              );
+                            },
+                          )
+                        : Icon(
+                            Icons.fastfood,
+                            color: Colors.grey,
+                            size: isExtraSmall ? 24 : isSmall ? 28 : 32,
                           ),
+                  ),
+                ),
+                SizedBox(width: screenWidth * 0.03),
+                // Dish information
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        dish.dishName,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                           spacing: MediaQuery.of(context).size.width * 0.01,
-                          children: [
-                            BlocBuilder<GetCartBloc, GetCartState>(
-                              builder: (context, getCartState) {
-                                return BlocBuilder<ProgressBarBloc,
-                                    ProgressBarState>(
-                                  builder: (context, progressState) {
-                                    double remainingCalories = 0.0;
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: screenWidth * 0.01),
+                      Wrap(
+                        spacing: screenWidth * 0.01,
+                        runSpacing: screenWidth * 0.01,
+                        children: [
+                          // Calories info with BlocBuilder
+                          BlocBuilder<GetCartBloc, GetCartState>(
+                            builder: (context, getCartState) {
+                              return BlocBuilder<ProgressBarBloc, ProgressBarState>(
+                                builder: (context, progressState) {
+                                  double remainingCalories = 0.0;
 
-                                    if (progressState is ProgressBarLoaded) {
-                                      final baseConsumedCalories = progressState
-                                          .data.totalCaloriesConsumed;
-                                      final dailyCalorieGoal =
-                                          progressState.data.dailyCalorieGoal;
+                                  if (progressState is ProgressBarLoaded) {
+                                    final baseConsumedCalories = progressState.data.totalCaloriesConsumed;
+                                    final dailyCalorieGoal = progressState.data.dailyCalorieGoal;
 
-                                      // Get calories from cart
-                                      double cartCalories = 0.0;
-                                      if (getCartState is CartLoaded) {
-                                        cartCalories = getCartState
-                                                .totalNutrition['calories'] ??
-                                            0.0;
-                                      }
-
-                                      // Calculate remaining calories
-                                      final currentTotal =
-                                          baseConsumedCalories + cartCalories;
-                                      remainingCalories =
-                                          dailyCalorieGoal - currentTotal;
+                                    // Get calories from cart
+                                    double cartCalories = 0.0;
+                                    if (getCartState is CartLoaded) {
+                                      cartCalories = getCartState.totalNutrition['calories'] ?? 0.0;
                                     }
 
-                                    return Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[900],
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        calories,
-                                        style: TextStyle(
-                                          // Change color to red if dish calories exceed remaining calories
-                                          color: defaultCalories >
-                                                  remainingCalories
-                                              ? Colors.red
-                                              : AppColors.buttonColors,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[900],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                "P$protine",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[900],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                "C$cards",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const SizedBox(height: 8),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add_circle_outline,
-                          color: AppColors.buttonColors,
-                          size: 28,
-                        ),
-                        onPressed: () {
-                          if (_checkCalorieLimit(context, defaultCalories)) {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled:
-                                  true, // Enables full-screen bottom sheet
-                              backgroundColor: Colors.transparent,
-                              builder: (context) {
-                                return FractionallySizedBox(
-                                  heightFactor: 0.7, // Adjust height as needed
-                                  child: DishDetails(
-                                    servingInfos: dish.servingInfos,
-                                    calories: defaultCalories,
-                                    dishId: dish.id,
-                                    restaurantId: widget.restaurantId,
-                                    name: dish.dishName,
-                                    description: dish.description,
-                                    // You might want to add an imageUrl field to your Dish model
-                                    imageUrl: dish.servingInfos.isNotEmpty
-                                        ? dish
-                                            .servingInfos.first.servingInfo.url
-                                        : null,
-                                    // Get all available serving sizes
-                                    servingSizes: dish.servingInfos
-                                        .map((info) => info.servingInfo.size)
-                                        .toList(),
-                                    sizeOptions: sizeOptions,
-                                    // If you have ingredients data, add it to your model
-                                    // For now, passing an empty list or you can add a default value
-                                    ingredients: const [],
-                                  ),
-                                );
-                              },
-                            );
-                          }
+                                    // Calculate remaining calories
+                                    final currentTotal = baseConsumedCalories + cartCalories;
+                                    remainingCalories = dailyCalorieGoal - currentTotal;
+                                  }
 
-                          // Add to cart functionality
-                        },
+                                  return _buildNutritionBadge(
+                                    calories,
+                                    defaultCalories > remainingCalories ? Colors.red : AppColors.buttonColors,
+                                    nutritionInfoFontSize,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          _buildNutritionBadge("P$protein", Colors.white, nutritionInfoFontSize),
+                          _buildNutritionBadge("C$carbs", Colors.white, nutritionInfoFontSize),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                SizedBox(width: screenWidth * 0.01),
+                // Add button
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    SizedBox(height: screenWidth * 0.01),
+                    IconButton(
+                      icon: Icon(
+                        Icons.add_circle_outline,
+                        color: AppColors.buttonColors,
+                        size: isExtraSmall ? 24 : isSmall ? 26 : 28,
+                      ),
+                      onPressed: () {
+                        if (_checkCalorieLimit(context, defaultCalories)) {
+                          _showDishDetails(context, dish, defaultCalories, sizeOptions);
+                        }
+                      },
+                      padding: EdgeInsets.all(screenWidth * 0.005),
+                      constraints: BoxConstraints(
+                        minHeight: isExtraSmall ? 36 : 48,
+                        minWidth: isExtraSmall ? 36 : 48,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
+// Helper method to create nutrition badges
+Widget _buildNutritionBadge(String text, Color textColor, double fontSize) {
+  return Container(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 6,
+      vertical: 4,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.grey[900],
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(
+        color: textColor,
+        fontSize: fontSize,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
+}
+
+// Helper method to show dish details
+void _showDishDetails(BuildContext context, Dish dish, double defaultCalories, Map<String, NutritionInfo> sizeOptions) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      return FractionallySizedBox(
+        heightFactor: 0.7,
+        child: DishDetails(
+          servingInfos: dish.servingInfos,
+          calories: defaultCalories,
+          dishId: dish.id,
+          restaurantId: widget.restaurantId,
+          name: dish.dishName,
+          description: dish.description,
+          imageUrl: dish.servingInfos.isNotEmpty ? dish.servingInfos.first.servingInfo.url : null,
+          servingSizes: dish.servingInfos.map((info) => info.servingInfo.size).toList(),
+          sizeOptions: sizeOptions,
+          ingredients: const [],
+        ),
+      );
+    },
+  );
+}
 
   Widget _buildOrderSummary(BuildContext context, UserStats userStats) {
     return BlocBuilder<GetCartBloc, GetCartState>(

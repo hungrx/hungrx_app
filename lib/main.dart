@@ -39,6 +39,7 @@ import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/restauran
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/nearby_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/request_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/suggested_restaurants_api.dart';
+import 'package:hungrx_app/data/datasources/api/subscription_api.dart/store_purchase_api_client.dart';
 import 'package:hungrx_app/data/datasources/api/timezone/timezone_api.dart';
 import 'package:hungrx_app/data/datasources/api/water_screen/delete_water_api.dart';
 import 'package:hungrx_app/data/datasources/api/water_screen/get_water_entry_api.dart';
@@ -83,6 +84,7 @@ import 'package:hungrx_app/data/repositories/dashboad_screen/streak_repository.d
 import 'package:hungrx_app/data/repositories/profile_setting_screen/tdee_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/update_basic_info_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/user_info_profile_repository.dart';
+import 'package:hungrx_app/data/repositories/subscription/store_purchase_repository_impl.dart';
 import 'package:hungrx_app/data/repositories/subscription/subscription_repository.dart';
 import 'package:hungrx_app/data/repositories/timezone/timezone_repository.dart';
 import 'package:hungrx_app/data/repositories/water_screen/delete_water_repository.dart';
@@ -115,6 +117,7 @@ import 'package:hungrx_app/domain/usecases/restaurant_menu.dart/add_to_cart_usec
 import 'package:hungrx_app/domain/usecases/restaurant_screen/get_suggested_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/dashboad_screen/submit_feedback_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_screen/request_restaurant_usecase.dart';
+import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/store_purchase_usecase.dart';
 import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/subscriptiion_usecase.dart';
 import 'package:hungrx_app/domain/usecases/timezone/update_timezone_usecase.dart';
 import 'package:hungrx_app/domain/usecases/water_screen/delete_water_entry_usecase.dart';
@@ -133,6 +136,7 @@ import 'package:hungrx_app/presentation/blocs/add_to_cart/add_to_cart_bloc.dart'
 import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/calorie_metrics_dashboad/calorie_metrics_dashboad_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/change_calorie_goal/change_calorie_goal_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscription_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/common_food_search/common_food_search_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/consume_cart/consume_cart_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/consume_common_food/consume_common_food_bloc.dart';
@@ -232,6 +236,10 @@ class MyApp extends StatelessWidget {
     final waterIntakeRepository = GetWaterIntakeRepository(waterIntakeApi);
     final getWaterIntakeUseCase = GetWaterIntakeUseCase(waterIntakeRepository);
     final suggestedRestaurantsApi = SuggestedRestaurantsApi();
+    final storePurchaseApiClient = StorePurchaseApiClient();
+    final storePurchaseRepository =
+        StorePurchaseRepositoryImpl(apiClient: storePurchaseApiClient);
+    final storePurchaseUseCase = StorePurchaseUseCase(storePurchaseRepository);
     final suggestedRestaurantsRepository =
         SuggestedRestaurantsRepository(suggestedRestaurantsApi);
     final getSuggestedRestaurantsUseCase =
@@ -341,6 +349,8 @@ class MyApp extends StatelessWidget {
               SubscriptionUseCase(
                 SubscriptionRepository(),
               ),
+              storePurchaseUseCase,
+              authService,
             ),
           ),
 
@@ -360,6 +370,10 @@ class MyApp extends StatelessWidget {
               repository: RestaurantMenuRepository(RestaurantMenuApi()),
               authService: authService,
             ),
+          ),
+          BlocProvider<CheckStatusSubscriptionBloc>(
+            create: (context) =>
+                CheckStatusSubscriptionBloc(authService: authService),
           ),
 
           BlocProvider(

@@ -18,14 +18,14 @@ class SubscriptionRepository {
     }
   }
 
-  Future<bool> purchaseSubscription(SubscriptionModel subscription) async {
-    try {
-      return await PurchaseService.purchasePackage(subscription.package);
-    } catch (e) {
-      print('❌ Error purchasing subscription: $e');
-      rethrow;
-    }
+Future<Map<String, dynamic>> purchaseSubscription(SubscriptionModel subscription) async {
+  try {
+    return await PurchaseService.purchasePackage(subscription.package);
+  } catch (e) {
+    print('❌ Error in repository purchasing subscription: $e');
+    rethrow;
   }
+}
 
   Future<bool> isPremiumUser() async {
     return await PurchaseService.isUserPremium();
