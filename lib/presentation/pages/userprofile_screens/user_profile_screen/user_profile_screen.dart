@@ -111,37 +111,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
-  //   Widget _buildLoadingOverlay() {
-  //   return Container(
-  //     color: Colors.black.withOpacity(0.5),
-  //     child: const Center(
-  //       child: CircularProgressIndicator(),
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildErrorOverlay() {
-  //   return Container(
-  //     color: Colors.black.withOpacity(0.8),
-  //     child: Center(
-  //       child: Column(
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: [
-  //           const Text(
-  //             'Failed to load profile',
-  //             style: TextStyle(color: Colors.white),
-  //           ),
-  //           const SizedBox(height: 16),
-  //           ElevatedButton(
-  //             onPressed: _fetchProfileDetails,
-  //             child: const Text('Retry'),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget _buildHeader(
       BuildContext context, GetProfileDetailsModel? profileData) {
     return Padding(
@@ -270,7 +239,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           });
         }),
         _buildDetailItem(Icons.payment, 'Subscription', 'Monthly plans...', () {
-          context.pushNamed(RouteNames.subscriptionScreen);
+          context.pushNamed(RouteNames.subscriptionScreen,extra: true);
         }),
       ],
     );

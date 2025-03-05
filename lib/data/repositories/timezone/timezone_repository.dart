@@ -69,6 +69,7 @@ class TimezoneRepository {
         throw Exception(response['message'] ?? 'Failed to update timezone');
       }
     } catch (e) {
+      print(e);
       throw Exception('Repository error: $e');
     }
   }

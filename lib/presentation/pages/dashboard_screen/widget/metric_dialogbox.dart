@@ -313,47 +313,86 @@ class MetricsDialog extends StatelessWidget {
                       Container(
                         margin: const EdgeInsets.only(top: 16),
                         width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: state is ChangeCalorieGoalLoading
-                              ? null
-                              : () {
-                                  // final now = DateTime.now();
-                                  // final formattedDate =
-                                  //     "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
-                                  context.read<ChangeCalorieGoalBloc>().add(
-                                        SubmitChangeCalorieGoal(
-                                          day: 1,
-                                          calorie: actualWeightChange,
-                                          date: date,
-                                          isShown: true,
-                                        ),
-                                      );
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4ECDC4),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: state is ChangeCalorieGoalLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
+                        child: Row(
+                          children: [
+                            // Cancel button
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 8),
+                                child: ElevatedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Colors.white.withOpacity(0.1),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                )
-                              : Text(
-                                  'Save Progress',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
+                              ),
+                            ),
+                            // Save Progress button
+                            Expanded(
+                              flex: 2,
+                              child: Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                child: ElevatedButton(
+                                  onPressed: state is ChangeCalorieGoalLoading
+                                      ? null
+                                      : () {
+                                          context
+                                              .read<ChangeCalorieGoalBloc>()
+                                              .add(
+                                                SubmitChangeCalorieGoal(
+                                                  day: 1,
+                                                  calorie: actualWeightChange,
+                                                  date: date,
+                                                  isShown: true,
+                                                ),
+                                              );
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4ECDC4),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: state is ChangeCalorieGoalLoading
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.white),
+                                          ),
+                                        )
+                                      : Text(
+                                          'Save Progress',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     else

@@ -19,6 +19,7 @@ class TimezoneBloc extends Bloc<TimezoneEvent, TimezoneState> {
       final timezone = await _updateTimezoneUseCase.execute(event.userId);
       emit(TimezoneUpdateSuccess(timezone));
     } catch (e) {
+      print(e);
       emit(TimezoneUpdateFailure(e.toString()));
     }
   }

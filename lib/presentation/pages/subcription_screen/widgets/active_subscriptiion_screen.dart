@@ -177,10 +177,6 @@ class ActiveSubscriptionWidget extends StatelessWidget {
                       Icons.local_dining,
                       'Real-Time Calorie Tracking',
                     ),
-                    _buildFeatureItem(
-                      Icons.analytics,
-                      'Advanced Health Analytics',
-                    ),
                   ],
                 ),
               ),

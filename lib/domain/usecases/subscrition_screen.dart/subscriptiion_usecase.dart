@@ -1,4 +1,5 @@
 // lib/domain/usecases/subscription_usecase.dart
+import 'package:hungrx_app/data/Models/subcription_model/subscription_Info.dart';
 import 'package:hungrx_app/data/Models/subcription_model/subscription_model.dart';
 import 'package:hungrx_app/data/repositories/subscription/subscription_repository.dart';
 
@@ -15,7 +16,7 @@ class SubscriptionUseCase {
     return await _repository.getSubscriptions();
   }
 
- Future<Map<String, dynamic>> purchaseSubscription(SubscriptionModel subscription) async {
+ Future<SubscriptionInfo> purchaseSubscription(SubscriptionModel subscription) async {
   try {
     return await _repository.purchaseSubscription(subscription);
   } catch (e) {

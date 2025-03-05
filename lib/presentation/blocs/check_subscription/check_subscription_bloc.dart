@@ -1,14 +1,16 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/domain/usecases/verify_subscription/verify_subscription_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscription_event.dart';
 import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscription_state.dart';
 
-class CheckStatusSubscriptionBloc extends Bloc<CheckStatusSubscriptionEvent, CheckStatusSubscriptionState> {
-  final AuthService _authService;
+class CheckStatusSubscriptionBloc
+    extends Bloc<CheckStatusSubscriptionEvent, CheckStatusSubscriptionState> {
+  final VerifySubscriptionUseCase _verifySubscriptionUseCase;
 
-  CheckStatusSubscriptionBloc({required AuthService authService})
-      : _authService = authService,
-        super(SubscriptionInitial()) {
+  CheckStatusSubscriptionBloc({
+    required VerifySubscriptionUseCase verifySubscriptionUseCase,
+  })  : _verifySubscriptionUseCase = verifySubscriptionUseCase,
+        super(CheckSubscriptionInitial()) {
     on<CheckSubscription>(_onCheckSubscription);
     on<UpdateSubscriptionStatus>(_onUpdateSubscriptionStatus);
   }
@@ -17,21 +19,24 @@ class CheckStatusSubscriptionBloc extends Bloc<CheckStatusSubscriptionEvent, Che
     CheckSubscription event,
     Emitter<CheckStatusSubscriptionState> emit,
   ) async {
-    emit(SubscriptionLoading());
+    emit(CheckSubscriptionLoading());
     try {
-      final subscriptionData = await _authService.checkSubscriptionStatus(event.userId);
-      
-      if (subscriptionData != null) {
-        if (subscriptionData['isSubscribed']) {
-          emit(SubscriptionActive(subscriptionData['subscriptionLevel']));
-        } else {
-          emit(SubscriptionInactive());
-        }
+      final subscriptionData =
+          await _verifySubscriptionUseCase.execute(event.userId);
+
+      // Instead of checking only if the user is subscribed,
+      // we now check if the subscription is valid (i.e. still active until expiration)
+      if (subscriptionData.isValid) {
+        emit(CheckSubscriptionActive(
+          subscriptionData.subscriptionLevel,
+          subscriptionData.isValid,
+          subscriptionData.expirationDate,
+        ));
       } else {
-        emit(const SubscriptionError('Failed to fetch subscription status'));
+        emit(CheckSubscriptionInactive());
       }
     } catch (e) {
-      emit(SubscriptionError('Error: ${e.toString()}'));
+      emit(CheckSubscriptionError('Error: ${e.toString()}'));
     }
   }
 
@@ -39,10 +44,16 @@ class CheckStatusSubscriptionBloc extends Bloc<CheckStatusSubscriptionEvent, Che
     UpdateSubscriptionStatus event,
     Emitter<CheckStatusSubscriptionState> emit,
   ) async {
-    if (event.isSubscribed) {
-      emit(SubscriptionActive(event.subscriptionLevel));
+    // Similarly, if the subscription remains valid (even after cancellation),
+    // treat it as active.
+    if (event.isValid) {
+      emit(CheckSubscriptionActive(
+        event.subscriptionLevel,
+        event.isValid,
+        event.expirationDate,
+      ));
     } else {
-      emit(SubscriptionInactive());
+      emit(CheckSubscriptionInactive());
     }
   }
 }

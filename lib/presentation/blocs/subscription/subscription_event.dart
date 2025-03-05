@@ -20,6 +20,7 @@ class PurchaseSubscription extends SubscriptionEvent {
   @override
   List<Object?> get props => [subscription];
 }
+class UpdateSubscriptionInfo extends SubscriptionEvent {}
 
 class CheckPremiumStatus extends SubscriptionEvent {}
 class RestorePurchases extends SubscriptionEvent {}

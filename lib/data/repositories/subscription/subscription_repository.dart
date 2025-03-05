@@ -1,3 +1,4 @@
+import 'package:hungrx_app/data/Models/subcription_model/subscription_Info.dart';
 import 'package:hungrx_app/data/Models/subcription_model/subscription_model.dart';
 import 'package:hungrx_app/data/services/purchase_service.dart';
 
@@ -18,7 +19,7 @@ class SubscriptionRepository {
     }
   }
 
-Future<Map<String, dynamic>> purchaseSubscription(SubscriptionModel subscription) async {
+Future<SubscriptionInfo> purchaseSubscription(SubscriptionModel subscription) async {
   try {
     return await PurchaseService.purchasePackage(subscription.package);
   } catch (e) {

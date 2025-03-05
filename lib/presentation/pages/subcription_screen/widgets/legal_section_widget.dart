@@ -37,7 +37,7 @@ class LegalSectionWidget extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: AppColors.buttonColors.withOpacity(0.1),
                   borderRadius:

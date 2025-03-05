@@ -17,14 +17,18 @@ class CheckSubscription extends CheckStatusSubscriptionEvent {
 }
 
 class UpdateSubscriptionStatus extends CheckStatusSubscriptionEvent {
-  final bool isSubscribed;
+ final bool isSubscribed;
   final String subscriptionLevel;
+  final bool isValid;
+  final DateTime? expirationDate;
 
   const UpdateSubscriptionStatus({
-    required this.isSubscribed,
+   required this.isSubscribed,
     required this.subscriptionLevel,
+    required this.isValid,
+    this.expirationDate,
   });
 
   @override
-  List<Object?> get props => [isSubscribed, subscriptionLevel];
+  List<Object?> get props => [isSubscribed, subscriptionLevel, isValid, expirationDate];
 }

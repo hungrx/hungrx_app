@@ -180,26 +180,26 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                 ],
               ),
             ),
-            PopupMenuItem<String>(
-              value: 'set_distance',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.radio_button_checked,
-                    color: Colors.white,
-                    size: isSmallScreen ? 18 : 22,
-                  ),
-                  SizedBox(width: isSmallScreen ? 6 : 8),
-                  Text(
-                    'Set Search Radius',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: isSmallScreen ? 12 : 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // PopupMenuItem<String>(
+            //   value: 'set_distance',
+            //   child: Row(
+            //     children: [
+            //       Icon(
+            //         Icons.radio_button_checked,
+            //         color: Colors.white,
+            //         size: isSmallScreen ? 18 : 22,
+            //       ),
+            //       SizedBox(width: isSmallScreen ? 6 : 8),
+            //       Text(
+            //         'Set Search Radius',
+            //         style: TextStyle(
+            //           color: Colors.grey,
+            //           fontSize: isSmallScreen ? 12 : 14,
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
           ],
           onSelected: (value) {
             if (value == 'request_restaurant') {

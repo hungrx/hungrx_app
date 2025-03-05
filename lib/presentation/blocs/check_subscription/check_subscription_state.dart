@@ -7,25 +7,31 @@ abstract class CheckStatusSubscriptionState extends Equatable {
   List<Object?> get props => [];
 }
 
-class SubscriptionInitial extends CheckStatusSubscriptionState {}
+class CheckSubscriptionInitial extends CheckStatusSubscriptionState {}
 
-class SubscriptionLoading extends CheckStatusSubscriptionState {}
+class CheckSubscriptionLoading extends CheckStatusSubscriptionState {}
 
-class SubscriptionActive extends CheckStatusSubscriptionState {
+class CheckSubscriptionActive extends CheckStatusSubscriptionState {
   final String level;
+  final bool isValid;
+  final DateTime? expirationDate;
 
-  const SubscriptionActive(this.level);
+  const CheckSubscriptionActive(
+    this.level,
+    this.isValid,
+    this.expirationDate,
+  );
 
   @override
-  List<Object?> get props => [level];
+  List<Object?> get props => [level, isValid, expirationDate];
 }
 
-class SubscriptionInactive extends CheckStatusSubscriptionState {}
+class CheckSubscriptionInactive extends CheckStatusSubscriptionState {}
 
-class SubscriptionError extends CheckStatusSubscriptionState {
+class CheckSubscriptionError extends CheckStatusSubscriptionState {
   final String error;
 
-  const SubscriptionError(this.error);
+  const CheckSubscriptionError(this.error);
 
   @override
   List<Object?> get props => [error];

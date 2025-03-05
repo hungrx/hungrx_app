@@ -11,6 +11,7 @@ import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_event.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/premium_container.dart';
+import 'package:hungrx_app/routes/route_names.dart';
 
 class TDEEResultScreen extends StatefulWidget {
   final TDEEResultModel tdeeResult;
@@ -67,7 +68,7 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
 
       if (userId == null) {
         // ignore: use_build_context_synchronously
-        GoRouter.of(context).go('/home');
+        context.pushNamed(RouteNames.subscriptionScreen ,extra: false);
         return;
       }
 
@@ -187,8 +188,8 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
           // Motivational greeting based on goal
           _buildMotivationalGreeting(result.goal),
           const SizedBox(height: 10),
-    Align(
-            alignment: Alignment.centerLeft,  // Changed to align left
+          Align(
+            alignment: Alignment.centerLeft, // Changed to align left
             child: InfoButton(
               metricType: 'all_metrics',
               compact: false,
@@ -217,7 +218,9 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
           FadeTransition(
             opacity: _opacityAnimation,
             child: PremiumContainer(
-              onpress: () => _navigateToHome(context),
+              onpress: () {
+                context.pushNamed(RouteNames.subscriptionScreen,extra: false);
+              },
             ),
           ),
         ],
@@ -282,7 +285,6 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
             textAlign: TextAlign.center,
           ),
           // const SizedBox(width: 20),
-      
         ],
       ),
     );

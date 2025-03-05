@@ -41,6 +41,7 @@ import 'package:hungrx_app/data/datasources/api/restaurant_screen/request_restau
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/suggested_restaurants_api.dart';
 import 'package:hungrx_app/data/datasources/api/subscription_api.dart/store_purchase_api_client.dart';
 import 'package:hungrx_app/data/datasources/api/timezone/timezone_api.dart';
+import 'package:hungrx_app/data/datasources/api/verify_subscription.dart/verify_subscription.dart';
 import 'package:hungrx_app/data/datasources/api/water_screen/delete_water_api.dart';
 import 'package:hungrx_app/data/datasources/api/water_screen/get_water_entry_api.dart';
 import 'package:hungrx_app/data/datasources/api/water_screen/water_intake_api.dart';
@@ -87,6 +88,7 @@ import 'package:hungrx_app/data/repositories/profile_setting_screen/user_info_pr
 import 'package:hungrx_app/data/repositories/subscription/store_purchase_repository_impl.dart';
 import 'package:hungrx_app/data/repositories/subscription/subscription_repository.dart';
 import 'package:hungrx_app/data/repositories/timezone/timezone_repository.dart';
+import 'package:hungrx_app/data/repositories/verify_subscription/verify_subscription_repository.dart';
 import 'package:hungrx_app/data/repositories/water_screen/delete_water_repository.dart';
 import 'package:hungrx_app/data/repositories/water_screen/get_water_entry_repository.dart';
 import 'package:hungrx_app/data/repositories/water_screen/water_intake_repository.dart';
@@ -120,6 +122,7 @@ import 'package:hungrx_app/domain/usecases/restaurant_screen/request_restaurant_
 import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/store_purchase_usecase.dart';
 import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/subscriptiion_usecase.dart';
 import 'package:hungrx_app/domain/usecases/timezone/update_timezone_usecase.dart';
+import 'package:hungrx_app/domain/usecases/verify_subscription/verify_subscription_usecase.dart';
 import 'package:hungrx_app/domain/usecases/water_screen/delete_water_entry_usecase.dart';
 import 'package:hungrx_app/domain/usecases/water_screen/get_water_entry_usecase.dart';
 import 'package:hungrx_app/domain/usecases/weight_screen/get_weight_history_usecase.dart';
@@ -371,9 +374,11 @@ class MyApp extends StatelessWidget {
               authService: authService,
             ),
           ),
-          BlocProvider<CheckStatusSubscriptionBloc>(
-            create: (context) =>
-                CheckStatusSubscriptionBloc(authService: authService),
+          BlocProvider(
+            create: (context) => CheckStatusSubscriptionBloc(
+                verifySubscriptionUseCase: VerifySubscriptionUseCase(
+                    repository: VerifySubscriptionRepository(
+                        apiClient: VerifySubscriptionApiClient()))),
           ),
 
           BlocProvider(

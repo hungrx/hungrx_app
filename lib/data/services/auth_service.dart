@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:hungrx_app/data/Models/dashboad_screen/home_screen_model.dart';
 import 'package:hungrx_app/data/datasources/api/dashboard_screen/home_screen_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/service_api/user_profile_api_service.dart';
@@ -8,7 +7,6 @@ import 'package:hungrx_app/data/repositories/auth_screen/email_signin_repository
 import 'package:hungrx_app/data/repositories/auth_screen/google_auth_repository.dart';
 import 'package:hungrx_app/data/repositories/otp_auth_screen/otp_repository.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
 
 class SharedKeys {
   static const String onboardingKey = 'has_seen_onboarding';
@@ -18,11 +16,9 @@ class SharedKeys {
   static const String lastDialogDateKey = 'last_dialog_date';
   static const String accountCreationDateKey = 'account_creation_date';
   static const String profileCompletionKey = 'profile_completion_status';
-    static const String subscriptionStatusKey = 'subscription_status';
+  static const String subscriptionStatusKey = 'subscription_status';
   static const String subscriptionLevelKey = 'subscription_level';
 }
-
-
 
 class AuthService {
   final HomeApiService _homeApiService = HomeApiService();
@@ -32,7 +28,6 @@ class AuthService {
   final UserProfileApiService _userProfileApiService = UserProfileApiService();
   final OnboardingService _onboardingService = OnboardingService();
 
-
   static String userIdKey = 'user_id';
   static String installKey = 'installation_check';
   static const String onboardingKey = 'has_seen_onboarding';
@@ -40,7 +35,7 @@ class AuthService {
   static const String lastDialogDateKey = 'last_dialog_date';
   static const String accountCreationDateKey = 'account_creation_date';
   static const String profileCompletionKey = 'profile_completion_status';
-    static const String subscriptionStatusKey = 'subscription_status';
+  static const String subscriptionStatusKey = 'subscription_status';
   static const String subscriptionLevelKey = 'subscription_level';
 
   Future<void> initialize() async {
@@ -51,7 +46,8 @@ class AuthService {
       // New installation - clear everything and set initial state
       await prefs.clear();
       await prefs.setBool(installKey, true);
-     await _onboardingService.resetOnboarding();// Ensure onboarding shows for new installs
+      await _onboardingService
+          .resetOnboarding(); // Ensure onboarding shows for new installs
       await prefs.setBool(firstTimeKey, true);
     }
   }
@@ -70,6 +66,8 @@ class AuthService {
   }
 
   Future<bool?> checkProfileCompletion(String userId) async {
+
+    
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -88,36 +86,6 @@ class AuthService {
       return null;
     }
   }
-
-  Future<Map<String, dynamic>?> checkSubscriptionStatus(String userId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final response = await http.post(
-        Uri.parse('https://hungrx.xyz/users/verify'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'userId': userId}),
-      );
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        if (jsonResponse['success'] == true) {
-          // Cache the subscription status
-          await prefs.setBool(subscriptionStatusKey, jsonResponse['isSubscribed']);
-          await prefs.setString(subscriptionLevelKey, jsonResponse['subscriptionLevel']);
-          
-          return {
-            'isSubscribed': jsonResponse['isSubscribed'],
-            'subscriptionLevel': jsonResponse['subscriptionLevel'],
-          };
-        }
-      }
-      return null;
-    } catch (e) {
-      print('Error checking subscription status: $e');
-      return null;
-    }
-  }
-
   // Get cached subscription status
   Future<Map<String, dynamic>> getSubscriptionInfo() async {
     try {
@@ -134,8 +102,6 @@ class AuthService {
       };
     }
   }
-
-  
 
   Future<String?> getUserId() async {
     try {
@@ -166,6 +132,7 @@ class AuthService {
   Future<void> logout() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      
 
       // Save flags before clearing
       final bool installFlag = prefs.getBool(installKey) ?? false;
@@ -230,7 +197,8 @@ class AuthService {
 
       // Restore flags
       await prefs.setBool(installKey, installFlag);
-        await _onboardingService.resetOnboarding();    // Force onboarding on next login
+      await _onboardingService
+          .resetOnboarding(); // Force onboarding on next login
       await prefs.setBool(firstTimeKey, true);
 
       await Future.wait([

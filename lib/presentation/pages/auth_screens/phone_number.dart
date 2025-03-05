@@ -6,9 +6,14 @@ import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_event.dart';
 import 'package:hungrx_app/presentation/blocs/apple_auth/apple_auth_state.dart';
+import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscription_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscription_event.dart';
+import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscription_state.dart';
 import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_event.dart';
 import 'package:hungrx_app/presentation/blocs/google_auth/google_auth_state.dart';
+import 'package:hungrx_app/presentation/blocs/subscription/subscription_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/subscription/subscription_event.dart';
 import 'package:hungrx_app/presentation/blocs/timezone/timezone_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/timezone/timezone_event.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
@@ -124,6 +129,14 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
     );
   }
 
+  Future<void> _checkSubscriptionStatus(String userId) async {
+    if (mounted) {
+      context
+          .read<CheckStatusSubscriptionBloc>()
+          .add(CheckSubscription(userId));
+    }
+  }
+
   Future<void> _handleAuthSuccess(BuildContext context, String? userId) async {
     if (userId != null) {
       try {
@@ -133,12 +146,33 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
 
         if (mounted) {
           context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
+          context.read<SubscriptionBloc>().add(UpdateSubscriptionInfo());
+          // Trigger the subscription check via the BLoC
+          await _checkSubscriptionStatus(userId);
         }
 
         if (!mounted) return;
 
         if (isProfileComplete == true) {
-          GoRouter.of(context).go('/home');
+          // Retrieve the current subscription state from the BLoC
+
+          final subscriptionState = await context
+            .read<CheckStatusSubscriptionBloc>()
+            .stream
+            .firstWhere((state) => state is! CheckSubscriptionLoading);
+          // final subscriptionState =
+          //     context.read<CheckStatusSubscriptionBloc>().state;
+          print(subscriptionState);
+          // Navigate based on the BLoC's subscription state
+          if (subscriptionState is CheckSubscriptionActive) {
+            // print(
+                // "reched ..................${subscriptionState is CheckSubscriptionActive}");
+            GoRouter.of(context).go('/home');
+          } else {
+             print(
+                "reched ..................${subscriptionState is CheckSubscriptionActive}");
+            GoRouter.of(context).go('/subscriptionScreen');
+          }
         } else if (isProfileComplete == false) {
           GoRouter.of(context).go('/user-info-one');
         } else {
@@ -282,7 +316,7 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                       ),
                     ),
                     SizedBox(height: size.height * 0.08),
-        
+
                     // Improved Social Login Container
                     Expanded(
                       child: LayoutBuilder(
@@ -338,9 +372,9 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                         },
                       ),
                     ),
-        
+
                     SizedBox(height: spacing),
-        
+
                     // Improved Terms and Conditions Container
                     Container(
                       padding: EdgeInsets.symmetric(

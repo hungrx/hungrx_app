@@ -1,6 +1,8 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/data/Models/subcription_model/store_subscription.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/data/services/purchase_service.dart';
 import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/store_purchase_usecase.dart';
 import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/subscriptiion_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_event.dart';
@@ -19,6 +21,59 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     on<PurchaseSubscription>(_onPurchaseSubscription);
     on<CheckPremiumStatus>(_onCheckPremiumStatus);
     on<RestorePurchases>(_onRestorePurchases);
+    on<UpdateSubscriptionInfo>(_onUpdateSubscriptionInfo); // New event
+  }
+
+  Future<void> _onUpdateSubscriptionInfo(
+    UpdateSubscriptionInfo event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    emit(SubscriptionLoading());
+    try {
+      print(".........................update info");
+      // Call the RevenueCat API to get updated subscription info.
+      final updatedInfo = await PurchaseService.getSubscriptionInfo();
+      final userId = await _authService.getUserId();
+      // Build a map of transaction details using the updated information.
+      final transactionDetails = {
+        'userId': userId ?? '',
+        'rcAppUserId': updatedInfo.rcAppUserId ?? '',
+        'productId': updatedInfo.productId ?? '',
+        'subscriptionLevel':
+            updatedInfo.offerType ?? 'monthly', // Adjust as needed
+        'expirationDate': updatedInfo.expirationDate ?? '',
+        'revenuecatDetails': {
+          'isCanceled': updatedInfo.isCanceled,
+          'expirationDate': updatedInfo.expirationDate ?? '',
+          'productIdentifier': updatedInfo.productIdentifier ?? '',
+          'periodType': updatedInfo.periodType, // e.g., "normal"
+          'latestPurchaseDate': updatedInfo.latestPurchaseDate ?? '',
+          'originalPurchaseDate': updatedInfo.originalPurchaseDate ?? '',
+          'store': updatedInfo.store, // e.g., "app_store" or "play_store"
+          'isSandbox': updatedInfo.isSandbox,
+          'willRenew': updatedInfo.willRenew,
+        }
+      };
+
+      // Convert to your model and call the store purchase use case.
+      final purchaseDetailsModel =
+          StorePurchaseDetailsModel.fromMap(transactionDetails);
+      final storeResponse =
+          await _storePurchaseUseCase.execute(purchaseDetailsModel);
+
+      if (storeResponse.success) {
+        // Emit updated subscription state.
+        emit(SubscriptionPurchased(
+          isSubscribed: storeResponse.isSubscribed,
+          subscriptionLevel: storeResponse.subscriptionLevel,
+        ));
+      } else {
+        emit(SubscriptionError(
+            'Subscription update completed but failed to store details: ${storeResponse.message}'));
+      }
+    } catch (e) {
+      emit(SubscriptionError('Error updating subscription: ${e.toString()}'));
+    }
   }
 
   Future<void> _onInitializeSubscriptionService(
@@ -63,61 +118,88 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       final result =
           await _subscriptionUseCase.purchaseSubscription(event.subscription);
       final userId = await _authService.getUserId();
-      // Check if purchase was successful using the 'success' key
-      if (result['success'] == true) {
-        // You can store transaction details here if needed
+
+      if (result.success) {
+        // Create transaction details map with the new structure
         final transactionDetails = {
           'userId': userId ?? '',
-          'rcAppUserId': result['rcAppUserId'] ?? '',
-          'productId': result['productId'] ?? '',
-          'purchaseToken': result['purchaseToken'] ?? '',
-          'transactionId': result['transactionId'] ?? '',
-          'offerType': result['offerType'] ?? '',
-          'priceInLocalCurrency': result['priceInLocalCurrency'] ?? '',
-          'currencyCode': result['currencyCode'] ?? ''
+          'rcAppUserId': result.rcAppUserId ?? '',
+          'productId': result.productId ?? '',
+          'subscriptionLevel':
+              result.offerType ?? 'monthly', // Add appropriate mapping
+          'expirationDate': result.expirationDate ?? '',
+          'revenuecatDetails': {
+            'isCanceled': result.isCanceled,
+            'expirationDate': result.expirationDate ?? '',
+            'productIdentifier': result.productIdentifier ?? '',
+            'periodType': 'normal', // Add appropriate mapping
+            'latestPurchaseDate': result.latestPurchaseDate ?? '',
+            'originalPurchaseDate': result.originalPurchaseDate ?? '',
+            'store': result.store ?? 'app_store', // Add appropriate mapping
+            'isSandbox': result.isSandbox,
+            'willRenew': result.willRenew,
+          }
         };
+
         // Log transaction details for debugging
         print('Transaction details: $transactionDetails');
+
         final purchaseDetailsModel =
             StorePurchaseDetailsModel.fromMap(transactionDetails);
         final storeResponse =
             await _storePurchaseUseCase.execute(purchaseDetailsModel);
 
-        // Here you would call your API with the transaction details
-        // await yourApiService.verifyPurchase(transactionDetails);
-
-        if (storeResponse.success) {
-          emit(SubscriptionPurchased(
-              isSubscribed: storeResponse.isSubscribed,
-              subscriptionLevel: storeResponse.subscriptionLevel));
-        } else {
-          emit(SubscriptionError(
-              'Purchase completed but failed to store details: ${storeResponse.message}'));
-        }
+if (storeResponse.success) {
+        emit(SubscriptionPurchased(
+          isSubscribed: storeResponse.isSubscribed,
+          subscriptionLevel: storeResponse.subscriptionLevel
+        ));
       } else {
-        emit(SubscriptionError(
-            result['error'] ?? 'Purchase could not be completed'));
+        emit(SubscriptionError('Purchase completed but failed to store details: ${storeResponse.message}'));
       }
-    } catch (e) {
-      // Error handling remains the same
-      String errorMessage;
-      if (e.toString().contains('PURCHASE_CANCELLED')) {
-        errorMessage = 'Purchase cancelled';
-      } else if (e.toString().contains('PRODUCT_NOT_FOUND')) {
-        errorMessage = 'Product not available';
-      } else if (e.toString().contains('INSUFFICIENT_PERMISSIONS')) {
-        errorMessage = 'Purchase not authorized';
-      } else if (e.toString().contains('NETWORK_ERROR')) {
-        errorMessage = 'Network error. Please check your connection';
-      } else if (e.toString().contains('INVALID_RECEIPT')) {
-        errorMessage = 'Payment verification failed';
-      } else {
-        errorMessage = 'Error during purchase. Please try again later.';
+    } else {
+      // Handle purchase failure
+      print('❌ Purchase failed with error: ${result.error}');
+      
+      // Check for item already owned
+      if (result.error?.toString().contains('6') == true ||
+          result.error?.toString().contains('This product is already active') == true ||
+          result.error?.toString().contains('ITEM_ALREADY_OWNED') == true) {
+        print('🎯 Detected already owned product error');
+        emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
+        return;
       }
-
-      emit(SubscriptionError(errorMessage));
+      emit(SubscriptionError(result.error ?? 'Purchase could not be completed'));
     }
+  } on PlatformException catch (e) {
+    print('📱 Platform Exception caught: ${e.code} - ${e.message}');
+    
+    // Handle error code 6 and item already owned cases
+    if (e.code == '6' || 
+        e.message?.contains('This product is already active') == true ||
+        e.message?.contains('ITEM_ALREADY_OWNED') == true) {
+      print('🎯 Detected error code 6 or active product message');
+      emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
+      return;
+    }
+    
+    String errorMessage = e.message ?? 'Unknown error occurred';
+    print('❌ Emitting platform error: $errorMessage');
+    emit(SubscriptionError(errorMessage));
+  } catch (e) {
+    print('💥 General exception caught: $e');
+    String message = e.toString();
+    
+    if (message.contains('6') || 
+        message.contains('This product is already active') ||
+        message.contains('ITEM_ALREADY_OWNED')) {
+      print('🎯 Detected already owned product in general exception');
+      emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
+      return;
+    }
+    emit(SubscriptionError('Unexpected error: $message'));
   }
+}
 
   Future<void> _onCheckPremiumStatus(
     CheckPremiumStatus event,

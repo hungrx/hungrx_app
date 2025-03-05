@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hungrx_app/data/Models/subcription_model/subscription_Info.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -82,73 +83,91 @@ class PurchaseService {
   }
 
   /// Purchase a Subscription Package
-  static Future<Map<String, dynamic>> purchasePackage(Package package) async {
-    try {
-      // Store product details before purchase
-      final productId = package.storeProduct.identifier;
-      final offerType = package.identifier;
-      final priceInLocalCurrency = package.storeProduct.price.toString();
-      final currencyCode = package.storeProduct.currencyCode;
+static Future<SubscriptionInfo> purchasePackage(Package package) async {
+  try {
+    // Store product details before purchase
+    final productId = package.storeProduct.identifier;
+    final offerType = package.identifier;
+    final priceInLocalCurrency = package.storeProduct.price.toString();
+    final currencyCode = package.storeProduct.currencyCode;
 
-      // Make the purchase
-      final purchaseResult = await Purchases.purchasePackage(package);
-
-      // Check for the specific entitlement ID
-      final isPremium = purchaseResult.entitlements.active
-          .containsKey(_entitlementIdentifier);
-
-      // Get the RevenueCat user ID
-      final rcAppUserId = purchaseResult.originalAppUserId;
-
-      // Create a transaction details map
-      final transactionDetails = {
-        'success': isPremium,
-        'userId': '', // You need to supply this from your auth system
-        'rcAppUserId': rcAppUserId,
-        'productId': productId,
-        'offerType': offerType,
-        'priceInLocalCurrency': priceInLocalCurrency,
-        'currencyCode': currencyCode,
-      };
-
-      // We'll need to get transaction ID or purchase token separately
-      // as it's not directly accessible in the purchase result
-      if (Platform.isAndroid) {
-        // For Android, we need to extract the purchase token
-        // This requires some additional work - see extractPurchaseToken method
-        final purchaseToken = await _extractPurchaseToken(productId);
-        if (purchaseToken != null) {
-          transactionDetails['purchaseToken'] = purchaseToken;
-        }
-      } else if (Platform.isIOS) {
-        // For iOS, try to get the transaction ID
-        final transactionId = await _extractTransactionId();
-        if (transactionId != null) {
-          transactionDetails['transactionId'] = transactionId;
-        }
-      }
-
-      debugPrint('Purchase completed - Premium access: $isPremium');
-      debugPrint('Transaction details: $transactionDetails');
-
-      return transactionDetails;
-    } on PlatformException catch (e) {
-      switch (e.code) {
-        case 'PURCHASE_CANCELLED':
-          debugPrint('⚠️ User cancelled the purchase');
-          return {'success': false, 'error': 'PURCHASE_CANCELLED'};
-        case 'PRODUCT_NOT_FOUND':
-          debugPrint('❌ Product not found in store');
-          return {'success': false, 'error': 'PRODUCT_NOT_FOUND'};
-        default:
-          debugPrint('❌ Unknown error: ${e.code} - ${e.message}');
-          return {'success': false, 'error': e.code};
-      }
-    } catch (e) {
-      debugPrint('❌ Unexpected error during purchase: $e');
-      return {'success': false, 'error': e.toString()};
+    // Make the purchase
+    final purchaseResult = await Purchases.purchasePackage(package);
+    
+    // Get the RevenueCat user ID
+    final rcAppUserId = purchaseResult.originalAppUserId;
+    
+    // Get additional information from CustomerInfo
+    final customerInfo = await Purchases.getCustomerInfo();
+    final entitlement = customerInfo.entitlements.all[_entitlementIdentifier];
+    
+    // Check if entitlement is active
+    final isActive = entitlement?.isActive ?? false;
+    
+    // Prepare platform-specific transaction identifiers
+    String? purchaseToken;
+    String? transactionId;
+    
+    if (Platform.isAndroid) {
+      purchaseToken = await _extractPurchaseToken(productId);
+    } else if (Platform.isIOS) {
+      transactionId = await _extractTransactionId();
     }
+
+    if (isActive) {
+      return SubscriptionInfo(
+        isActive: true,
+        isCanceled: !(entitlement?.willRenew ?? true),
+        expirationDate: entitlement?.expirationDate,
+        productIdentifier: entitlement?.productIdentifier,
+        periodType: entitlement?.periodType.name,
+        latestPurchaseDate: entitlement?.latestPurchaseDate,
+        originalPurchaseDate: entitlement?.originalPurchaseDate,
+        store: entitlement?.store.name,
+        isSandbox: entitlement?.isSandbox ?? false,
+        willRenew: entitlement?.willRenew ?? false,
+        ownershipType: entitlement?.ownershipType.name,
+        
+        // Add transaction details
+        success: true,
+        userId: '', // You need to supply this from your auth system
+        rcAppUserId: rcAppUserId,
+        productId: productId,
+        offerType: offerType,
+        priceInLocalCurrency: priceInLocalCurrency,
+        currencyCode: currencyCode,
+        purchaseToken: purchaseToken,
+        transactionId: transactionId,
+      );
+    }
+    return SubscriptionInfo(
+      success: false,
+      rcAppUserId: rcAppUserId,
+      productId: productId,
+      offerType: offerType,
+      priceInLocalCurrency: priceInLocalCurrency,
+      currencyCode: currencyCode,
+      purchaseToken: purchaseToken,
+      transactionId: transactionId,
+    );
+    
+  } on PlatformException catch (e) {
+    switch (e.code) {
+      case 'PURCHASE_CANCELLED':
+        debugPrint('⚠️ User cancelled the purchase');
+        return SubscriptionInfo.fromError('PURCHASE_CANCELLED');
+      case 'PRODUCT_NOT_FOUND':
+        debugPrint('❌ Product not found in store');
+        return SubscriptionInfo.fromError('PRODUCT_NOT_FOUND');
+      default:
+        debugPrint('❌ Unknown error: ${e.code} - ${e.message}');
+        return SubscriptionInfo.fromError(e.code);
+    }
+  } catch (e) {
+    debugPrint('❌ Unexpected error during purchase: $e');
+    return SubscriptionInfo.fromError(e.toString());
   }
+}
 
   static Future<String?> _extractPurchaseToken(String productId) async {
     try {
@@ -202,6 +221,100 @@ class PurchaseService {
       return null;
     }
   }
+
+  static Future<SubscriptionInfo> getSubscriptionInfo() async {
+  try {
+    // Get the current customer info from RevenueCat
+    final customerInfo = await Purchases.getCustomerInfo();
+    
+    // Get the RevenueCat user ID
+    final rcAppUserId = customerInfo.originalAppUserId;
+    
+    // Check for the specific entitlement
+    final entitlement = customerInfo.entitlements.all[_entitlementIdentifier];
+    
+    // Check if entitlement is active
+    final isActive = entitlement?.isActive ?? false;
+    
+    // If no active entitlement, return basic inactive info
+    if (!isActive || entitlement == null) {
+      return SubscriptionInfo(
+        isActive: false,
+        success: true,
+        rcAppUserId: rcAppUserId,
+      );
+    }
+    
+    // Get product information
+    final productIdentifier = entitlement.productIdentifier;
+    
+    // Prepare platform-specific transaction identifiers
+    String? purchaseToken;
+    String? transactionId;
+    
+    if (Platform.isAndroid) {
+      purchaseToken = await _extractPurchaseToken(productIdentifier);
+    } else if (Platform.isIOS) {
+      transactionId = await _extractTransactionId();
+    }
+    
+    // Return full subscription info for active subscription
+    return SubscriptionInfo(
+      isActive: true,
+      isCanceled: !entitlement.willRenew,
+      expirationDate: entitlement.expirationDate,
+      productIdentifier: entitlement.productIdentifier,
+      periodType: entitlement.periodType.name,
+      latestPurchaseDate: entitlement.latestPurchaseDate,
+      originalPurchaseDate: entitlement.originalPurchaseDate,
+      store: entitlement.store.name,
+      isSandbox: entitlement.isSandbox,
+      willRenew: entitlement.willRenew,
+      ownershipType: entitlement.ownershipType.name,
+      
+      // Add transaction details
+      success: true,
+      userId: '', // You need to supply this from your auth system
+      rcAppUserId: rcAppUserId,
+      productId: productIdentifier,
+      offerType: '', // Not relevant when just checking status
+      purchaseToken: purchaseToken,
+      transactionId: transactionId,
+    );
+    
+  } catch (e) {
+    debugPrint('❌ Error retrieving subscription info: $e');
+    return SubscriptionInfo.fromError(e.toString());
+  }
+}
+
+// 
+  //  Future<SubscriptionInfo?> getSubscriptionInfo() async {
+  //   try {
+  //    final customerInfo = await Purchases.getCustomerInfo();
+  //     final entitlement = customerInfo.entitlements.all[_entitlementIdentifier];
+      
+  //     if (entitlement?.isActive ?? false) {
+  //       return SubscriptionInfo(
+  //         isActive: true,
+  //         expirationDate: entitlement?.expirationDate,
+  //         productIdentifier: entitlement?.productIdentifier,
+  //         periodType: entitlement?.periodType.name,
+  //         latestPurchaseDate: entitlement?.latestPurchaseDate,
+  //         originalPurchaseDate: entitlement?.originalPurchaseDate,
+  //         store: entitlement?.store.name,
+  //         isSandbox: entitlement?.isSandbox ?? false,
+  //         willRenew: entitlement?.willRenew ?? false,
+  //         ownershipType: entitlement?.ownershipType.name,
+  //       );
+  //     }
+  //     return null;
+  //   } catch (e) {
+  //     print('Error getting subscription info: $e');
+  //     return null;
+  //   }
+  // }
+
 
   /// Restore Purchases for Existing Users
   static Future<bool> restorePurchases() async {

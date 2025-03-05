@@ -1,5 +1,4 @@
 // ignore_for_file: unnecessary_null_comparison
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +16,8 @@ import 'package:hungrx_app/presentation/blocs/internet_connection/internet_conne
 import 'package:hungrx_app/presentation/blocs/internet_connection/internet_connection_state.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_event.dart';
+import 'package:hungrx_app/presentation/blocs/subscription/subscription_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/subscription/subscription_event.dart';
 import 'package:hungrx_app/presentation/blocs/timezone/timezone_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/timezone/timezone_event.dart';
 import 'package:hungrx_app/presentation/blocs/timezone/timezone_state.dart';
@@ -38,21 +39,19 @@ class SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _initializeApp();
-    // _checkConnectivityAndNavigate();
   }
 
   Future<void> _initializeApp() async {
-     await _authService.initialize();
+    await _authService.initialize();
     final userId = await _authService.getUserId();
     if (userId != null) {
-
-      
+      await _updateUserTimezone(userId);
     }
     _checkConnectivityAndNavigate();
   }
 
   Future<void> _updateUserTimezone(String userId) async {
-    if (mounted && userId !=null) {
+    if (mounted && userId != null) {
       context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
     }
   }
@@ -63,11 +62,11 @@ class SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkSubscriptionStatus(String userId) async {
     if (mounted) {
-      context.read<CheckStatusSubscriptionBloc>().add(CheckSubscription(userId));
+      context
+          .read<CheckStatusSubscriptionBloc>()
+          .add(CheckSubscription(userId));
     }
   }
-
-// Inside SplashScreenState class, update the _navigateToNextScreen method:
 
   Future<void> _navigateToNextScreen() async {
     await Future.delayed(const Duration(seconds: 4));
@@ -76,24 +75,29 @@ class SplashScreenState extends State<SplashScreen> {
 
     final bool isLoggedIn = await _authService.isLoggedIn();
     final bool hasSeenOnboarding = await _onboardingService.hasSeenOnboarding();
-    print(hasSeenOnboarding);
+
     String route = '/phoneNumber';
-if (!hasSeenOnboarding) {
-        route = '/onboarding';
-      } else if (isLoggedIn) {
+
+    if (!hasSeenOnboarding) {
+      route = '/onboarding';
+    } else if (isLoggedIn) {
       try {
         final userId = await _authService.getUserId();
-        print("splash :$userId");
+        print("splash: $userId");
 
         if (userId != null) {
           await _updateUserTimezone(userId);
-           await _checkSubscriptionStatus(userId);
-          // Check profile completion with improved error handling
+
+          context.read<SubscriptionBloc>().add(UpdateSubscriptionInfo());
+          await Future.delayed(const Duration(seconds: 1));
+          // Check subscription status using BLoC
+          await _checkSubscriptionStatus(userId);
+
+          // Check profile completion
           final bool? isProfileComplete =
               await _authService.checkProfileCompletion(userId);
 
           if (isProfileComplete == null) {
-            // Handle server error case
             if (mounted) {
               showDialog(
                 context: context,
@@ -106,7 +110,6 @@ if (!hasSeenOnboarding) {
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        // Retry connectivity check
                         context
                             .read<ConnectivityBloc>()
                             .add(CheckConnectivity());
@@ -117,7 +120,7 @@ if (!hasSeenOnboarding) {
                 ),
               );
             }
-            return; // Stop navigation until error is resolved
+            return;
           }
 
           // Try to fetch home data
@@ -128,17 +131,30 @@ if (!hasSeenOnboarding) {
             }
           } catch (e) {
             print('Error fetching home data: $e');
-            // Continue navigation even if home data fetch fails
           }
 
-          // Try to update streaks
+          // Update streaks
           if (mounted) {
             context.read<StreakBloc>().add(FetchStreakData());
           }
 
-          // Determine route based on profile completion
-          route = isProfileComplete ? '/home' : '/user-info-one';
-        } 
+          // Determine route based on profile completion and subscription status
+          if (isProfileComplete) {
+            // Check subscription state from BLoC
+            final subscriptionState =
+                context.read<CheckStatusSubscriptionBloc>().state;
+
+            if (subscriptionState is CheckSubscriptionActive) {
+              route = '/home';
+              // print(
+              //     "subscriptin stauts................... ${subscriptionState is CheckSubscriptionActive}");
+            } else {
+              route = '/subscriptionScreen';
+            }
+          } else {
+            route = '/user-info-one';
+          }
+        }
       } catch (e) {
         print('Error during navigation checks: $e');
         if (mounted) {
@@ -150,7 +166,6 @@ if (!hasSeenOnboarding) {
             ),
           );
 
-          // Add retry option for better UX
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -176,10 +191,8 @@ if (!hasSeenOnboarding) {
             ),
           );
         }
-        route = '/phoneNumber'; // Fallback to login on error
+        route = '/phoneNumber';
       }
-    } else if (!hasSeenOnboarding) {
-      route = '/onboarding';
     }
 
     if (mounted) {
@@ -191,7 +204,6 @@ if (!hasSeenOnboarding) {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-
         BlocListener<ConnectivityBloc, ConnectivityState>(
           listener: (context, state) {
             if (state is ConnectivityConnected) {
@@ -211,9 +223,9 @@ if (!hasSeenOnboarding) {
             }
           },
         ),
-           BlocListener<CheckStatusSubscriptionBloc, CheckStatusSubscriptionState>(
+        BlocListener<CheckStatusSubscriptionBloc, CheckStatusSubscriptionState>(
           listener: (context, state) {
-            if (state is SubscriptionError) {
+            if (state is CheckSubscriptionError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Subscription check failed: ${state.error}'),
@@ -242,13 +254,11 @@ if (!hasSeenOnboarding) {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 spacing: 30,
                 children: [
-                  // Logo
                   Image.asset(
                     'assets/images/logos.png',
                     width: 300,
                     height: 300,
                   ),
-                  // Loading Animation positioned at the bottom of the logo
                   LoadingAnimationWidget.staggeredDotsWave(
                     color: AppColors.primaryColor,
                     size: 40,

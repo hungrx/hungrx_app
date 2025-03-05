@@ -151,7 +151,7 @@ class AppRouter {
         path: '/weight-tracking',
         name: RouteNames.weightTracking,
         builder: (context, state) => WeightTrackingScreen(
-          isMaintain: state.extra as bool? ?? false, // Provide a default value
+          isMaintain: state.extra as bool, // Provide a default value
         ),
       ),
       GoRoute(
@@ -295,7 +295,9 @@ class AppRouter {
         path: '/subscriptionScreen',
         name: RouteNames.subscriptionScreen,
         builder: (BuildContext context, GoRouterState state) {
-          return const SubscriptionScreen(); // Replace with actual RestaurantDetailsScreen
+          return  SubscriptionScreen(
+            fromResultScreen: state.extra as bool? ?? false,
+          ); // Replace with actual RestaurantDetailsScreen
         },
       ),
       GoRoute(
