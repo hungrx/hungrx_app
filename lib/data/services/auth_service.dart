@@ -56,8 +56,9 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString(userIdKey);
+      print("..........user ${userId}");
       final profileComplete = prefs.getBool(profileCompletionKey) ?? false;
-
+      print("..........profile ${profileComplete}");
       return userId != null && userId.isNotEmpty && profileComplete;
     } catch (e) {
       print('Error checking login status: $e');
@@ -66,14 +67,12 @@ class AuthService {
   }
 
   Future<bool?> checkProfileCompletion(String userId) async {
-
-    
     try {
       final prefs = await SharedPreferences.getInstance();
 
       // Always check with server to ensure latest status
       final response = await _userProfileApiService.checkUserProfile(userId);
-
+ print("..........responce ${response}");
       // ignore: unnecessary_null_comparison
       if (response.status != null) {
         // Cache the profile status
@@ -86,6 +85,7 @@ class AuthService {
       return null;
     }
   }
+
   // Get cached subscription status
   Future<Map<String, dynamic>> getSubscriptionInfo() async {
     try {
@@ -132,7 +132,6 @@ class AuthService {
   Future<void> logout() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
 
       // Save flags before clearing
       final bool installFlag = prefs.getBool(installKey) ?? false;
@@ -183,7 +182,7 @@ class AuthService {
 
       // Save flags before clearing
       final bool installFlag = prefs.getBool(installKey) ?? false;
-      // final bool onboardingFlag = prefs.getBool(onboardingKey) ?? false;
+      final bool onboardingFlag = prefs.getBool(onboardingKey) ?? false;
 
       // Clear all SharedPreferences
       await prefs.clear();
@@ -197,8 +196,9 @@ class AuthService {
 
       // Restore flags
       await prefs.setBool(installKey, installFlag);
-      await _onboardingService
-          .resetOnboarding(); // Force onboarding on next login
+      await prefs.setBool(onboardingKey, onboardingFlag);
+      // await _onboardingService
+      //     .resetOnboarding(); // Force onboarding on next login
       await prefs.setBool(firstTimeKey, true);
 
       await Future.wait([

@@ -35,10 +35,13 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       final updatedInfo = await PurchaseService.getSubscriptionInfo();
       final userId = await _authService.getUserId();
       // Build a map of transaction details using the updated information.
+
+      print("udatatecalled.........................");
       final transactionDetails = {
-        'userId': userId ?? '',
         'rcAppUserId': updatedInfo.rcAppUserId ?? '',
+        'userId': userId ?? '',
         'productId': updatedInfo.productId ?? '',
+        'isUpdate': true, // Added isUpdate field set to false
         'subscriptionLevel':
             updatedInfo.offerType ?? 'monthly', // Adjust as needed
         'expirationDate': updatedInfo.expirationDate ?? '',
@@ -118,13 +121,14 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       final result =
           await _subscriptionUseCase.purchaseSubscription(event.subscription);
       final userId = await _authService.getUserId();
-
+     print("puchase claed.........................");
       if (result.success) {
         // Create transaction details map with the new structure
         final transactionDetails = {
           'userId': userId ?? '',
           'rcAppUserId': result.rcAppUserId ?? '',
           'productId': result.productId ?? '',
+          'isUpdate': false, // Added isUpdate field set to false
           'subscriptionLevel':
               result.offerType ?? 'monthly', // Add appropriate mapping
           'expirationDate': result.expirationDate ?? '',
@@ -149,57 +153,61 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
         final storeResponse =
             await _storePurchaseUseCase.execute(purchaseDetailsModel);
 
-if (storeResponse.success) {
-        emit(SubscriptionPurchased(
-          isSubscribed: storeResponse.isSubscribed,
-          subscriptionLevel: storeResponse.subscriptionLevel
-        ));
+        if (storeResponse.success) {
+          emit(SubscriptionPurchased(
+              isSubscribed: storeResponse.isSubscribed,
+              subscriptionLevel: storeResponse.subscriptionLevel));
+        } else {
+          emit(SubscriptionError(
+              'Purchase completed but failed to store details: ${storeResponse.message}'));
+        }
       } else {
-        emit(SubscriptionError('Purchase completed but failed to store details: ${storeResponse.message}'));
+        // Handle purchase failure
+        print('❌ Purchase failed with error: ${result.error}');
+
+        // Check for item already owned
+        if (result.error?.toString().contains('6') == true ||
+            result.error
+                    ?.toString()
+                    .contains('This product is already active') ==
+                true ||
+            result.error?.toString().contains('ITEM_ALREADY_OWNED') == true) {
+          print('🎯 Detected already owned product error');
+          emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
+          return;
+        }
+        emit(SubscriptionError(
+            result.error ?? 'Purchase could not be completed'));
       }
-    } else {
-      // Handle purchase failure
-      print('❌ Purchase failed with error: ${result.error}');
-      
-      // Check for item already owned
-      if (result.error?.toString().contains('6') == true ||
-          result.error?.toString().contains('This product is already active') == true ||
-          result.error?.toString().contains('ITEM_ALREADY_OWNED') == true) {
-        print('🎯 Detected already owned product error');
+    } on PlatformException catch (e) {
+      print('📱 Platform Exception caught: ${e.code} - ${e.message}');
+
+      // Handle error code 6 and item already owned cases
+      if (e.code == '6' ||
+          e.message?.contains('This product is already active') == true ||
+          e.message?.contains('ITEM_ALREADY_OWNED') == true) {
+        print('🎯 Detected error code 6 or active product message');
         emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
         return;
       }
-      emit(SubscriptionError(result.error ?? 'Purchase could not be completed'));
+
+      String errorMessage = e.message ?? 'Unknown error occurred';
+      print('❌ Emitting platform error: $errorMessage');
+      emit(SubscriptionError(errorMessage));
+    } catch (e) {
+      print('💥 General exception caught: $e');
+      String message = e.toString();
+
+      if (message.contains('6') ||
+          message.contains('This product is already active') ||
+          message.contains('ITEM_ALREADY_OWNED')) {
+        print('🎯 Detected already owned product in general exception');
+        emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
+        return;
+      }
+      emit(SubscriptionError('Unexpected error: $message'));
     }
-  } on PlatformException catch (e) {
-    print('📱 Platform Exception caught: ${e.code} - ${e.message}');
-    
-    // Handle error code 6 and item already owned cases
-    if (e.code == '6' || 
-        e.message?.contains('This product is already active') == true ||
-        e.message?.contains('ITEM_ALREADY_OWNED') == true) {
-      print('🎯 Detected error code 6 or active product message');
-      emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
-      return;
-    }
-    
-    String errorMessage = e.message ?? 'Unknown error occurred';
-    print('❌ Emitting platform error: $errorMessage');
-    emit(SubscriptionError(errorMessage));
-  } catch (e) {
-    print('💥 General exception caught: $e');
-    String message = e.toString();
-    
-    if (message.contains('6') || 
-        message.contains('This product is already active') ||
-        message.contains('ITEM_ALREADY_OWNED')) {
-      print('🎯 Detected already owned product in general exception');
-      emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
-      return;
-    }
-    emit(SubscriptionError('Unexpected error: $message'));
   }
-}
 
   Future<void> _onCheckPremiumStatus(
     CheckPremiumStatus event,

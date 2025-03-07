@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "487283706527-6jcnk2cntf7sjlnq6iao36v6t0rg1q0g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hungrx.hungrx_app",
+            "certificate_hash": "2d5d795eec1263204db9a6df913d7b80bdf25032"
+          }
+        },
+        {
           "client_id": "487283706527-u8ss5a0o20d1mrg3mobrsi71jhfisf26.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

@@ -2,6 +2,7 @@ class StorePurchaseDetailsModel {
   final String userId;
   final String rcAppUserId;
   final String productId;
+  final bool isUpdate; // Added the missing field
   final String subscriptionLevel;
   final String expirationDate;
   final RevenuecatDetails revenuecatDetails;
@@ -10,6 +11,7 @@ class StorePurchaseDetailsModel {
     required this.userId,
     required this.rcAppUserId,
     required this.productId,
+    required this.isUpdate, // Added to constructor
     required this.subscriptionLevel,
     required this.expirationDate,
     required this.revenuecatDetails,
@@ -20,9 +22,11 @@ class StorePurchaseDetailsModel {
       userId: map['userId'] ?? '',
       rcAppUserId: map['rcAppUserId'] ?? '',
       productId: map['productId'] ?? '',
+      isUpdate: map['isUpdate'] ?? false, // Added with default false
       subscriptionLevel: map['subscriptionLevel'] ?? '',
       expirationDate: map['expirationDate'] ?? '',
-      revenuecatDetails: RevenuecatDetails.fromMap(map['revenuecatDetails'] ?? {}),
+      revenuecatDetails:
+          RevenuecatDetails.fromMap(map['revenuecatDetails'] ?? {}),
     );
   }
 
@@ -31,6 +35,7 @@ class StorePurchaseDetailsModel {
       'userId': userId,
       'rcAppUserId': rcAppUserId,
       'productId': productId,
+      'isUpdate': isUpdate, // Added to map
       'subscriptionLevel': subscriptionLevel,
       'expirationDate': expirationDate,
       'revenuecatDetails': revenuecatDetails.toMap(),
@@ -91,6 +96,7 @@ class RevenuecatDetails {
     };
   }
 }
+
 // Response model
 class StorePurchaseResponseModel {
   final bool success;

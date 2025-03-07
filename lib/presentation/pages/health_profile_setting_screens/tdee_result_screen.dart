@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/core/widgets/citation_ibutton.dart';
 import 'package:hungrx_app/data/Models/profile_setting_screen/tdee_result_model.dart';
-import 'package:hungrx_app/data/services/auth_service.dart';
-import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/home_screen/home_screen_event.dart';
-import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
-import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_event.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/widget/gradient_container.dart';
 import 'package:hungrx_app/presentation/pages/health_profile_setting_screens/widgets/premium_container.dart';
 import 'package:hungrx_app/routes/route_names.dart';
@@ -24,11 +18,9 @@ class TDEEResultScreen extends StatefulWidget {
 
 class TDEEResultScreenState extends State<TDEEResultScreen>
     with SingleTickerProviderStateMixin {
-  final AuthService _authService = AuthService();
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
-  bool _isNavigating = false;
 
   @override
   void initState() {
@@ -52,89 +44,38 @@ class TDEEResultScreenState extends State<TDEEResultScreen>
     );
   }
 
-  Future<bool> _onWillPop() async {
-    if (_isNavigating) return false;
 
-    _isNavigating = true;
-    await _navigateToHome(context);
-    return false;
-  }
-
-  Future<void> _navigateToHome(BuildContext context) async {
-    try {
-      final userId = await _authService.getUserId();
-
-      if (!mounted) return;
-
-      if (userId == null) {
-        // ignore: use_build_context_synchronously
-        context.pushNamed(RouteNames.subscriptionScreen ,extra: false);
-        return;
-      }
-
-      final homeData = await _authService.fetchHomeData();
-
-      if (!mounted) return;
-
-      if (homeData != null) {
-        // ignore: use_build_context_synchronously
-        context.read<HomeBloc>().add(InitializeHomeData(homeData));
-        // ignore: use_build_context_synchronously
-        context.read<StreakBloc>().add(FetchStreakData());
-      }
-
-      // Using context.go instead of GoRouter.of(context).go() for more concise code
-      context.go('/home');
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error navigating to home: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-
-      // Navigate to home even if there's an error
-      // ignore: use_build_context_synchronously
-      context.go('/home');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: GradientContainer(
-          top: size.height * 0.00,
-          left: size.height * 0.01,
-          right: size.height * 0.01,
-          bottom: size.height * 0.01,
-          child: SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          _buildHeader(context),
-                          const SizedBox(height: 24),
-                          _buildResults(widget.tdeeResult, context),
-                        ],
-                      ),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GradientContainer(
+        top: size.height * 0.00,
+        left: size.height * 0.01,
+        right: size.height * 0.01,
+        bottom: size.height * 0.01,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _buildHeader(context),
+                        const SizedBox(height: 24),
+                        _buildResults(widget.tdeeResult, context),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

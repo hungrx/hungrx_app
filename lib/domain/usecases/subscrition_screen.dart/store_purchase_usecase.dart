@@ -11,7 +11,7 @@ class StorePurchaseUseCase {
     try {
       return await _repository.storePurchaseDetails(purchaseDetails);
     } catch (e) {
-      throw Exception('UseCase error: $e');
+      throw Exception('UseCase error');
     }
   }
 }

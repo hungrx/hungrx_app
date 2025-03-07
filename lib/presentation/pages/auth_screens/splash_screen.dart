@@ -1,4 +1,3 @@
-// ignore_for_file: unnecessary_null_comparison
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -45,12 +44,17 @@ class SplashScreenState extends State<SplashScreen> {
     await _authService.initialize();
     final userId = await _authService.getUserId();
     if (userId != null) {
+      final isProfileComplete =
+          await _authService.checkProfileCompletion(userId);
+      print("Initial profile completion check: $isProfileComplete");
+
       await _updateUserTimezone(userId);
     }
     _checkConnectivityAndNavigate();
   }
 
   Future<void> _updateUserTimezone(String userId) async {
+    // ignore: unnecessary_null_comparison
     if (mounted && userId != null) {
       context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
     }
@@ -74,6 +78,8 @@ class SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final bool isLoggedIn = await _authService.isLoggedIn();
+
+    print(".................${isLoggedIn}");
     final bool hasSeenOnboarding = await _onboardingService.hasSeenOnboarding();
 
     String route = '/phoneNumber';
@@ -86,6 +92,10 @@ class SplashScreenState extends State<SplashScreen> {
         print("splash: $userId");
 
         if (userId != null) {
+          // Check profile completion
+          final bool? isProfileComplete =
+              await _authService.checkProfileCompletion(userId);
+
           await _updateUserTimezone(userId);
 
           context.read<SubscriptionBloc>().add(UpdateSubscriptionInfo());
@@ -93,9 +103,7 @@ class SplashScreenState extends State<SplashScreen> {
           // Check subscription status using BLoC
           await _checkSubscriptionStatus(userId);
 
-          // Check profile completion
-          final bool? isProfileComplete =
-              await _authService.checkProfileCompletion(userId);
+          print("..........isprofile complete ${isProfileComplete}");
 
           if (isProfileComplete == null) {
             if (mounted) {
@@ -248,23 +256,26 @@ class SplashScreenState extends State<SplashScreen> {
 
           return Scaffold(
             backgroundColor: AppColors.buttonColors,
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                spacing: 30,
-                children: [
-                  Image.asset(
-                    'assets/images/logos.png',
-                    width: 300,
-                    height: 300,
+            body: Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Image.asset(
+                      'assets/images/logos.png',
+                      width: 300,
+                      height: 300,
+                    ),
                   ),
-                  LoadingAnimationWidget.staggeredDotsWave(
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.only(bottom: 35), // Adjust as needed
+                  child: LoadingAnimationWidget.threeRotatingDots(
                     color: AppColors.primaryColor,
-                    size: 40,
+                    size: 35,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },

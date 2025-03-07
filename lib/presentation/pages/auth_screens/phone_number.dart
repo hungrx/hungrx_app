@@ -138,11 +138,14 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
   }
 
   Future<void> _handleAuthSuccess(BuildContext context, String? userId) async {
+    print(userId);
     if (userId != null) {
       try {
         final authService = AuthService();
         final isProfileComplete =
             await authService.checkProfileCompletion(userId);
+
+             print("..........google authe ${isProfileComplete}");
 
         if (mounted) {
           context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));

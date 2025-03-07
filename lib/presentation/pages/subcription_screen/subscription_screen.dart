@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
@@ -13,6 +14,7 @@ import 'package:hungrx_app/presentation/blocs/subscription/subscription_bloc.dar
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_event.dart';
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_state.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/active_subscriptiion_screen.dart';
+import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/active_subscription_dialog.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/feature_item_widget.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/google_play_account_error_dialog.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/legal_section_widget.dart';
@@ -20,7 +22,7 @@ import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/subscri
 
 class SubscriptionScreen extends StatefulWidget {
   final bool fromResultScreen;
-  const SubscriptionScreen({super.key, this.fromResultScreen = false});
+  const SubscriptionScreen({super.key,  this.fromResultScreen = true});
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
@@ -30,6 +32,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final String _privacyPolicyUrl = 'https://www.hungrx.com/privacy-policy.html';
   bool _isLoading = false;
   bool _isInitialLoading = true;
+  bool _dialogShown = false;
   final AuthService _authService = AuthService();
 
   @override
@@ -272,15 +275,29 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("icon............${widget.fromResultScreen}");
     return Scaffold(
       appBar: AppBar(
         leading: widget.fromResultScreen
             ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  context.pop();
-                },
-              )
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              // Show a Snackbar message
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No more pages. The app will now close.'),
+                ),
+              );
+              // Wait for a moment so the user sees the message, then close the app.
+              Future.delayed(const Duration(seconds: 2), () {
+                SystemNavigator.pop();
+              });
+            }
+          },
+        )
             : IconButton(
                 onPressed: _showLogoutConfirmationDialog,
                 icon: const Icon(Icons.logout, color: Colors.white),
@@ -343,6 +360,28 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   }
                 },
                 builder: (context, checkStatusState) {
+                  print(widget.fromResultScreen);
+                  if (!widget.fromResultScreen &&
+                      checkStatusState is CheckSubscriptionActive &&
+                      !_dialogShown) {
+                    // Update flag without wrapping in setState if possible,
+                    // or wrap in a post frame callback if needed
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(() {
+                          _dialogShown = true;
+                        });
+                        print("Showing active subscription dialog");
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) =>
+                              const ActiveSubscriptionDialog(),
+                        ).then((_) => print("Dialog closed"));
+                      }
+                    });
+                  }
+
                   if (checkStatusState is CheckSubscriptionActive) {
                     return const ActiveSubscriptionWidget();
                   }
@@ -362,6 +401,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       }
 
                       if (state is SubscriptionError) {
+                        _initializeAndLoadSubscriptions();
                         print('❌ Subscription error: ${state.message}');
 
                         // Check for Google Play account mismatch
@@ -378,11 +418,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                             }
                           });
                         } else {
+                          _initializeAndLoadSubscriptions();
                           // Show regular error snackbar
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                state.message,
+                                "Subscrition canceled or error occured}",
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
