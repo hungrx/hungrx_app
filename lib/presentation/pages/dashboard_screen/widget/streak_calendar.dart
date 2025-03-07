@@ -179,8 +179,6 @@ class _StreakCalendarState extends State<StreakCalendar> {
           final startingDate = streakData.startDate;
           final endingDate = DateTime.now().add(
               const Duration(days: 365)); // Show one year ahead for unlimited
-print(startingDate);
-print(endingDate);
           // final endingDate = streakData.endDate();
 
           return _buildContainer(

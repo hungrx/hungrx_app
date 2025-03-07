@@ -66,17 +66,10 @@ class DashboardScreenState extends State<DashboardScreen> {
   DateTime? _lastCheckedDate;
 
   void _checkDateChange() async {
-    print('\n--- Date Change Check ---');
     final now = DateTime.now();
     final today = DateFormat('dd/MM/yyyy').format(now);
 
-    print('Current time: ${now.toIso8601String()}');
-    print('Today formatted: $today');
-    print(
-        'Last checked date: ${_lastCheckedDate?.toIso8601String() ?? "null"}');
-
     if (_lastCheckedDate == null) {
-      print('Initializing last checked date');
       _lastCheckedDate = now;
       return;
     }
@@ -85,7 +78,6 @@ class DashboardScreenState extends State<DashboardScreen> {
         DateFormat('dd/MM/yyyy').format(_lastCheckedDate!);
 
     if (lastCheckedFormatted != today) {
-      print('Date changed from $lastCheckedFormatted to $today');
       _lastCheckedDate = now;
 
       try {
@@ -99,24 +91,19 @@ class DashboardScreenState extends State<DashboardScreen> {
 
         // Clear the last dialog date to ensure dialog shows
         await _appPrefs.clearLastDialogDate();
-        print('Cleared last dialog date for new day');
 
         // Then fetch metrics and show dialog
         await _fetchMetricsAndShowDialog();
       } catch (e) {
-        print('Error handling date change: $e');
+          Exception('Error during date change check: $e');
       }
-    } else {
-      print('No date change detected');
-    }
-    print('------------------------\n');
+    } else {}
   }
 
   Future<void> _initializeApp() async {
     if (_isInitialized) return;
 
     try {
-      print('Starting initialization...');
       // 1. Initialize preferences
       final prefs = await SharedPreferences.getInstance();
       _appPrefs = AppPreferences(prefs);
@@ -125,7 +112,6 @@ class DashboardScreenState extends State<DashboardScreen> {
 
       // 2. Check first time user status
       final isFirstTime = _appPrefs.isFirstTimeUser();
-      print('Is first time user: $isFirstTime');
 
       // 3. Wait for home data first
       final homeBloc = context.read<HomeBloc>()..add(RefreshHomeData());
@@ -171,9 +157,7 @@ class DashboardScreenState extends State<DashboardScreen> {
       }
 
       _isInitialized = true;
-      print('Initialization completed successfully');
     } catch (e) {
-      print('Initialization error: $e');
       _isInitialized = false;
     }
   }
@@ -193,40 +177,26 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _debugPreferences() {
-    print('\n--- Debug Preferences ---');
     _appPrefs.printAllPreferences();
 
     final homeState = context.read<HomeBloc>().state;
-    if (homeState is HomeLoaded) {
-      print(
-          'Calculation date from home data: ${homeState.homeData.calculationDate}');
-    }
-    print('----------------------\n');
+    if (homeState is HomeLoaded) {}
   }
 
   void _debugDates() {
     final homeState = context.read<HomeBloc>().state;
     if (homeState is HomeLoaded) {
-      final data = homeState.homeData;
-      print('\n--- Debug Dates ---');
-      print('Calculation date: ${data.calculationDate}');
       // print('Starting date: ${data.startingDate}');
-      print('Current date: ${DateTime.now().toIso8601String()}');
-      print('Last shown date: ${_appPrefs.getLastDialogDate()}');
-      print('Account creation date: ${_appPrefs.getAccountCreationDate()}');
-      print('-------------------\n');
     }
   }
 
   Future<void> _checkAndShowMetricsDialog() async {
     if (!mounted) {
-      print('Not mounted when checking metrics dialog');
       return;
     }
 
     final homeState = context.read<HomeBloc>().state;
     if (homeState is! HomeLoaded) {
-      print('Home state not loaded when checking metrics dialog');
       return;
     }
 
@@ -235,28 +205,19 @@ class DashboardScreenState extends State<DashboardScreen> {
     final lastShownDate = _appPrefs.getLastDialogDate();
     // final accountCreationDate = _parseDate(homeState.homeData.calculationDate);
 
-    print('Today\'s date (formatted): $today');
-    print('API Creation date: ${homeState.homeData.calculationDate}');
-    print('Last shown date: $lastShownDate');
-
     // Don't show on account creation date
     if (homeState.homeData.calculationDate == today) {
-      print('Skipping metrics dialog on account creation date');
       return;
     }
 
     // Show if not shown today (either null or different date)
     if (lastShownDate != today) {
-      print('Showing metrics dialog - not shown today');
       if (mounted) {
         await _showMetricsDialog(); // Make this async
         await _appPrefs.setLastDialogDate(today);
-        print(
-            'Dialog shown and date updated to: $today'); // Store in same format as comparison
+        // Store in same format as comparison
       }
-    } else {
-      print('Metrics dialog already shown today');
-    }
+    } else {}
   }
 
   Future<void> simulateFutureDate(int daysToAdd) async {
@@ -264,11 +225,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     if (homeState is! HomeLoaded) return;
 
     final accountCreationDate = _parseDate(homeState.homeData.calculationDate);
-    final simulatedDate = accountCreationDate.add(Duration(days: daysToAdd));
-
-    print('\n--- Simulating date ${daysToAdd} days in future ---');
-    print('Original creation date: ${accountCreationDate.toIso8601String()}');
-    print('Simulated current date: ${simulatedDate.toIso8601String()}');
+    accountCreationDate.add(Duration(days: daysToAdd));
 
     // Clear last shown dialog date to test dialog showing
     _appPrefs.clearLastDialogDate();
@@ -289,9 +246,6 @@ class DashboardScreenState extends State<DashboardScreen> {
     final now = DateTime.now();
     final daysSinceCreation = now.difference(accountCreationDate).inDays;
 
-    print('Account Creation Date: ${accountCreationDate.toIso8601String()}');
-    print('Days since creation: $daysSinceCreation');
-
     // Show reminder only after 7 days of account creation
     if (daysSinceCreation >= 7) {
       final shouldShow = await WeightReminderManager.shouldShowReminder();
@@ -310,14 +264,10 @@ class DashboardScreenState extends State<DashboardScreen> {
 
         final double weightValue = parseWeightValue(homeState.homeData.weight);
 
-        print("from $weightValue");
         await _showWeightReminderDialog(
             lastUpdate, weightValue, homeState.homeData.goalStatus);
       }
-    } else {
-      print(
-          'Not showing weight reminder - only $daysSinceCreation days since creation');
-    }
+    } else {}
   }
 
   DateTime _parseDate(String date) {
@@ -369,7 +319,6 @@ class DashboardScreenState extends State<DashboardScreen> {
   Future<void> _fetchMetricsAndShowDialog() async {
     if (!mounted) return;
 
-    print('Fetching metrics and showing dialog...');
     final metricsBloc = context.read<CalorieMetricsBloc>();
     metricsBloc.add(FetchCalorieMetrics());
 
@@ -378,22 +327,19 @@ class DashboardScreenState extends State<DashboardScreen> {
       await for (final state in metricsBloc.stream.timeout(
         const Duration(seconds: 10),
         onTimeout: (sink) {
-          print('Metrics fetch timeout');
           sink.close();
         },
       )) {
         if (state is CalorieMetricsLoaded) {
-          print('Metrics loaded successfully');
           await _checkAndShowMetricsDialog();
           break;
         }
         if (state is CalorieMetricsError) {
-          print('Error loading metrics');
           break;
         }
       }
     } catch (e) {
-      print('Error in _fetchMetricsAndShowDialog: $e');
+      // Handle timeout error
     }
   }
 
@@ -405,23 +351,16 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _showMetricsDialog() async {
-    print('Attempting to show metrics dialog');
     if (!mounted) {
-      print('Not mounted when showing metrics dialog');
       return;
     }
 
     final metricsState = context.read<CalorieMetricsBloc>().state;
     final homeState = context.read<HomeBloc>().state;
 
-    print(
-        'Current states - Metrics: ${metricsState.runtimeType}, Home: ${homeState.runtimeType}');
-
     if (metricsState is CalorieMetricsLoaded && homeState is HomeLoaded) {
       // Check if data is null
       if (metricsState.metrics.data == null) {
-        print('Metrics data is null, showing fallback message');
-
         // Show a simple informative snackbar instead of the dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -431,11 +370,6 @@ class DashboardScreenState extends State<DashboardScreen> {
         );
         return;
       }
-
-      print('Showing metrics dialog with data:');
-      print('Consumed: ${metricsState.metrics.data!.consumedCalories}');
-      print('Goal: ${metricsState.metrics.data!.goal}');
-      print('Goal: ${metricsState.metrics.data!.isShown}');
 
       try {
         await showDialog(
@@ -457,14 +391,11 @@ class DashboardScreenState extends State<DashboardScreen> {
             isShown: metricsState.metrics.data!.isShown,
           ),
         );
-        print('Dialog shown successfully');
       } catch (e) {
-        print('Error showing dialog: $e');
+
+        // Handle dialog error
       }
-    } else {
-      print(
-          'Cannot show dialog: Metrics state = ${metricsState.runtimeType}, Home state = ${homeState.runtimeType}');
-    }
+    } else {}
   }
 
   Future<void> _fetchData() async {
@@ -570,9 +501,9 @@ class DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: Colors.black,
       body: BlocListener<CalorieMetricsBloc, CalorieMetricsState>(
         listener: (context, state) {
-          print('BlocListener state: $state'); // Debug print
+          // Debug print
           if (state is CalorieMetricsLoaded) {
-            print('Metrics loaded in listener'); // Debug print
+            // Debug print
           }
         },
         child: BlocConsumer<HomeBloc, HomeState>(

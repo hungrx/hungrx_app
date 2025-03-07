@@ -11,7 +11,6 @@ class StreakRepository {
       final response = await _apiService.fetchUserStreak(userId);
       return StreakDataModel.fromJson(response);
     } catch (e) {
-      print(e);
       throw Exception('Repository error: $e');
     }
   }

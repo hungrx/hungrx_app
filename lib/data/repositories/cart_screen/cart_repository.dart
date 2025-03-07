@@ -15,7 +15,6 @@ class GetCartRepository {
         final cartResponse = CartResponseModel.fromJson(response);
         return cartResponse;
       } catch (e) {
-        print("Error parsing cart response: $e");
         return CartResponseModel(
           success: false,
           message: 'Failed to parse cart data',
@@ -24,7 +23,6 @@ class GetCartRepository {
         );
       }
     } catch (e) {
-      print("Error fetching cart: $e");
       return CartResponseModel(
         success: false,
         message: 'Failed to fetch cart. Please try again.',

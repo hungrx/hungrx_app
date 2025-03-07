@@ -9,8 +9,6 @@ class AppleAuthApi {
     required String idToken,
     required String authCode,
   }) async {
-    print('idToken: $idToken');
-    print('authCode: $authCode');
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/loginWithApple'),
@@ -20,7 +18,6 @@ class AppleAuthApi {
           'code': authCode,
         }),
       );
-      print(response.body);
 
       if (response.statusCode == 200) {
         return AppleAuthResponse.fromJson(jsonDecode(response.body));
@@ -28,7 +25,6 @@ class AppleAuthApi {
         throw Exception('Failed to authenticate: ${response.body}');
       }
     } catch (e) {
-      print(e);
       throw Exception('Network error: $e');
     }
   }

@@ -20,7 +20,6 @@ class SubscriptionUseCase {
   try {
     return await _repository.purchaseSubscription(subscription);
   } catch (e) {
-    print('❌ Error purchasing subscription: $e');
     rethrow;
   }
 }

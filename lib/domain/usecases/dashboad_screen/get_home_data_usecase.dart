@@ -10,7 +10,6 @@ class GetHomeDataUseCase {
     try {
       return await repository.getHomeData(userId);
     } catch (e) {
-      print(e);
       throw Exception('UseCase error: $e');
     }
   }

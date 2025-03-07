@@ -101,7 +101,6 @@ class GoogleAuthRepository {
         body: json.encode(requestBody),
       );
 
-      print(response.body);
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -145,7 +144,7 @@ class GoogleAuthRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_id');
     } catch (error) {
-      print('Error signing out from Google: $error');
+      throw Exception('Failed to sign out from Google: $error');
     }
   }
 }

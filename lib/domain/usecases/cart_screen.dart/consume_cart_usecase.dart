@@ -11,8 +11,7 @@ class ConsumeCartUseCase {
     try {
       return await _repository.consumeCart(request);
     } catch (e) {
-      print(e);
-      throw Exception('UseCase error: $e');
+      throw Exception('Some error or no food in Cart');
     }
   }
 }

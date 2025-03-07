@@ -138,14 +138,11 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
   }
 
   Future<void> _handleAuthSuccess(BuildContext context, String? userId) async {
-    print(userId);
     if (userId != null) {
       try {
         final authService = AuthService();
         final isProfileComplete =
             await authService.checkProfileCompletion(userId);
-
-             print("..........google authe ${isProfileComplete}");
 
         if (mounted) {
           context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
@@ -160,20 +157,17 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
           // Retrieve the current subscription state from the BLoC
 
           final subscriptionState = await context
-            .read<CheckStatusSubscriptionBloc>()
-            .stream
-            .firstWhere((state) => state is! CheckSubscriptionLoading);
+              .read<CheckStatusSubscriptionBloc>()
+              .stream
+              .firstWhere((state) => state is! CheckSubscriptionLoading);
           // final subscriptionState =
           //     context.read<CheckStatusSubscriptionBloc>().state;
-          print(subscriptionState);
           // Navigate based on the BLoC's subscription state
           if (subscriptionState is CheckSubscriptionActive) {
             // print(
-                // "reched ..................${subscriptionState is CheckSubscriptionActive}");
+            // "reched ..................${subscriptionState is CheckSubscriptionActive}");
             GoRouter.of(context).go('/home');
           } else {
-             print(
-                "reched ..................${subscriptionState is CheckSubscriptionActive}");
             GoRouter.of(context).go('/subscriptionScreen');
           }
         } else if (isProfileComplete == false) {

@@ -30,7 +30,6 @@ class _CommonFoodListItemState extends State<CommonFoodListItem> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _initializeUserId();
   }

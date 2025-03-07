@@ -22,7 +22,7 @@ import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/subscri
 
 class SubscriptionScreen extends StatefulWidget {
   final bool fromResultScreen;
-  const SubscriptionScreen({super.key,  this.fromResultScreen = true});
+  const SubscriptionScreen({super.key, this.fromResultScreen = true});
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
@@ -56,17 +56,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   // Debug function to log subscription state
   void _logSubscriptionState(SubscriptionState state) {
-    print("🔍 SUBSCRIPTION STATE: ${state.runtimeType}");
     if (state is SubscriptionsLoaded) {
-      print("🔍 Subscriptions count: ${state.subscriptions.length}");
       if (state.subscriptions.isEmpty) {
-        print("⚠️ WARNING: Subscriptions list is empty!");
-      } else {
-        for (var sub in state.subscriptions) {
-          print(
-              "🔍 Subscription: ${sub.id} - ${sub.title} - ${sub.priceString}");
-        }
-      }
+      } else {}
     }
   }
 
@@ -118,7 +110,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   void _initializeAndLoadSubscriptions() {
-    print("🔄 Initializing and loading subscriptions");
     // Only trigger initialization, which will now also load subscriptions
     BlocProvider.of<SubscriptionBloc>(context)
         .add(InitializeSubscriptionService());
@@ -128,7 +119,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (mounted) {
         final state = context.read<SubscriptionBloc>().state;
         if (state is! SubscriptionsLoaded || (state.subscriptions.isEmpty)) {
-          print("⚠️ Retry loading subscriptions after delay");
           BlocProvider.of<SubscriptionBloc>(context)
               .add(InitializeSubscriptionService());
         }
@@ -275,29 +265,28 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print("icon............${widget.fromResultScreen}");
     return Scaffold(
       appBar: AppBar(
         leading: widget.fromResultScreen
             ? IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            } else {
-              // Show a Snackbar message
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('No more pages. The app will now close.'),
-                ),
-              );
-              // Wait for a moment so the user sees the message, then close the app.
-              Future.delayed(const Duration(seconds: 2), () {
-                SystemNavigator.pop();
-              });
-            }
-          },
-        )
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    // Show a Snackbar message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No more pages. The app will now close.'),
+                      ),
+                    );
+                    // Wait for a moment so the user sees the message, then close the app.
+                    Future.delayed(const Duration(seconds: 2), () {
+                      SystemNavigator.pop();
+                    });
+                  }
+                },
+              )
             : IconButton(
                 onPressed: _showLogoutConfirmationDialog,
                 icon: const Icon(Icons.logout, color: Colors.white),
@@ -360,7 +349,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   }
                 },
                 builder: (context, checkStatusState) {
-                  print(widget.fromResultScreen);
                   if (!widget.fromResultScreen &&
                       checkStatusState is CheckSubscriptionActive &&
                       !_dialogShown) {
@@ -371,12 +359,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         setState(() {
                           _dialogShown = true;
                         });
-                        print("Showing active subscription dialog");
                         showDialog(
                           context: context,
                           barrierDismissible: false,
                           builder: (context) =>
                               const ActiveSubscriptionDialog(),
+                          // ignore: avoid_print
                         ).then((_) => print("Dialog closed"));
                       }
                     });
@@ -402,11 +390,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
                       if (state is SubscriptionError) {
                         _initializeAndLoadSubscriptions();
-                        print('❌ Subscription error: ${state.message}');
 
                         // Check for Google Play account mismatch
                         if (state.message == 'GOOGLE_PLAY_ACCOUNT_MISMATCH') {
-                          print('🎯 Showing Google Play account error dialog');
                           Future.microtask(() {
                             if (mounted) {
                               showDialog(
@@ -414,6 +400,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                 barrierDismissible: false,
                                 builder: (context) =>
                                     GooglePlayAccountErrorDialog(),
+                                // ignore: avoid_print
                               ).then((_) => print('✅ Dialog closed'));
                             }
                           });
@@ -578,8 +565,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                             const SizedBox(height: 24),
                                             ElevatedButton(
                                               onPressed: () {
-                                                print(
-                                                    "🔄 Attempting direct offering reload");
                                                 PurchaseService
                                                     .debugOfferings();
                                                 _initializeAndLoadSubscriptions();

@@ -21,8 +21,6 @@ class VerifySubscriptionApiClient {
           'userId': userId,
         }),
       );
-print("very :${response.body}");
-print(DateTime.now().toUtc().toIso8601String());
       if (response.statusCode != 200) {
         throw ApiException(
           message: 'Failed to verify subscription',

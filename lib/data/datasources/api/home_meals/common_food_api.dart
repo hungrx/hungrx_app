@@ -23,7 +23,7 @@ class CommonFoodApi {
       }
       throw Exception('Failed to search common food');
     } catch (e) {
-      print('Error in searchCommonFood: $e'); // Enhanced error logging
+      // Enhanced error logging
       throw Exception('Error searching common food: $e');
     }
   }

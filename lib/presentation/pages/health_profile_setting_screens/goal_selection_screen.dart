@@ -564,7 +564,6 @@ class GoalSelectionScreenState extends State<GoalSelectionScreen> {
           }
           break;
         case null:
-          // TODO: Handle this case.
           throw UnimplementedError();
       }
     } catch (e) {

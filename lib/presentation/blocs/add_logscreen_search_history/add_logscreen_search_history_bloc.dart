@@ -33,7 +33,6 @@ class LogMealSearchHistoryBloc extends Bloc<LogMealSearchHistoryEvent, LogMealSe
       );
       emit(LogMealSearchHistorySuccess(history));
     } catch (e) {
-      print(e);
       emit(LogMealSearchHistoryError(e.toString()));
     }
   }

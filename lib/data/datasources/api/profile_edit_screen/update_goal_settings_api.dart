@@ -19,7 +19,6 @@ class UpdateGoalSettingsApi {
         throw Exception('Failed to update goal settings: ${response.body}');
       }
     } catch (e) {
-      print(e);
       throw Exception('Error updating goal settings: $e');
     }
   }

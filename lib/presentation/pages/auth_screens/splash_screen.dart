@@ -44,9 +44,7 @@ class SplashScreenState extends State<SplashScreen> {
     await _authService.initialize();
     final userId = await _authService.getUserId();
     if (userId != null) {
-      final isProfileComplete =
-          await _authService.checkProfileCompletion(userId);
-      print("Initial profile completion check: $isProfileComplete");
+      await _authService.checkProfileCompletion(userId);
 
       await _updateUserTimezone(userId);
     }
@@ -79,7 +77,6 @@ class SplashScreenState extends State<SplashScreen> {
 
     final bool isLoggedIn = await _authService.isLoggedIn();
 
-    print(".................${isLoggedIn}");
     final bool hasSeenOnboarding = await _onboardingService.hasSeenOnboarding();
 
     String route = '/phoneNumber';
@@ -89,7 +86,6 @@ class SplashScreenState extends State<SplashScreen> {
     } else if (isLoggedIn) {
       try {
         final userId = await _authService.getUserId();
-        print("splash: $userId");
 
         if (userId != null) {
           // Check profile completion
@@ -102,8 +98,6 @@ class SplashScreenState extends State<SplashScreen> {
           await Future.delayed(const Duration(seconds: 1));
           // Check subscription status using BLoC
           await _checkSubscriptionStatus(userId);
-
-          print("..........isprofile complete ${isProfileComplete}");
 
           if (isProfileComplete == null) {
             if (mounted) {
@@ -138,7 +132,15 @@ class SplashScreenState extends State<SplashScreen> {
               context.read<HomeBloc>().add(InitializeHomeData(homeData));
             }
           } catch (e) {
-            print('Error fetching home data: $e');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Failed to fetch home data'),
+                  duration: Duration(seconds: 3),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
           }
 
           // Update streaks
@@ -164,7 +166,6 @@ class SplashScreenState extends State<SplashScreen> {
           }
         }
       } catch (e) {
-        print('Error during navigation checks: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

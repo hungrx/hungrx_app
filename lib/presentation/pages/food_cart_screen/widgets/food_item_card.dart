@@ -25,7 +25,6 @@ class FoodItemCard extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isSmallScreen = screenWidth < 360;
     final quantity = dish.quantity;
-    print(quantity);
     final caloriesPerItem =
         double.tryParse(dish.nutritionInfo.calories.value) ?? 0;
 

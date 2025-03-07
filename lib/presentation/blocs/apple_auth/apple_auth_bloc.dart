@@ -44,7 +44,6 @@ class AppleAuthBloc extends Bloc<AppleAuthEvent, AppleAuthState> {
       }
 
       // Handle other general errors
-      print('Apple Sign In Error: $e');
       emit(AppleAuthFailure(e.toString()));
     }
   }

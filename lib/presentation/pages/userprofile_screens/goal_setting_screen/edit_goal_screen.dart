@@ -80,7 +80,6 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
   Future<void> _initializeUserId() async {
 
     final userId = await _authService.getUserId();
-    print("new user id form aco$userId");
     _updateUserTimezone(userId??"");
     setState(() {
       _userId = userId;
@@ -296,7 +295,6 @@ class _GoalSettingsEditScreenState extends State<GoalSettingsEditScreen> {
 
     // Helper function to format weight gain rate with proper unit
     String formatWeightGainRate(double rate, bool isMetric) {
-      print(rate);
       if (isMetric) {
         return '${rate.toStringAsFixed(2)} kg/week';
       } else {

@@ -140,54 +140,60 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
   }
 
   void showCelebrationDialog(BuildContext context, String currentWeight) async {
+    // Capture all needed values and services early
     final updateGoalSettingsBloc = context.read<UpdateGoalSettingsBloc>();
+    final goalSettingsBloc = context.read<GoalSettingsBloc>();
     final userId = await _authService.getUserId();
-    print(userId);
-    CelebrationDialog.show(
-      context,
-      currentWeight: currentWeight,
-      onDialogClosed: (dialogContext, setNewGoal) {
-        if (setNewGoal) {
-          final goalSettingsState = context.read<GoalSettingsBloc>().state;
-          if (goalSettingsState is GoalSettingsLoaded) {
+    final isMaintain = widget.isMaintain;
+
+    // Store the current settings state
+    GoalSettingsLoaded? goalSettingsState;
+    if (goalSettingsBloc.state is GoalSettingsLoaded) {
+      goalSettingsState = goalSettingsBloc.state as GoalSettingsLoaded;
+    }
+
+    // Only proceed if we have the settings
+    if (goalSettingsState != null) {
+      CelebrationDialog.show(
+        context,
+        currentWeight: currentWeight,
+        onDialogClosed: (dialogContext, setNewGoal) {
+          if (setNewGoal) {
             Navigator.push(
-              context, // Use original context
+              dialogContext, // Use the dialog's context for navigation
               MaterialPageRoute(
                 builder: (context) => GoalSettingsEditScreen(
                   goal: 'maintain weight',
-                  targetWeight: goalSettingsState.settings.targetWeight,
-                  weightGainRate: goalSettingsState.settings.weightGainRate,
-                  activityLevel: goalSettingsState.settings.activityLevel,
-                  mealsPerDay: goalSettingsState.settings.mealsPerDay,
-                  isMetric: goalSettingsState.settings.isMetric,
+                  targetWeight: goalSettingsState?.settings.targetWeight ?? "",
+                  weightGainRate:
+                      goalSettingsState?.settings.weightGainRate ?? 0.0,
+                  activityLevel:
+                      goalSettingsState?.settings.activityLevel ?? '',
+                  mealsPerDay: goalSettingsState?.settings.mealsPerDay ?? 0,
+                  isMetric: goalSettingsState?.settings.isMetric ?? false,
                   currentWeight: double.parse(currentWeight),
-                  isMaintain: widget.isMaintain,
+                  isMaintain: isMaintain, // Use captured value
                 ),
               ),
             );
-          }
-        } else {
-          final goalSettingsState = context.read<GoalSettingsBloc>().state;
-          if (goalSettingsState is GoalSettingsLoaded) {
+          } else {
             final settings = UpdateGoalSettingsModel(
               userId: userId,
               goal: 'maintain weight',
-              targetWeight: goalSettingsState.settings.targetWeight,
-              weightGainRate: goalSettingsState.settings.weightGainRate,
-              activityLevel: goalSettingsState.settings.activityLevel,
-              mealsPerDay: goalSettingsState.settings.mealsPerDay,
+              targetWeight: goalSettingsState?.settings.targetWeight ?? '',
+              weightGainRate: goalSettingsState?.settings.weightGainRate ?? 0.0,
+              activityLevel: goalSettingsState?.settings.activityLevel ?? '',
+              mealsPerDay: goalSettingsState?.settings.mealsPerDay ?? 0,
             );
 
             // Use the bloc instance we captured earlier
             updateGoalSettingsBloc.add(
               UpdateGoalSettingsSubmitted(settings: settings),
             );
-
-            // Navigator.of(dialogContext).pop(true);
           }
-        }
-      },
-    );
+        },
+      );
+    }
   }
 
   Future<void> _showGoalChangeDialog(
@@ -314,8 +320,6 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
               UpdateWeightRequested(newWeight),
             );
 
-        print(isGoalAchieved);
-
         // Then show celebration dialog
         showCelebrationDialog(context, selectedValue);
         return;
@@ -339,7 +343,6 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
 
   @override
   Widget build(BuildContext context) {
-    print("current:${widget.currentWeight}");
     return BlocBuilder<GoalSettingsBloc, GoalSettingsState>(
       builder: (context, goalState) {
         if (goalState is GoalSettingsLoaded) {
@@ -417,9 +420,7 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
                           Navigator.of(context).pop(true);
                         }
                       } else if (state is WeightUpdateError) {
-                        print(state.error);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          
                           SnackBar(
                             content: Text(state.error),
                             backgroundColor: Colors.red,

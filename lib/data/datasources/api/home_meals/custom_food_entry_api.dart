@@ -11,7 +11,6 @@ class CustomFoodEntryApi {
     required String calories,
   }) async {
     try {
-      
       final response = await http.post(
         Uri.parse(ApiConstants.baseUrl + ApiConstants.addUnknown),
         headers: {'Content-Type': 'application/json'},
@@ -22,7 +21,7 @@ class CustomFoodEntryApi {
           'calories': calories,
         }),
       );
-// print(response.body);
+print(response.body);
       if (response.statusCode == 200) {
         return CustomFoodEntryResponse.fromJson(jsonDecode(response.body));
       } else {

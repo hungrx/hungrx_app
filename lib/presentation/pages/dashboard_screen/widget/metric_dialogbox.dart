@@ -60,7 +60,6 @@ class MetricsDialog extends StatelessWidget {
     final padding = isSmallScreen ? 12.0 : 20.0;
     // final titleFontSize = isSmallScreen ? 18.0 : 20.0;
     // final metricCardPadding = isSmallScreen ? 12.0 : 16.0;
-    print("ishown now :$isShown");
     final bool isGaining = isWeightGainGoal;
     final analysisColor =
         isGaining ? const Color(0xFF4ECDC4) : const Color(0xFFFF6B6B);

@@ -15,7 +15,6 @@ class TDEEApiService {
         },
         body: json.encode({'userId': userId}),
       );
-      print(response.body);
       final decodedResponse = json.decode(response.body);
       
       if (response.statusCode == 200) {

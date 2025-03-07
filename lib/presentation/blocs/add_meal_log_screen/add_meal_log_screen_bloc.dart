@@ -22,7 +22,6 @@ class AddMealBloc extends Bloc<AddMealEvent, AddMealState> {
       final response = await _useCase.execute(event.request);
       emit(AddMealSuccess(response));
     } catch (e) {
-      print(e);
       emit(AddMealFailure(e.toString()));
     }
   }

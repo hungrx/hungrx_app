@@ -24,7 +24,6 @@ class GetCartApi {
           'remaining': 0.0
         };
       }
-print(response.body);
       // Handle different response scenarios
       if (response.statusCode == 200) {
         // Check if response has expected structure

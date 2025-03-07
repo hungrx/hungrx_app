@@ -11,7 +11,6 @@ class CalorieMetricsRepository {
       final Map<String, dynamic> response = await _api.getCalorieMetrics(userId);
       return CalorieMetricsModel.fromJson(response);
     } catch (e) {
-      print("new error $e");
       throw Exception('Repository error: $e');
     }
   }

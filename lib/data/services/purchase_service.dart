@@ -365,7 +365,6 @@ static Future<SubscriptionInfo> purchasePackage(Package package) async {
             : null;
 
     if (url == null) {
-      print('Subscription management is not supported on this platform.');
       return;
     }
 
@@ -373,7 +372,6 @@ static Future<SubscriptionInfo> purchasePackage(Package package) async {
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
-      print('Could not launch subscription management page.');
     }
   }
 

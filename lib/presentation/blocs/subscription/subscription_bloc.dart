@@ -30,13 +30,11 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   ) async {
     emit(SubscriptionLoading());
     try {
-      print(".........................update info");
       // Call the RevenueCat API to get updated subscription info.
       final updatedInfo = await PurchaseService.getSubscriptionInfo();
       final userId = await _authService.getUserId();
       // Build a map of transaction details using the updated information.
 
-      print("udatatecalled.........................");
       final transactionDetails = {
         'rcAppUserId': updatedInfo.rcAppUserId ?? '',
         'userId': userId ?? '',
@@ -121,7 +119,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       final result =
           await _subscriptionUseCase.purchaseSubscription(event.subscription);
       final userId = await _authService.getUserId();
-     print("puchase claed.........................");
       if (result.success) {
         // Create transaction details map with the new structure
         final transactionDetails = {
@@ -146,7 +143,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
         };
 
         // Log transaction details for debugging
-        print('Transaction details: $transactionDetails');
 
         final purchaseDetailsModel =
             StorePurchaseDetailsModel.fromMap(transactionDetails);
@@ -163,7 +159,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
         }
       } else {
         // Handle purchase failure
-        print('❌ Purchase failed with error: ${result.error}');
 
         // Check for item already owned
         if (result.error?.toString().contains('6') == true ||
@@ -172,7 +167,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
                     .contains('This product is already active') ==
                 true ||
             result.error?.toString().contains('ITEM_ALREADY_OWNED') == true) {
-          print('🎯 Detected already owned product error');
           emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
           return;
         }
@@ -180,28 +174,23 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
             result.error ?? 'Purchase could not be completed'));
       }
     } on PlatformException catch (e) {
-      print('📱 Platform Exception caught: ${e.code} - ${e.message}');
 
       // Handle error code 6 and item already owned cases
       if (e.code == '6' ||
           e.message?.contains('This product is already active') == true ||
           e.message?.contains('ITEM_ALREADY_OWNED') == true) {
-        print('🎯 Detected error code 6 or active product message');
         emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
         return;
       }
 
       String errorMessage = e.message ?? 'Unknown error occurred';
-      print('❌ Emitting platform error: $errorMessage');
       emit(SubscriptionError(errorMessage));
     } catch (e) {
-      print('💥 General exception caught: $e');
       String message = e.toString();
 
       if (message.contains('6') ||
           message.contains('This product is already active') ||
           message.contains('ITEM_ALREADY_OWNED')) {
-        print('🎯 Detected already owned product in general exception');
         emit(SubscriptionError('GOOGLE_PLAY_ACCOUNT_MISMATCH'));
         return;
       }

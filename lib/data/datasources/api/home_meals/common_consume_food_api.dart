@@ -19,7 +19,6 @@ class CommonFoodApi {
         throw Exception('Failed to add common food: ${response.body}');
       }
     } catch (e) {
-      print(e);
       throw Exception('Network error: $e');
     }
   }

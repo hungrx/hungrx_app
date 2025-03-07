@@ -17,7 +17,6 @@ class NearbyRestaurantRepository {
 
       // Get current position
       Position position = await Geolocator.getCurrentPosition();
-      print('Current position - Latitude: ${position.latitude}, Longitude: ${position.longitude}');
 
       // Get API response
       final Map<String, dynamic> response = await _api.getNearbyRestaurants(
@@ -26,7 +25,6 @@ class NearbyRestaurantRepository {
         radius: radius,
       );
 
-      print('Repository received response: $response');
 
       // Validate response structure
       if (response['success'] != true) {
@@ -38,15 +36,12 @@ class NearbyRestaurantRepository {
       }
 
       final List<dynamic> restaurantsData = response['data'] as List<dynamic>;
-      print('Number of restaurants received: ${restaurantsData.length}');
 
       final List<NearbyRestaurantModel> restaurants = restaurantsData
           .map((restaurantJson) {
             try {
               return NearbyRestaurantModel.fromJson(restaurantJson as Map<String, dynamic>);
             } catch (e) {
-              print('Error parsing restaurant: $e');
-              print('Problematic restaurant data: $restaurantJson');
               rethrow;
             }
           })
@@ -54,7 +49,6 @@ class NearbyRestaurantRepository {
 
       return restaurants;
     } catch (e) {
-      print('Repository error: $e');
       throw Exception('Failed to get nearby restaurants: $e');
     }
   }

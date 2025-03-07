@@ -79,7 +79,6 @@ class CalorieMetricsData {
   }
 
   factory CalorieMetricsData.fromJson(Map<String, dynamic> json) {
-    print("Parsing CalorieMetricsData from: $json");
     try {
       return CalorieMetricsData(
         consumedCalories: _safeDouble(json['consumedCalories']),
@@ -97,7 +96,6 @@ class CalorieMetricsData {
         isShown: json['isShown'] ?? false,
       );
     } catch (e) {
-      print("Error parsing CalorieMetricsData: $e");
       rethrow;
     }
   }

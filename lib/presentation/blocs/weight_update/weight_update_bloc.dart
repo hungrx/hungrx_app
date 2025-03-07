@@ -29,7 +29,6 @@ class WeightUpdateBloc extends Bloc<WeightUpdateEvent, WeightUpdateState> {
       final response = await _updateWeightUseCase.execute(userId, event.newWeight);
       emit(WeightUpdateSuccess(response.message));
     } catch (e) {
-      print(e);
       emit(WeightUpdateError(
         'Failed to update weight. Please check your internet connection and try again.',
       ));

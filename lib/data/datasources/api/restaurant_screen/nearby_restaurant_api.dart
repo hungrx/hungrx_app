@@ -9,7 +9,6 @@ class NearbyRestaurantApi {
    required double radius,
     String category = 'all',
   }) async {
-    print(radius);
     try {
       final Uri uri =
           Uri.parse(ApiConstants.baseUrl + ApiConstants.nearby).replace(
@@ -37,7 +36,6 @@ class NearbyRestaurantApi {
             'HTTP Error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error in API call: $e');
       rethrow; // Rethrow to preserve the original error
     }
   }

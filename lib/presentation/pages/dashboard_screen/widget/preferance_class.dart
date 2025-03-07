@@ -23,7 +23,6 @@ class AppPreferences {
   // Dialog date methods
   String? getLastDialogDate() {
     final storedDate = _prefs.getString(lastDialogDateKey);
-    print('Getting last dialog date from storage: $storedDate');
     return storedDate;
   }
 
@@ -41,10 +40,8 @@ class AppPreferences {
       
       // Store in dd/MM/yyyy format
       final formattedDate = _dateFormat.format(parsedDate);
-      print('Setting last dialog date: $formattedDate (original: $date)');
       await _prefs.setString(lastDialogDateKey, formattedDate);
     } catch (e) {
-      print('Error setting last dialog date: $e');
       // Store original if parsing fails
       await _prefs.setString(lastDialogDateKey, date);
     }
@@ -52,7 +49,6 @@ class AppPreferences {
 
   Future<void> clearLastDialogDate() async {
     await _prefs.remove(lastDialogDateKey);
-    print('Cleared last dialog date');
   }
 
   // Account creation date methods
@@ -71,10 +67,8 @@ class AppPreferences {
       }
       
       final formattedDate = _dateFormat.format(parsedDate);
-      print('Setting account creation date: $formattedDate (original: $date)');
       await _prefs.setString(accountCreationDateKey, formattedDate);
     } catch (e) {
-      print('Error setting account creation date: $e');
       await _prefs.setString(accountCreationDateKey, date);
     }
   }
@@ -85,16 +79,9 @@ class AppPreferences {
 
     final today = _dateFormat.format(DateTime.now());
     final isShown = lastShown == today;
-    print('Has shown dialog today check:');
-    print('Last shown: $lastShown');
-    print('Today: $today');
-    print('Result: $isShown');
     return isShown;
   }
 
   void printAllPreferences() {
-    print('First time user: ${isFirstTimeUser()}');
-    print('Last dialog date: ${getLastDialogDate()}');
-    print('Account creation date: ${getAccountCreationDate()}');
   }
 }

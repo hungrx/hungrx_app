@@ -339,7 +339,6 @@ class _CommonFoodConsumeBottomSheetState
                   );
                   Navigator.pop(context);
                 } else if (state is CommonFoodFailure) {
-                  print(state.error);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.error),
@@ -356,7 +355,6 @@ class _CommonFoodConsumeBottomSheetState
                         GetSearchHistoryLogRequested(),
                       );
                 } else if (state is AddCommonFoodHistoryFailure) {
-                  print(state.error);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.error),

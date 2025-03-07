@@ -64,33 +64,49 @@ class FoodDetails {
 
 class NutritionFacts {
   final int calories;
+  final int? protein;
+  final int? carbs;
+  final int? fat;
 
   NutritionFacts({
     required this.calories,
+    this.protein,
+    this.carbs,
+    this.fat,
   });
 
   factory NutritionFacts.fromJson(Map<String, dynamic> json) {
-    // Convert calories to int if it's a double
-    final caloriesValue = json['calories'] ?? 0;
+    // Convert values to int if they're strings or doubles
+    final caloriesValue = _parseIntValue(json['calories']);
+    final proteinValue = _parseIntValue(json['protein']);
+    final carbsValue = _parseIntValue(json['carbs']);
+    final fatValue = _parseIntValue(json['fat']);
+    
     return NutritionFacts(
-      calories: caloriesValue is double ? caloriesValue.round() : caloriesValue,
+      calories: caloriesValue,
+      protein: proteinValue,
+      carbs: carbsValue,
+      fat: fatValue,
     );
   }
 }
 
 class ServingInfo {
-  final int size;
+  final dynamic size; // Changed to dynamic to handle both int and String
   final String unit;
+  final int? quantity;
 
   ServingInfo({
     required this.size,
     required this.unit,
+    this.quantity,
   });
 
   factory ServingInfo.fromJson(Map<String, dynamic> json) {
     return ServingInfo(
       size: json['size'] ?? 1,
       unit: json['unit'] ?? 'serving',
+      quantity: _parseIntValue(json['quantity']),
     );
   }
 }
@@ -115,7 +131,7 @@ class UpdatedMeal {
 }
 
 class FoodItem {
-  final int servingSize;
+  final dynamic servingSize; // Changed to dynamic to handle both int and String
   final String selectedMeal;
   final String dishId;
   final int totalCalories;
@@ -142,12 +158,12 @@ class FoodItem {
   });
 
   factory FoodItem.fromJson(Map<String, dynamic> json) {
-    final totalCaloriesValue = json['totalCalories'] ?? 0;
+    final totalCaloriesValue = _parseIntValue(json['totalCalories']);
     return FoodItem(
-      servingSize: json['servingSize'] ?? 1,
+      servingSize: json['servingSize'], // No conversion needed, accept as dynamic
       selectedMeal: json['selectedMeal'] ?? '',
       dishId: json['dishId'] ?? '',
-      totalCalories: totalCaloriesValue is double ? totalCaloriesValue.round() : totalCaloriesValue,
+      totalCalories: totalCaloriesValue,
       timestamp: DateTime.parse(json['timestamp'] ?? DateTime.now().toIso8601String()),
       name: json['name'] ?? '',
       brandName: json['brandName'] ?? '',
@@ -157,4 +173,19 @@ class FoodItem {
       foodId: json['foodId'] ?? '',
     );
   }
+}
+
+// Helper function to safely parse int values from various types
+int _parseIntValue(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is double) return value.round();
+  if (value is String) {
+    try {
+      return int.parse(value);
+    } catch (_) {
+      return 0;
+    }
+  }
+  return 0;
 }

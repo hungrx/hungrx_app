@@ -59,7 +59,6 @@ class TimezoneRepository {
 
       // Detect timezone based on device settings.
       final detectedTimeZone = detectTimeZone();
-      print("Detected Time Zone: $detectedTimeZone");
 
       final response = await _api.updateTimezone(userId, detectedTimeZone);
 
@@ -69,7 +68,6 @@ class TimezoneRepository {
         throw Exception(response['message'] ?? 'Failed to update timezone');
       }
     } catch (e) {
-      print(e);
       throw Exception('Repository error: $e');
     }
   }
@@ -82,7 +80,6 @@ class TimezoneRepository {
       final formatter = DateFormat.yMd().add_jms();
       return formatter.format(tzDateTime);
     } catch (e) {
-      print("Error formatting date: $e");
       return "Error formatting date";
     }
   }

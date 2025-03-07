@@ -72,7 +72,6 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
     Future<void> _initializeUserId() async {
 
     final userId = await _authService.getUserId();
-    print("new user id form aco$userId");
     _updateUserTimezone(userId??"");
    
   }

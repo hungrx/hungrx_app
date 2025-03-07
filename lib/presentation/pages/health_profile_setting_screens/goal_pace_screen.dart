@@ -95,7 +95,7 @@ class GoalPaceScreen extends StatelessWidget {
 
     return monthsToGoal < 1 
       ? "Expected time: Less than a month"
-      : "Expected time: About ${monthsToGoal} month${monthsToGoal > 1 ? 's' : ''}";
+      : "Expected time: About $monthsToGoal month${monthsToGoal > 1 ? 's' : ''}";
   }
 
   @override 

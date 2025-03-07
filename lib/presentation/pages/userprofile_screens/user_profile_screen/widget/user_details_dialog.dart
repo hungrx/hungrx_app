@@ -14,7 +14,6 @@ class UserStatsDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
      final screenSize = MediaQuery.of(context).size;
-    print(profileData.height);
     return Dialog(
        insetPadding: EdgeInsets.symmetric(
               horizontal: screenSize.width * 0.05,

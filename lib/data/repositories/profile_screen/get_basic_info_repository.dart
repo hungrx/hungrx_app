@@ -11,7 +11,6 @@ class GetBasicInfoRepository {
       final response = await _api.getBasicInfo(userId);
       return GetBasicInfoResponse.fromJson(response);
     } catch (e) {
-      print(e);
       throw Exception('Repository error: $e');
     }
   }

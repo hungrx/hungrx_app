@@ -12,14 +12,12 @@ class DeleteFoodApiService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(request.toJson()),
       );
-print(response.body);
       if (response.statusCode == 200) {
         return DeleteFoodResponse.fromJson(json.decode(response.body));
       } else {
         throw Exception('Failed to delete food: ${response.body}');
       }
     } catch (e) {
-      print(e);
       throw Exception('Error deleting food: $e');
     }
   }

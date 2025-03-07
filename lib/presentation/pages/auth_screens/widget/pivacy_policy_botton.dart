@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 class ClickableTermsAndPolicyText extends StatelessWidget {
   final String termsUrl;
@@ -44,28 +43,17 @@ TextSpan _buildClickableSpan(String text, String url) {
       ),
     recognizer: TapGestureRecognizer()
       ..onTap = () async {
-        print('URL Tapped: $url');
         final uri = Uri.parse(url);
         try {
           // Changed to universalLaunchUrl for better iOS support
           if (await canLaunchUrl(uri)) {
-               print('Can launch URL');
             final success = await launchUrl(
             Uri.parse(url),
             mode: LaunchMode.externalApplication,
           );
-            print('Launch success: $success');
           if (!success) {
             debugPrint('Could not launch $url');
           }
-            // await launchUrl(
-            //   uri,
-            //   mode: LaunchMode.platformDefault, // Changed from externalApplication
-            //   webViewConfiguration: const WebViewConfiguration(
-            //     enableJavaScript: true,
-            //     enableDomStorage: true,
-            //   ),
-            // );
           }
         } catch (e) {
           debugPrint("Error launching URL: $e");

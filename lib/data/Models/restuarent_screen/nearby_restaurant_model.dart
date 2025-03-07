@@ -63,8 +63,6 @@ class NearbyRestaurantModel extends Equatable {
         version: json['__v'] as int? ?? 0,
       );
     } catch (e) {
-      print('Error parsing NearbyRestaurantModel: $e');
-      print('Problematic JSON: $json');
       rethrow;
     }
   }

@@ -11,10 +11,8 @@ class CalorieMetricsApi {
         body: jsonEncode({'userId': userId}),
       );
       
-      print("Raw response: ${response.body}");
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        print("Decoded data: $data");
         return data; // Return the complete response
       }
       throw Exception('Failed to fetch calorie metrics: ${response.statusCode}');

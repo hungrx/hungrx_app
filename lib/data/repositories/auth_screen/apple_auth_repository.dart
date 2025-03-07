@@ -56,7 +56,6 @@ class AppleAuthRepository {
       // Debug information
       // print('Identity Token: ${appleCredential.identityToken?.substring(0, 50)}...');
       // print('Authorization Code: ${appleCredential.authorizationCode.substring(0, 50)}...');
-      print('User ID: ${appleCredential.email}');
       // print('Email: ${appleCredential.email}');
       // print('Given Name: ${appleCredential.givenName}');
       // print('Family Name: ${appleCredential.familyName}');
@@ -76,8 +75,6 @@ class AppleAuthRepository {
         // First attempt with AuthCredential
         return await _firebaseAuth.signInWithCredential(authCredential);
       } catch (e) {
-        print('First sign-in attempt failed, trying alternative method...');
-
         // If first attempt fails, try with OAuthProvider
         final oauthCredential = OAuthProvider('apple.com').credential(
           idToken: appleCredential.identityToken!,
@@ -101,27 +98,18 @@ class AppleAuthRepository {
               await _saveUserId(apiResponse.data.user!.id);
             }
           } catch (e) {
-            print('Backend API error (non-fatal): $e');
+            throw Exception('Failed to authenticate with backend: $e');
           }
 
           return userCredential;
         } on FirebaseAuthException catch (e) {
-          print('Detailed Firebase Auth Error:');
-          print('Code: ${e.code}');
-          print('Message: ${e.message}');
-          print('Email: ${e.email}');
-          print('Credential: ${e.credential}');
-          print('Tenant ID: ${e.tenantId}');
+          Exception('Firebase auth failed: $e');
           rethrow;
         }
       }
     } on SignInWithAppleAuthorizationException catch (e) {
-      print('Apple Sign In Authorization Error:');
-      print('Code: ${e.code}');
-      print('Message: ${e.message}');
-      rethrow;
+      throw Exception('Apple Sign In failed: $e');
     } catch (e) {
-      print('Unexpected error during Apple Sign In: $e');
       rethrow;
     }
   }
@@ -130,9 +118,7 @@ class AppleAuthRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_id', userId);
-      print('Successfully saved Apple user ID to SharedPreferences');
     } catch (e) {
-      print('Error saving Apple user ID: $e');
       throw Exception('Failed to save Apple user ID locally');
     }
   }
@@ -146,10 +132,7 @@ class AppleAuthRepository {
       // Clear stored user ID
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_id');
-
-      print('Successfully signed out from Apple');
     } catch (error) {
-      print('Error signing out from Apple: $error');
       throw Exception('Failed to sign out from Apple: $error');
     }
   }

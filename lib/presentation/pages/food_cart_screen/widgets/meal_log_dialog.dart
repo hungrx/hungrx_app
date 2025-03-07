@@ -44,7 +44,6 @@ class MealLogDialog extends StatelessWidget {
               },
             );
           } else if (state is ConsumeCartError) {
-            print(state.message);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -241,7 +240,6 @@ class MealLogContent extends StatelessWidget {
         }
 
         if (state is MealTypeError) {
-          print(state.message);
           return _buildErrorContent(context, state);
         }
 
@@ -421,7 +419,6 @@ class MealLogContent extends StatelessWidget {
   }
 
   Widget _buildErrorContent(BuildContext context, MealTypeError state) {
-    print(state.message);
     return Center(
       child: Column(
         children: [

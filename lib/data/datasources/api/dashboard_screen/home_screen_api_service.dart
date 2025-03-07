@@ -11,7 +11,6 @@ class HomeApiService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );
-print(response.body);
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
 
@@ -29,7 +28,6 @@ print(response.body);
         throw Exception('Failed to load home data: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in fetchHomeData: $e');
       throw Exception('Failed to fetch home data: $e');
     }
   }

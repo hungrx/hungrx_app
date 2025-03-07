@@ -47,7 +47,6 @@ class _LogMealViewState extends State<LogMealView> {
 
   @override
   Widget build(BuildContext context) {
-
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.black,

@@ -181,7 +181,6 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
           actions: [
             BlocBuilder<UpdateBasicInfoBloc, UpdateBasicInfoState>(
               builder: (context, state) {
-                print(userId);
                 return TextButton(
                   onPressed: userId == null || state is UpdateBasicInfoLoading
                       ? null

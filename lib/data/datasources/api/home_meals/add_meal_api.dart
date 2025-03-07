@@ -13,7 +13,6 @@ class AddMealApi {
       if (!uri.hasAuthority) {
         throw Exception('Invalid URL: $url');
       }
-print(request.userId);
       final response = await http.post(
         Uri.parse(ApiConstants.baseUrl + ApiConstants.addConsumedFood),
         headers: {'Content-Type': 'application/json'},
@@ -33,7 +32,6 @@ print(request.userId);
       throw NetworkException('Network error: Unable to connect to server', e);
     } catch (e) {
       if (e is http.ClientException) {
-        print(e);
         throw Exception('Network error: Unable to connect to server');
       }
       throw Exception('Network error: $e');

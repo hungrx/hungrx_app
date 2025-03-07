@@ -11,8 +11,7 @@ class ConsumeCartRepository {
     try {
       return await _api.consumeCart(request);
     } catch (e) {
-      print(e);
-      throw Exception('Repository error: $e');
+      throw Exception('Repository error');
     }
   }
 }

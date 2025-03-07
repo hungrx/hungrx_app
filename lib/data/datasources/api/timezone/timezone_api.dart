@@ -9,7 +9,6 @@ class TimezoneApi {
 
   Future<Map<String, dynamic>> updateTimezone(String userId, String timezone) async {
    
-   print("time :$timezone");
     try {
       final response = await client.post(
         Uri.parse('${ApiConstants.baseUrl}/users/timezone'),
@@ -19,7 +18,6 @@ class TimezoneApi {
           'timezone': timezone,
         }),
       );
-print("time zone${response.body}");
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {

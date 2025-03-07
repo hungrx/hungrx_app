@@ -25,7 +25,6 @@ class GetSearchHistoryLogApi {
         throw Exception('Failed to load search history');
       }
     } catch (e) {
-      print(e);
       throw Exception('Network error: $e');
     }
   }

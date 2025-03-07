@@ -14,7 +14,6 @@ class SubscriptionRepository {
           .map((package) => SubscriptionModel.fromPackage(package))
           .toList();
     } catch (e) {
-      print('❌ Error fetching subscriptions: $e');
       return [];
     }
   }
@@ -23,7 +22,6 @@ Future<SubscriptionInfo> purchaseSubscription(SubscriptionModel subscription) as
   try {
     return await PurchaseService.purchasePackage(subscription.package);
   } catch (e) {
-    print('❌ Error in repository purchasing subscription: $e');
     rethrow;
   }
 }

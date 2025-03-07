@@ -56,12 +56,9 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString(userIdKey);
-      print("..........user ${userId}");
       final profileComplete = prefs.getBool(profileCompletionKey) ?? false;
-      print("..........profile ${profileComplete}");
       return userId != null && userId.isNotEmpty && profileComplete;
     } catch (e) {
-      print('Error checking login status: $e');
       return false;
     }
   }
@@ -72,7 +69,6 @@ class AuthService {
 
       // Always check with server to ensure latest status
       final response = await _userProfileApiService.checkUserProfile(userId);
- print("..........responce ${response}");
       // ignore: unnecessary_null_comparison
       if (response.status != null) {
         // Cache the profile status
@@ -81,7 +77,6 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error checking profile completion: $e');
       return null;
     }
   }
@@ -95,7 +90,6 @@ class AuthService {
         'subscriptionLevel': prefs.getString(subscriptionLevelKey) ?? 'none',
       };
     } catch (e) {
-      print('Error getting subscription info: $e');
       return {
         'isSubscribed': false,
         'subscriptionLevel': 'none',
@@ -108,7 +102,6 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(userIdKey);
     } catch (e) {
-      print('Error getting user ID: $e');
       return null;
     }
   }
@@ -124,7 +117,6 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error fetching home data: $e');
       return null;
     }
   }
@@ -171,7 +163,6 @@ class AuthService {
         await prefs.setString(accountCreationDateKey, accountCreationDate);
       }
     } catch (e) {
-      print('Error during logout: $e');
       rethrow;
     }
   }
@@ -209,7 +200,6 @@ class AuthService {
 
       await _clearAppCache();
     } catch (e) {
-      print('Error during account deletion: $e');
       rethrow;
     }
   }
@@ -237,7 +227,6 @@ class AuthService {
         }
       }
     } catch (e) {
-      print('Error clearing app cache: $e');
       // Don't rethrow as this is a cleanup operation
     }
   }

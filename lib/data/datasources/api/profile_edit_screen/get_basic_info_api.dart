@@ -10,7 +10,6 @@ class GetBasicInfoApi {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );
-      print(response.body);
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
