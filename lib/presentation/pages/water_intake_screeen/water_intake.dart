@@ -399,7 +399,7 @@ Widget _buildWaterProgress(WaterIntakeData data) {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child:  Text('Cancel' , style: TextStyle(color: Colors.white),),
             ),
             TextButton(
               onPressed: () {
@@ -411,7 +411,7 @@ Widget _buildWaterProgress(WaterIntakeData data) {
                     );
                 Navigator.pop(context);
               },
-              child: const Text('Delete'),
+              child: const Text('Delete', style: TextStyle(color: Colors.blue),),
             ),
           ],
         );
