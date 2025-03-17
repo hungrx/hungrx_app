@@ -20,6 +20,11 @@ class AppleAuthBloc extends Bloc<AppleAuthEvent, AppleAuthState> {
     emit(AppleAuthLoading());
     try {
       final credential = await _appleSignInUseCase.execute();
+      print("name .......${credential.user?.displayName}");
+      print("email .......${credential.user?.email}");
+      print("phote .......${credential.user?.photoURL}");
+      
+
       emit(AppleAuthSuccess(credential));
     } catch (e) {
       // Handle SignInWithApple specific errors

@@ -39,6 +39,7 @@ import 'package:hungrx_app/data/datasources/api/restaurant_menu_screen/restauran
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/nearby_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/request_restaurant_api.dart';
 import 'package:hungrx_app/data/datasources/api/restaurant_screen/suggested_restaurants_api.dart';
+import 'package:hungrx_app/data/datasources/api/subscription_api.dart/store_details_sub.dart';
 import 'package:hungrx_app/data/datasources/api/subscription_api.dart/store_purchase_api_client.dart';
 import 'package:hungrx_app/data/datasources/api/timezone/timezone_api.dart';
 import 'package:hungrx_app/data/datasources/api/verify_subscription.dart/verify_subscription.dart';
@@ -85,6 +86,7 @@ import 'package:hungrx_app/data/repositories/dashboad_screen/streak_repository.d
 import 'package:hungrx_app/data/repositories/profile_setting_screen/tdee_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/update_basic_info_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/user_info_profile_repository.dart';
+import 'package:hungrx_app/data/repositories/subscription/store_details_sub.dart';
 import 'package:hungrx_app/data/repositories/subscription/store_purchase_repository_impl.dart';
 import 'package:hungrx_app/data/repositories/subscription/subscription_repository.dart';
 import 'package:hungrx_app/data/repositories/timezone/timezone_repository.dart';
@@ -119,6 +121,7 @@ import 'package:hungrx_app/domain/usecases/restaurant_menu.dart/add_to_cart_usec
 import 'package:hungrx_app/domain/usecases/restaurant_screen/get_suggested_restaurants_usecase.dart';
 import 'package:hungrx_app/domain/usecases/dashboad_screen/submit_feedback_usecase.dart';
 import 'package:hungrx_app/domain/usecases/restaurant_screen/request_restaurant_usecase.dart';
+import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/store_details_sub.dart';
 import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/store_purchase_usecase.dart';
 import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/subscriptiion_usecase.dart';
 import 'package:hungrx_app/domain/usecases/timezone/update_timezone_usecase.dart';
@@ -354,6 +357,11 @@ class MyApp extends StatelessWidget {
               ),
               storePurchaseUseCase,
               authService,
+              StoreRevenueCatDetailsUseCase(
+                RevenueCatRepositoryImpl(
+                  apiClient: RevenueCatApiClient(),
+                ),
+              ),
             ),
           ),
 

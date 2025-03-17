@@ -31,11 +31,80 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
   final TextEditingController _nameController = TextEditingController();
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
-    final AuthService _authService = AuthService();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
+  String _selectedGender = 'girl';
 
-
+  Widget _buildAvatarSelection() {
+    return FadeTransition(
+      opacity: _opacityAnimation,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Girl Avatar Option
+              GestureDetector(
+                onTap: () => setState(() => _selectedGender = 'girl'),
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _selectedGender == 'girl'
+                          ? AppColors.buttonColors
+                          : Colors.transparent,
+                      width: 4,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/dpw.jpg',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 40),
+              // Boy Avatar Option
+              GestureDetector(
+                onTap: () => setState(() => _selectedGender = 'boy'),
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _selectedGender == 'boy'
+                          ? AppColors.buttonColors
+                          : Colors.transparent,
+                      width: 4,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/dp.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Choose your avatar',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: MediaQuery.of(context).size.width * 0.04,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _handleLogout() async {
     if (!mounted) return;
@@ -69,15 +138,12 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
     }
   }
 
-    Future<void> _initializeUserId() async {
-
+  Future<void> _initializeUserId() async {
     final userId = await _authService.getUserId();
-    _updateUserTimezone(userId??"");
-   
+    _updateUserTimezone(userId ?? "");
   }
 
-    Future<void> _updateUserTimezone(String userId) async {
-    
+  Future<void> _updateUserTimezone(String userId) async {
     context.read<TimezoneBloc>().add(UpdateUserTimezone(userId));
   }
 
@@ -136,6 +202,7 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
       await _handleLogout();
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -169,7 +236,7 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your name')),
+        const SnackBar(content: Text('What should we call you?')),
       );
     }
   }
@@ -189,132 +256,146 @@ class _UserInfoScreenOneState extends State<UserInfoScreenOne>
     return BlocProvider(
       create: (context) =>
           UserProfileFormBloc(userProfileRepository, tdeeRepository),
-      child: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Scaffold(
-          resizeToAvoidBottomInset: false,
-          body: GradientContainer(
-            top: size.height * 0.06,
-            left: size.height * 0.01,
-            right: size.height * 0.01,
-            bottom: size.height * 0.01,
-            child: SafeArea(
-              child: Form(
-                key: _formKey,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: size.width * 0.05,
-                    vertical: size.height * 0.02,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Progress Bar
-                      const SteppedProgressBar(
-                        currentStep: 1,
-                        totalSteps: 6,
-                      ),
-
-                      SizedBox(height: size.height * 0.04),
-
-                      // Header
-                      FadeTransition(
-                        opacity: _opacityAnimation,
-                        child: const HeaderTextDataScreen(
-                          data: 'Hey there! \nWhat should we call you?',
-                        ),
-                      ),
-
-                      SizedBox(height: size.height * 0.03),
-
-                      // Question Text
-                      FadeTransition(
-                        opacity: _opacityAnimation,
-                        child: Text(
-                          "Enter a name below :",
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: size.width * 0.04,
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: size.height * 0.01),
-
-                      // Text Field
-                      FadeTransition(
-                        opacity: _opacityAnimation,
-                        child: BlocBuilder<UserProfileFormBloc,
-                            UserProfileFormState>(
-                          builder: (context, state) {
-                            return CustomTextFormField(
-                              onChanged: (value) {
-                                context
-                                    .read<UserProfileFormBloc>()
-                                    .add(NameChanged(value));
-                              },
-                              controller: _nameController,
-                              hintText: 'Enter a name',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please Enter a preferred name';
-                                }
-                                return null;
-                              },
-                            );
-                          },
-                        ),
-                      ),
-
-                      // Flexible space that adjusts based on keyboard visibility
-                      Expanded(
-                        child: !isKeyboardVisible
-                            ? const SizedBox()
-                            : SizedBox(height: viewInsets.bottom),
-                      ),
-
-                      // Next Button
-                      FadeTransition(
-                        opacity: _opacityAnimation,
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            bottom:
-                                isKeyboardVisible ? viewInsets.bottom + 16 : 16,
-                          ),
-                          child: Align(
-                              alignment: Alignment.bottomRight,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: _isLoading ? null : _showLogoutConfirmationDialog,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.buttonColors,
-                                      shape: const CircleBorder(),
-                                      padding: const EdgeInsets.all(14),
-                                    ),
-                                    child: const Icon(Icons.logout,
-                                        color: Colors.black),
-                                  ),
-                                  CustomNextButton(
-                                    btnName: "Next",
-                                    onPressed: () => _handleNextButton(context),
-                                    height: 50,
-                                  ),
-                                ],
-                              )
-
-                              // CustomNextButton(
-
-                              //   onPressed: () => _handleNextButton(context),
-                              //   height: size.height * 0.06,
-                              // ),
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: GradientContainer(
+          top: size.height * 0.0,
+          left: size.height * 0.01,
+          right: size.height * 0.01,
+          bottom: size.height * 0.01,
+          child: SafeArea(
+            child: Form(
+              key: _formKey,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: size.width * 0.05,
+                  vertical: size.height * 0.02,
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Progress Bar
+                            Padding(
+                              padding:  EdgeInsets.only(top: size.height * 0.06),
+                              child: const SteppedProgressBar(
+                                currentStep: 1,
+                                totalSteps: 6,
                               ),
+                            ),
+      
+                            SizedBox(height: size.height * 0.04),
+      
+                            FadeTransition(
+                              opacity: _opacityAnimation,
+                              child: const HeaderTextDataScreen(
+                                data: 'Hey there! \nChoose your avatar',
+                              ),
+                            ),
+      
+                            SizedBox(height: size.height * 0.04),
+      
+                            _buildAvatarSelection(),
+      
+                            SizedBox(height: size.height * 0.03),
+      
+                            // Header
+      
+                            SizedBox(height: size.height * 0.03),
+      
+                            // Question Text
+                            FadeTransition(
+                              opacity: _opacityAnimation,
+                              child: Text(
+                                "Give a name to your avatar",
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: size.width * 0.04,
+                                ),
+                              ),
+                            ),
+      
+                            SizedBox(height: size.height * 0.01),
+      
+                            // Text Field
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: FadeTransition(
+                                opacity: _opacityAnimation,
+                                child: BlocBuilder<UserProfileFormBloc,
+                                    UserProfileFormState>(
+                                  builder: (context, state) {
+                                    return CustomTextFormField(
+                                      onChanged: (value) {
+                                        context
+                                            .read<UserProfileFormBloc>()
+                                            .add(NameChanged(value));
+                                      },
+                                      controller: _nameController,
+                                      hintText: 'Enter here',
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Please enter a name';
+                                        }
+                                        return null;
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            // SizedBox(
+                            //     height: isKeyboardVisible
+                            //         ? size.height * 0.3
+                            //         : size.height * 0.1),
+                            // Flexible space that adjusts based on keyboard visibility
+                            // Expanded(
+                            //   child: !isKeyboardVisible
+                            //       ? const SizedBox()
+                            //       : SizedBox(height: viewInsets.bottom),
+                            // ),
+      
+                            // Next Button
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    FadeTransition(
+                      opacity: _opacityAnimation,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          bottom:
+                              isKeyboardVisible ? viewInsets.bottom + 16 : 0,
+                        ),
+                        child: Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                          children: [
+                            ElevatedButton(
+                              onPressed: _isLoading
+                                  ? null
+                                  : _showLogoutConfirmationDialog,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.buttonColors,
+                                shape: const CircleBorder(),
+                                padding: const EdgeInsets.all(14),
+                              ),
+                              child: const Icon(Icons.logout,
+                                  color: Colors.black),
+                            ),
+                            CustomNextButton(
+                              btnName: "Next",
+                              onPressed: () => _handleNextButton(context),
+                              height: 50,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -19,6 +19,7 @@ class StorePurchaseApiClient {
         },
         body: json.encode(purchaseDetails.toMap()), // Changed from toJson() to toMap()
       );
+      print(response.body);
 
       if (response.statusCode == 200) {
         return StorePurchaseResponseModel.fromJson(

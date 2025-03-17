@@ -148,8 +148,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final sortedSubscriptions = List<SubscriptionModel>.from(subscriptions);
     sortedSubscriptions.sort((a, b) {
       // Trial plans first
-      if (a.title.contains('Trial') && !b.title.contains('Trial')) return -1;
-      if (!a.title.contains('Trial') && b.title.contains('Trial')) return 1;
+      bool aIsWeeklyOrTrial =
+          a.title.contains('Weekly') || a.title.contains('Trial');
+      bool bIsWeeklyOrTrial =
+          b.title.contains('Weekly') || b.title.contains('Trial');
+
+      if (aIsWeeklyOrTrial && !bIsWeeklyOrTrial) return -1;
+      if (!aIsWeeklyOrTrial && bIsWeeklyOrTrial) return 1;
 
       // Then Annual (since it's best value)
       if (a.title.contains('Annual') && !b.title.contains('Annual')) return -1;
@@ -390,6 +395,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
                       if (state is SubscriptionError) {
                         _initializeAndLoadSubscriptions();
+                        print(state.message);
 
                         // Check for Google Play account mismatch
                         if (state.message == 'GOOGLE_PLAY_ACCOUNT_MISMATCH') {
@@ -406,11 +412,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           });
                         } else {
                           _initializeAndLoadSubscriptions();
+                          print(state.message);
                           // Show regular error snackbar
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                "Subscrition canceled or error occured}",
+                                "Subscription canceled or error occurred",
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,

@@ -1,5 +1,3 @@
-
-
 import 'package:hungrx_app/data/Models/water_screen/get_water_entry_model.dart';
 
 abstract class GetWaterIntakeState {}

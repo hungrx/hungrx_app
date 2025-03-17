@@ -6,7 +6,6 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PurchaseService {
-  
   static String get _apiKey => Platform.isIOS
       ? "appl_SeITdhZNEmYswLMWJgsaZjeBIRD"
       : "goog_UWjHgGldvwtlcuhEUqJnNIjsxkK";
@@ -24,7 +23,11 @@ class PurchaseService {
       final configuration = PurchasesConfiguration(_apiKey)
         ..appUserID = null; // Set this if you need custom ID
       // Set to true if using another payment system
-
+if (Platform.isIOS) {
+      // configuration.usesStoreKit2IfAvailable = false;
+  await Purchases.setSimulatesAskToBuyInSandbox(true);
+    // await Purchases.setDebugsStoreKitMode(true);
+    }
       await Purchases.configure(configuration);
       // print('✅ RevenueCat SDK initialized successfully');
       Purchases.addCustomerInfoUpdateListener((info) async {
@@ -52,6 +55,12 @@ class PurchaseService {
   static Future<List<Package>> getPackages() async {
     try {
       final offerings = await Purchases.getOfferings();
+      debugPrint(
+          '🔍 All available offerings: ${offerings.all.keys.join(", ")}');
+      if (offerings.all.isEmpty) {
+        debugPrint('❌ No offerings available at all');
+        return [];
+      }
 
       // Try to get packages from the standard offering
       if (offerings.current != null &&
@@ -73,6 +82,14 @@ class PurchaseService {
         debugPrint('⚠️ Using fallback offering: ${firstOffering.identifier}');
         return firstOffering.availablePackages;
       }
+      for (var offeringId in offerings.all.keys) {
+        final offering = offerings.all[offeringId]!;
+        if (offering.availablePackages.isNotEmpty) {
+          debugPrint(
+              '✅ Using alternate offering: $offeringId with ${offering.availablePackages.length} packages');
+          return offering.availablePackages;
+        }
+      }
 
       debugPrint('⚠️ No offerings found');
       return [];
@@ -83,54 +100,65 @@ class PurchaseService {
   }
 
   /// Purchase a Subscription Package
-static Future<SubscriptionInfo> purchasePackage(Package package) async {
-  try {
-    // Store product details before purchase
-    final productId = package.storeProduct.identifier;
-    final offerType = package.identifier;
-    final priceInLocalCurrency = package.storeProduct.price.toString();
-    final currencyCode = package.storeProduct.currencyCode;
+  static Future<SubscriptionInfo> purchasePackage(Package package) async {
+    try {
+      // Store product details before purchase
+      final productId = package.storeProduct.identifier;
+      final offerType = package.identifier;
+      final priceInLocalCurrency = package.storeProduct.price.toString();
+      final currencyCode = package.storeProduct.currencyCode;
 
-    // Make the purchase
-    final purchaseResult = await Purchases.purchasePackage(package);
-    
-    // Get the RevenueCat user ID
-    final rcAppUserId = purchaseResult.originalAppUserId;
-    
-    // Get additional information from CustomerInfo
-    final customerInfo = await Purchases.getCustomerInfo();
-    final entitlement = customerInfo.entitlements.all[_entitlementIdentifier];
-    
-    // Check if entitlement is active
-    final isActive = entitlement?.isActive ?? false;
-    
-    // Prepare platform-specific transaction identifiers
-    String? purchaseToken;
-    String? transactionId;
-    
-    if (Platform.isAndroid) {
-      purchaseToken = await _extractPurchaseToken(productId);
-    } else if (Platform.isIOS) {
-      transactionId = await _extractTransactionId();
-    }
+      // Make the purchase
+      final purchaseResult = await Purchases.purchasePackage(package);
 
-    if (isActive) {
+      // Get the RevenueCat user ID
+      final rcAppUserId = purchaseResult.originalAppUserId;
+
+      // Get additional information from CustomerInfo
+      final customerInfo = await Purchases.getCustomerInfo();
+      final entitlement = customerInfo.entitlements.all[_entitlementIdentifier];
+
+      // Check if entitlement is active
+      final isActive = entitlement?.isActive ?? false;
+
+      // Prepare platform-specific transaction identifiers
+      String? purchaseToken;
+      String? transactionId;
+
+      if (Platform.isAndroid) {
+        purchaseToken = await _extractPurchaseToken(productId);
+      } else if (Platform.isIOS) {
+        transactionId = await _extractTransactionId();
+      }
+
+      if (isActive) {
+        return SubscriptionInfo(
+          isActive: true,
+          isCanceled: !(entitlement?.willRenew ?? true),
+          expirationDate: entitlement?.expirationDate,
+          productIdentifier: entitlement?.productIdentifier,
+          periodType: entitlement?.periodType.name,
+          latestPurchaseDate: entitlement?.latestPurchaseDate,
+          originalPurchaseDate: entitlement?.originalPurchaseDate,
+          store: entitlement?.store.name,
+          isSandbox: entitlement?.isSandbox ?? false,
+          willRenew: entitlement?.willRenew ?? false,
+          ownershipType: entitlement?.ownershipType.name,
+
+          // Add transaction details
+          success: true,
+          userId: '', // You need to supply this from your auth system
+          rcAppUserId: rcAppUserId,
+          productId: productId,
+          offerType: offerType,
+          priceInLocalCurrency: priceInLocalCurrency,
+          currencyCode: currencyCode,
+          purchaseToken: purchaseToken,
+          transactionId: transactionId,
+        );
+      }
       return SubscriptionInfo(
-        isActive: true,
-        isCanceled: !(entitlement?.willRenew ?? true),
-        expirationDate: entitlement?.expirationDate,
-        productIdentifier: entitlement?.productIdentifier,
-        periodType: entitlement?.periodType.name,
-        latestPurchaseDate: entitlement?.latestPurchaseDate,
-        originalPurchaseDate: entitlement?.originalPurchaseDate,
-        store: entitlement?.store.name,
-        isSandbox: entitlement?.isSandbox ?? false,
-        willRenew: entitlement?.willRenew ?? false,
-        ownershipType: entitlement?.ownershipType.name,
-        
-        // Add transaction details
-        success: true,
-        userId: '', // You need to supply this from your auth system
+        success: false,
         rcAppUserId: rcAppUserId,
         productId: productId,
         offerType: offerType,
@@ -139,35 +167,23 @@ static Future<SubscriptionInfo> purchasePackage(Package package) async {
         purchaseToken: purchaseToken,
         transactionId: transactionId,
       );
+    } on PlatformException catch (e) {
+      switch (e.code) {
+        case 'PURCHASE_CANCELLED':
+          debugPrint('⚠️ User cancelled the purchase');
+          return SubscriptionInfo.fromError('PURCHASE_CANCELLED');
+        case 'PRODUCT_NOT_FOUND':
+          debugPrint('❌ Product not found in store');
+          return SubscriptionInfo.fromError('PRODUCT_NOT_FOUND');
+        default:
+          debugPrint('❌ Unknown error: ${e.code} - ${e.message}');
+          return SubscriptionInfo.fromError(e.code);
+      }
+    } catch (e) {
+      debugPrint('❌ Unexpected error during purchase: $e');
+      return SubscriptionInfo.fromError(e.toString());
     }
-    return SubscriptionInfo(
-      success: false,
-      rcAppUserId: rcAppUserId,
-      productId: productId,
-      offerType: offerType,
-      priceInLocalCurrency: priceInLocalCurrency,
-      currencyCode: currencyCode,
-      purchaseToken: purchaseToken,
-      transactionId: transactionId,
-    );
-    
-  } on PlatformException catch (e) {
-    switch (e.code) {
-      case 'PURCHASE_CANCELLED':
-        debugPrint('⚠️ User cancelled the purchase');
-        return SubscriptionInfo.fromError('PURCHASE_CANCELLED');
-      case 'PRODUCT_NOT_FOUND':
-        debugPrint('❌ Product not found in store');
-        return SubscriptionInfo.fromError('PRODUCT_NOT_FOUND');
-      default:
-        debugPrint('❌ Unknown error: ${e.code} - ${e.message}');
-        return SubscriptionInfo.fromError(e.code);
-    }
-  } catch (e) {
-    debugPrint('❌ Unexpected error during purchase: $e');
-    return SubscriptionInfo.fromError(e.toString());
   }
-}
 
   static Future<String?> _extractPurchaseToken(String productId) async {
     try {
@@ -223,77 +239,76 @@ static Future<SubscriptionInfo> purchasePackage(Package package) async {
   }
 
   static Future<SubscriptionInfo> getSubscriptionInfo() async {
-  try {
-    // Get the current customer info from RevenueCat
-    final customerInfo = await Purchases.getCustomerInfo();
-    
-    // Get the RevenueCat user ID
-    final rcAppUserId = customerInfo.originalAppUserId;
-    
-    // Check for the specific entitlement
-    final entitlement = customerInfo.entitlements.all[_entitlementIdentifier];
-    
-    // Check if entitlement is active
-    final isActive = entitlement?.isActive ?? false;
-    
-    // If no active entitlement, return basic inactive info
-    if (!isActive || entitlement == null) {
-      return SubscriptionInfo(
-        isActive: false,
-        success: true,
-        rcAppUserId: rcAppUserId,
-      );
-    }
-    
-    // Get product information
-    final productIdentifier = entitlement.productIdentifier;
-    
-    // Prepare platform-specific transaction identifiers
-    String? purchaseToken;
-    String? transactionId;
-    
-    if (Platform.isAndroid) {
-      purchaseToken = await _extractPurchaseToken(productIdentifier);
-    } else if (Platform.isIOS) {
-      transactionId = await _extractTransactionId();
-    }
-    
-    // Return full subscription info for active subscription
-    return SubscriptionInfo(
-      isActive: true,
-      isCanceled: !entitlement.willRenew,
-      expirationDate: entitlement.expirationDate,
-      productIdentifier: entitlement.productIdentifier,
-      periodType: entitlement.periodType.name,
-      latestPurchaseDate: entitlement.latestPurchaseDate,
-      originalPurchaseDate: entitlement.originalPurchaseDate,
-      store: entitlement.store.name,
-      isSandbox: entitlement.isSandbox,
-      willRenew: entitlement.willRenew,
-      ownershipType: entitlement.ownershipType.name,
-      
-      // Add transaction details
-      success: true,
-      userId: '', // You need to supply this from your auth system
-      rcAppUserId: rcAppUserId,
-      productId: productIdentifier,
-      offerType: '', // Not relevant when just checking status
-      purchaseToken: purchaseToken,
-      transactionId: transactionId,
-    );
-    
-  } catch (e) {
-    debugPrint('❌ Error retrieving subscription info: $e');
-    return SubscriptionInfo.fromError(e.toString());
-  }
-}
+    try {
+      // Get the current customer info from RevenueCat
+      final customerInfo = await Purchases.getCustomerInfo();
 
-// 
+      // Get the RevenueCat user ID
+      final rcAppUserId = customerInfo.originalAppUserId;
+
+      // Check for the specific entitlement
+      final entitlement = customerInfo.entitlements.all[_entitlementIdentifier];
+
+      // Check if entitlement is active
+      final isActive = entitlement?.isActive ?? false;
+
+      // If no active entitlement, return basic inactive info
+      if (!isActive || entitlement == null) {
+        return SubscriptionInfo(
+          isActive: false,
+          success: true,
+          rcAppUserId: rcAppUserId,
+        );
+      }
+
+      // Get product information
+      final productIdentifier = entitlement.productIdentifier;
+
+      // Prepare platform-specific transaction identifiers
+      String? purchaseToken;
+      String? transactionId;
+
+      if (Platform.isAndroid) {
+        purchaseToken = await _extractPurchaseToken(productIdentifier);
+      } else if (Platform.isIOS) {
+        transactionId = await _extractTransactionId();
+      }
+
+      // Return full subscription info for active subscription
+      return SubscriptionInfo(
+        isActive: true,
+        isCanceled: !entitlement.willRenew,
+        expirationDate: entitlement.expirationDate,
+        productIdentifier: entitlement.productIdentifier,
+        periodType: entitlement.periodType.name,
+        latestPurchaseDate: entitlement.latestPurchaseDate,
+        originalPurchaseDate: entitlement.originalPurchaseDate,
+        store: entitlement.store.name,
+        isSandbox: entitlement.isSandbox,
+        willRenew: entitlement.willRenew,
+        ownershipType: entitlement.ownershipType.name,
+
+        // Add transaction details
+        success: true,
+        userId: '', // You need to supply this from your auth system
+        rcAppUserId: rcAppUserId,
+        productId: productIdentifier,
+        offerType: '', // Not relevant when just checking status
+        purchaseToken: purchaseToken,
+        transactionId: transactionId,
+      );
+    } catch (e) {
+      debugPrint('❌ Error retrieving subscription info: $e');
+      return SubscriptionInfo.fromError(e.toString());
+    }
+  }
+
+//
   //  Future<SubscriptionInfo?> getSubscriptionInfo() async {
   //   try {
   //    final customerInfo = await Purchases.getCustomerInfo();
   //     final entitlement = customerInfo.entitlements.all[_entitlementIdentifier];
-      
+
   //     if (entitlement?.isActive ?? false) {
   //       return SubscriptionInfo(
   //         isActive: true,
@@ -314,7 +329,6 @@ static Future<SubscriptionInfo> purchasePackage(Package package) async {
   //     return null;
   //   }
   // }
-
 
   /// Restore Purchases for Existing Users
   static Future<bool> restorePurchases() async {
@@ -371,14 +385,17 @@ static Future<SubscriptionInfo> purchasePackage(Package package) async {
     // Attempt to launch the URL
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-    }
+    } else {}
   }
 
   /// Debugging Offerings and Packages
   static Future<void> debugOfferings() async {
     try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      debugPrint('👤 Customer Info: ${customerInfo.originalAppUserId}');
       final offerings = await Purchases.getOfferings();
+      debugPrint('🔍 All offerings: ${offerings.all.keys.join(", ")}');
+
       if (offerings.current == null) {
         debugPrint(
             '⚠️ No current offering found. Set a current offering in RevenueCat.');
@@ -413,6 +430,11 @@ static Future<SubscriptionInfo> purchasePackage(Package package) async {
       });
     } catch (e) {
       debugPrint('❌ DEBUG: Error getting offerings: $e');
+      if (e is PlatformException) {
+        debugPrint('🔑 Error code: ${e.code}');
+        debugPrint('📝 Error message: ${e.message}');
+        debugPrint('🧩 Error details: ${e.details}');
+      }
     }
   }
 

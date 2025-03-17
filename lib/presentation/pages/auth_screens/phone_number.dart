@@ -344,6 +344,13 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                               children: [
                                 _buildSocialButton(
                                   context: context,
+                                  iconPath: 'assets/icons/apple.png',
+                                  label: 'Continue with Apple',
+                                  onPressed: () => _handleAppleSignIn(context),
+                                ),
+                                SizedBox(height: spacing),
+                                _buildSocialButton(
+                                  context: context,
                                   iconPath: 'assets/icons/google.png',
                                   label: 'Continue with Google',
                                   onPressed: () {
@@ -355,13 +362,6 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                                         .read<GoogleAuthBloc>()
                                         .add(GoogleSignInRequested());
                                   },
-                                ),
-                                SizedBox(height: spacing),
-                                _buildSocialButton(
-                                  context: context,
-                                  iconPath: 'assets/icons/apple.png',
-                                  label: 'Continue with Apple',
-                                  onPressed: () => _handleAppleSignIn(context),
                                 ),
                               ],
                             ),

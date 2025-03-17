@@ -1,8 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hungrx_app/data/Models/subcription_model/store_details_sub.dart';
 import 'package:hungrx_app/data/Models/subcription_model/store_subscription.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/data/services/purchase_service.dart';
+import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/store_details_sub.dart';
 import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/store_purchase_usecase.dart';
 import 'package:hungrx_app/domain/usecases/subscrition_screen.dart/subscriptiion_usecase.dart';
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_event.dart';
@@ -11,10 +13,11 @@ import 'package:hungrx_app/presentation/blocs/subscription/subscription_state.da
 class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   final SubscriptionUseCase _subscriptionUseCase;
   final StorePurchaseUseCase _storePurchaseUseCase;
+  final StoreRevenueCatDetailsUseCase _storeRevenueCatDetailsUseCase;
   final AuthService _authService;
 
-  SubscriptionBloc(
-      this._subscriptionUseCase, this._storePurchaseUseCase, this._authService)
+  SubscriptionBloc(this._subscriptionUseCase, this._storePurchaseUseCase,
+      this._authService, this._storeRevenueCatDetailsUseCase)
       : super(SubscriptionInitial()) {
     on<InitializeSubscriptionService>(_onInitializeSubscriptionService);
     on<LoadSubscriptions>(_onLoadSubscriptions);
@@ -40,8 +43,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
         'userId': userId ?? '',
         'productId': updatedInfo.productId ?? '',
         'isUpdate': true, // Added isUpdate field set to false
-        'subscriptionLevel':
-            updatedInfo.offerType ?? 'monthly', // Adjust as needed
+        'subscriptionLevel': updatedInfo.offerType ?? '', // Adjust as needed
         'expirationDate': updatedInfo.expirationDate ?? '',
         'revenuecatDetails': {
           'isCanceled': updatedInfo.isCanceled,
@@ -50,7 +52,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
           'periodType': updatedInfo.periodType, // e.g., "normal"
           'latestPurchaseDate': updatedInfo.latestPurchaseDate ?? '',
           'originalPurchaseDate': updatedInfo.originalPurchaseDate ?? '',
-          'store': updatedInfo.store, // e.g., "app_store" or "play_store"
+          'store': updatedInfo.store ?? '', // e.g., "app_store" or "play_store"
           'isSandbox': updatedInfo.isSandbox,
           'willRenew': updatedInfo.willRenew,
         }
@@ -120,34 +122,25 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
           await _subscriptionUseCase.purchaseSubscription(event.subscription);
       final userId = await _authService.getUserId();
       if (result.success) {
-        // Create transaction details map with the new structure
-        final transactionDetails = {
-          'userId': userId ?? '',
-          'rcAppUserId': result.rcAppUserId ?? '',
-          'productId': result.productId ?? '',
-          'isUpdate': false, // Added isUpdate field set to false
-          'subscriptionLevel':
-              result.offerType ?? 'monthly', // Add appropriate mapping
-          'expirationDate': result.expirationDate ?? '',
-          'revenuecatDetails': {
-            'isCanceled': result.isCanceled,
-            'expirationDate': result.expirationDate ?? '',
-            'productIdentifier': result.productIdentifier ?? '',
-            'periodType': 'normal', // Add appropriate mapping
-            'latestPurchaseDate': result.latestPurchaseDate ?? '',
-            'originalPurchaseDate': result.originalPurchaseDate ?? '',
-            'store': result.store ?? 'app_store', // Add appropriate mapping
-            'isSandbox': result.isSandbox,
-            'willRenew': result.willRenew,
-          }
-        };
+        final details = RevenueCatDetailsModel(
+          userId: userId ?? '',
+          revenueCatDetails: RevenueCatInfo(
+            isCanceled: false,
+            expirationDate: result.expirationDate ?? '',
+            productIdentifier: result.productIdentifier ?? '',
+            periodType: 'normal',
+            latestPurchaseDate: result.latestPurchaseDate ?? '',
+            originalPurchaseDate: result.originalPurchaseDate ?? '',
+            store: result.store ?? 'app_store',
+            isSandbox: result.isSandbox,
+            willRenew: result.willRenew,
+          ),
+        );
 
         // Log transaction details for debugging
 
-        final purchaseDetailsModel =
-            StorePurchaseDetailsModel.fromMap(transactionDetails);
         final storeResponse =
-            await _storePurchaseUseCase.execute(purchaseDetailsModel);
+            await _storeRevenueCatDetailsUseCase.execute(details);
 
         if (storeResponse.success) {
           emit(SubscriptionPurchased(
@@ -174,7 +167,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
             result.error ?? 'Purchase could not be completed'));
       }
     } on PlatformException catch (e) {
-
       // Handle error code 6 and item already owned cases
       if (e.code == '6' ||
           e.message?.contains('This product is already active') == true ||

@@ -183,6 +183,7 @@ class UserInfoScreenTwoState extends State<UserInfoScreenTwo> {
                                 fontSize: isSmallScreen ? 14 : 16,
                               ),
                             ),
+                            
                           ],
                         ),
                       ),
