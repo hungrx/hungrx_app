@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
@@ -13,6 +15,7 @@ import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_inf
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_event.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_state.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/basic_information_screen/widget/formvalidator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BasicInformationScreen extends StatefulWidget {
   const BasicInformationScreen({super.key});
@@ -22,6 +25,7 @@ class BasicInformationScreen extends StatefulWidget {
 }
 
 class BasicInformationScreenState extends State<BasicInformationScreen> {
+   UserBasicInfo? _cachedBasicInfo;
   String? userId = "";
   late bool isMetric = true;
   late TextEditingController nameController;
@@ -34,6 +38,7 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
   final _authService = AuthService();
   String gender = '';
   final _formKey = GlobalKey<FormState>();
+   bool _isInitialLoad = true;
 
   bool _validateFields() {
     if (!_formKey.currentState!.validate()) {
@@ -52,7 +57,58 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
     _initializeUserId();
     _initializeControllers();
     _fetchUserBasicInfo();
+     _loadCachedData();
   }
+
+  Future<void> _loadCachedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('basic_info_cache');
+
+    if (cachedData != null) {
+      try {
+        final Map<String, dynamic> jsonData = json.decode(cachedData);
+        final cachedInfo = UserBasicInfo.fromJson(jsonData);
+        setState(() {
+          _cachedBasicInfo = cachedInfo;
+          _updateControllers(cachedInfo);
+          _isInitialLoad = false;
+        });
+      } catch (e) {
+        debugPrint('Error loading cached data: $e');
+      }
+    }
+
+    // Fetch fresh data in background
+    _fetchUserBasicInfo();
+  }
+
+  Future<void> _cacheData(UserBasicInfo basicInfo) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonData = {
+      'name': basicInfo.name,
+      'email': basicInfo.email,
+      'gender': basicInfo.gender,
+      'phone': basicInfo.phone,
+      'age': basicInfo.age,
+      'heightInCm': basicInfo.heightInCm,
+      'heightInFeet': basicInfo.heightInFeet,
+      'heightInInches': basicInfo.heightInInches,
+      'weightInKg': basicInfo.weightInKg,
+      'weightInLbs': basicInfo.weightInLbs,
+      'targetWeight': basicInfo.targetWeight,
+      'dailyCalorieGoal': basicInfo.dailyCalorieGoal,
+      'daysToReachGoal': basicInfo.daysToReachGoal,
+      'caloriesToReachGoal': basicInfo.caloriesToReachGoal,
+      'activityLevel': basicInfo.activityLevel,
+      'goal': basicInfo.goal,
+      'mealsPerDay': basicInfo.mealsPerDay,
+      'weightGainRate': basicInfo.weightGainRate,
+      'isMetric': basicInfo.isMetric,
+      'isVerified': basicInfo.isVerified,
+    };
+    await prefs.setString('basic_info_cache', json.encode(jsonData));
+  }
+
 
   Future<void> _initializeUserId() async {
     userId = await _authService.getUserId() ?? "";
@@ -139,14 +195,29 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-        BlocListener<GetBasicInfoBloc, GetBasicInfoState>(
+       BlocListener<GetBasicInfoBloc, GetBasicInfoState>(
           listener: (context, state) {
             if (state is GetBasicInfoSuccess) {
-              _updateControllers(state.userInfo);
+              if (_cachedBasicInfo == null ||
+                  !_compareBasicInfo(_cachedBasicInfo!, state.userInfo)) {
+                setState(() {
+                  _cachedBasicInfo = state.userInfo;
+                  _updateControllers(state.userInfo);
+                });
+                _cacheData(state.userInfo);
+              }
             } else if (state is GetBasicInfoFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.error)),
-              );
+              if (!_isInitialLoad) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.error),
+                    action: SnackBarAction(
+                      label: 'Retry',
+                      onPressed: _fetchUserBasicInfo,
+                    ),
+                  ),
+                );
+              }
             }
           },
         ),
@@ -261,6 +332,27 @@ class BasicInformationScreenState extends State<BasicInformationScreen> {
       ),
     );
   }
+
+    bool _compareBasicInfo(UserBasicInfo cached, UserBasicInfo fresh) {
+    return cached.name == fresh.name &&
+        cached.email == fresh.email &&
+        cached.gender == fresh.gender &&
+        cached.phone == fresh.phone &&
+        cached.age == fresh.age &&
+        cached.heightInCm == fresh.heightInCm &&
+        cached.heightInFeet == fresh.heightInFeet &&
+        cached.heightInInches == fresh.heightInInches &&
+        cached.weightInKg == fresh.weightInKg &&
+        cached.weightInLbs == fresh.weightInLbs &&
+        cached.targetWeight == fresh.targetWeight &&
+        cached.isMetric == fresh.isMetric;
+  }
+
+  // Add pull-to-refresh functionality
+  // Future<void> _handleRefresh() async {
+  //   _fetchUserBasicInfo();
+  //   return Future.delayed(const Duration(seconds: 1));
+  // }
 
   Widget _buildInputField(
     IconData icon,

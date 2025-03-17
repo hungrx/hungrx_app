@@ -4,3 +4,6 @@ abstract class GetBasicInfoEvent {}
 class GetBasicInfoRequested extends GetBasicInfoEvent {
   GetBasicInfoRequested(); // No longer needs userId parameter
 }
+class LoadCachedBasicInfo extends GetBasicInfoEvent {
+  LoadCachedBasicInfo();
+}

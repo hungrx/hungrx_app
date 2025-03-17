@@ -10,6 +10,14 @@ class GetBasicInfoResponse {
       data: UserBasicInfo.fromJson(json['data'] ?? {}),
     );
   }
+
+  // Add toJson method
+  Map<String, dynamic> toJson() {
+    return {
+      'status': status,
+      'data': data.toJson(),
+    };
+  }
 }
 
 class UserBasicInfo {
@@ -80,6 +88,32 @@ class UserBasicInfo {
       isMetric: json['isMetric'] ?? true,
       isVerified: json['isVerified'] ?? false,
     );
+  }
+
+  // Add toJson method for caching
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'email': email,
+      'gender': gender,
+      'phone': phone,
+      'age': age,
+      'heightInCm': heightInCm,
+      'heightInFeet': heightInFeet,
+      'heightInInches': heightInInches,
+      'weightInKg': weightInKg,
+      'weightInLbs': weightInLbs,
+      'targetWeight': targetWeight,
+      'dailyCalorieGoal': dailyCalorieGoal,
+      'daysToReachGoal': daysToReachGoal,
+      'caloriesToReachGoal': caloriesToReachGoal,
+      'activityLevel': activityLevel,
+      'goal': goal,
+      'mealsPerDay': mealsPerDay,
+      'weightGainRate': weightGainRate,
+      'isMetric': isMetric,
+      'isVerified': isVerified,
+    };
   }
 
   // Helper method to get height in feet and inches format
