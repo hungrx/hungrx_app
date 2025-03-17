@@ -19,6 +19,13 @@ class CartResponseModel {
       remaining: (json['remaining'] as num).toDouble(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'success': success,
+    'message': message,
+    'data': data.map((e) => e.toJson()).toList(),
+    'remaining': remaining,
+  };
 }
 
 class CartModel {
@@ -42,6 +49,19 @@ class CartModel {
       createdAt: DateTime.parse(json['createdAt']),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'cartId': cartId,
+    'orders': orders.map((e) => e.toJson()).toList(),
+    'dishDetails': dishDetails.map((e) => e.toJson()).toList(),
+    'createdAt': createdAt.toIso8601String(),
+  };
+
+  bool equals(CartModel other) {
+    return cartId == other.cartId &&
+           createdAt == other.createdAt &&
+           dishDetails.length == other.dishDetails.length;
+  }
 }
 
 class OrderItem {
@@ -56,26 +76,37 @@ class OrderItem {
       items: (json['items'] as List).map((e) => CartItem.fromJson(e)).toList(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'restaurantId': restaurantId,
+    'items': items.map((e) => e.toJson()).toList(),
+  };
 }
 
 class CartItem {
   final String dishId;
   final String servingSize;
-  final int quantity;  // Added quantity field
+  final int quantity;
 
   CartItem({
     required this.dishId, 
     required this.servingSize,
-    required this.quantity,  // Added to constructor
+    required this.quantity,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
       dishId: json['dishId'],
       servingSize: json['servingSize'].toString(),
-      quantity: json['quantity'] as int,  // Parse quantity
+      quantity: json['quantity'] as int,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'dishId': dishId,
+    'servingSize': servingSize,
+    'quantity': quantity,
+  };
 }
 
 class DishDetail {
@@ -86,7 +117,7 @@ class DishDetail {
   final String dishId;
   final String dishName;
   final String servingSize;
-  final int? quantity;  // Added quantity field
+  final int? quantity;
   final NutritionInfo nutritionInfo;
   final String? url;
 
@@ -98,7 +129,7 @@ class DishDetail {
     required this.dishId,
     required this.dishName,
     required this.servingSize,
-     this.quantity,  // Added to constructor
+    this.quantity,
     required this.nutritionInfo,
     this.url,
   });
@@ -112,11 +143,24 @@ class DishDetail {
       dishId: json['dishId'],
       dishName: json['dishName'].toString().trim(),
       servingSize: json['servingSize'].toString(),
-      quantity: json['quantity'] as int,  // Parse quantity
+      quantity: json['quantity'] as int?,
       nutritionInfo: NutritionInfo.fromJson(json['nutritionInfo']),
       url: json['url'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'restaurantId': restaurantId,
+    'restaurantName': restaurantName,
+    'categoryName': categoryName,
+    'subCategoryName': subCategoryName,
+    'dishId': dishId,
+    'dishName': dishName,
+    'servingSize': servingSize,
+    'quantity': quantity,
+    'nutritionInfo': nutritionInfo.toJson(),
+    'url': url,
+  };
 }
 class NutritionInfo {
   final NutritionValue calories;
@@ -139,6 +183,13 @@ class NutritionInfo {
       totalFat: NutritionValue.fromJson(json['totalFat']),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'calories': calories.toJson(),
+    'protein': protein.toJson(),
+    'carbs': carbs.toJson(),
+    'totalFat': totalFat.toJson(),
+  };
 }
 
 class NutritionValue {
@@ -153,4 +204,9 @@ class NutritionValue {
       unit: json['unit'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'value': value,
+    'unit': unit,
+  };
 }

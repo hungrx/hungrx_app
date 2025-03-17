@@ -1,13 +1,18 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/data/Models/food_cart_screen.dart/get_cart_model.dart';
 import 'package:hungrx_app/data/repositories/cart_screen/cart_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
   final GetCartRepository cartRepository;
   final AuthService _authService;
+  CartResponseModel? _cachedCart;
 
   GetCartBloc(
     this.cartRepository,
@@ -15,10 +20,57 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
   ) : super(CartInitial()) {
     on<LoadCart>(_onLoadCart);
     on<UpdateQuantity>(_onUpdateQuantity);
+     on<LoadCachedCart>(_onLoadCachedCart);
   }
 
+   Future<void> _onLoadCachedCart(
+    LoadCachedCart event,
+    Emitter<GetCartState> emit,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString('cart_cache');
+
+      if (cachedData != null) {
+        final jsonData = json.decode(cachedData);
+        _cachedCart = CartResponseModel.fromJson(jsonData);
+        final totalNutrition = _calculateTotalNutrition(_cachedCart!.data);
+        emit(CartLoaded(
+          carts: _cachedCart!.data,
+          totalNutrition: totalNutrition,
+          cartResponse: _cachedCart!,
+          remaining: _cachedCart!.remaining,
+        ));
+      }
+    } catch (e) {
+      debugPrint('Error loading cached cart: $e');
+    }
+  }
+
+  Future<void> _cacheCartData(CartResponseModel cartData) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cart_cache', json.encode(cartData.toJson()));
+    } catch (e) {
+      debugPrint('Error caching cart data: $e');
+    }
+  }
+
+
   Future<void> _onLoadCart(LoadCart event, Emitter<GetCartState> emit) async {
-    emit(CartLoading());
+    // If we have cached data, emit it first
+    if (_cachedCart != null) {
+      final totalNutrition = _calculateTotalNutrition(_cachedCart!.data);
+      emit(CartLoaded(
+        carts: _cachedCart!.data,
+        totalNutrition: totalNutrition,
+        cartResponse: _cachedCart!,
+        remaining: _cachedCart!.remaining,
+      ));
+    } else {
+      emit(CartLoading());
+    }
+
     try {
       final userId = await _authService.getUserId();
       if (userId == null) {
@@ -29,19 +81,41 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
       final cartResponse = await cartRepository.getCart(userId);
 
       if (!cartResponse.success) {
-        emit(CartError(cartResponse.message));
+        if (_cachedCart == null) {
+          emit(CartError(cartResponse.message));
+        }
         return;
       }
 
-      final totalNutrition = _calculateTotalNutrition(cartResponse.data);
-      emit(CartLoaded(
+      // Compare with cached data before emitting
+      if (_cachedCart == null || !_compareCartResponses(_cachedCart!, cartResponse)) {
+        _cachedCart = cartResponse;
+        final totalNutrition = _calculateTotalNutrition(cartResponse.data);
+        emit(CartLoaded(
           carts: cartResponse.data,
           totalNutrition: totalNutrition,
           cartResponse: cartResponse,
-          remaining: cartResponse.remaining));
+          remaining: cartResponse.remaining,
+        ));
+        
+        // Update cache
+        await _cacheCartData(cartResponse);
+      }
     } catch (e) {
-      emit(CartError('Unable to load cart. Please try again later.'));
+      if (_cachedCart == null) {
+        emit(CartError('Unable to load cart. Please try again later.'));
+      }
     }
+  }
+
+  bool _compareCartResponses(CartResponseModel cached, CartResponseModel fresh) {
+    if (cached.data.length != fresh.data.length) return false;
+    
+    for (var i = 0; i < cached.data.length; i++) {
+      if (!cached.data[i].equals(fresh.data[i])) return false;
+    }
+    
+    return cached.remaining == fresh.remaining;
   }
 
   Map<String, double> _calculateTotalNutrition(List<CartModel> carts) {
@@ -140,18 +214,6 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
           totalNutrition: totalNutrition,
           cartResponse: updatedCartResponse,
           remaining: currentState.remaining));
-
-      // Optional: Call API to persist the change
-      // try {
-      //   await cartRepository.updateQuantity(
-      //     event.cartId,
-      //     event.dishId,
-      //     event.quantity,
-      //   );
-      // } catch (e) {
-      //   print('Error updating quantity on server: $e');
-      //   // You might want to emit an error state or revert the change
-      // }
     }
   }
 
@@ -171,40 +233,4 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
         }
     }
   }
-
-  // Map<String, double> _calculateTotalNutrition(List<CartModel> carts) {
-  //   double totalCalories = 0;
-  //   double totalProtein = 0;
-  //   double totalCarbs = 0;
-  //   double totalFat = 0;
-
-  //   for (var cart in carts) {
-  //     for (var dish in cart.dishDetails) {
-  //       try {
-  //         final servingSize = _parseServingSize(dish.servingSize);
-
-  //         final calories =
-  //             double.tryParse(dish.nutritionInfo.calories.value) ?? 0;
-  //         final protein =
-  //             double.tryParse(dish.nutritionInfo.protein.value) ?? 0;
-  //         final carbs = double.tryParse(dish.nutritionInfo.carbs.value) ?? 0;
-  //         final fat = double.tryParse(dish.nutritionInfo.totalFat.value) ?? 0;
-
-  //         totalCalories += calories * servingSize;
-  //         totalProtein += protein * servingSize;
-  //         totalCarbs += carbs * servingSize;
-  //         totalFat += fat * servingSize;
-  //       } catch (e) {
-  //         continue;
-  //       }
-  //     }
-  //   }
-
-  //   return {
-  //     'calories': totalCalories,
-  //     'protein': totalProtein,
-  //     'carbs': totalCarbs,
-  //     'fat': totalFat,
-  //   };
-  // }
 }

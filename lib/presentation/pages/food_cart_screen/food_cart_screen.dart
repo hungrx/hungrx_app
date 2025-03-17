@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
 import 'package:hungrx_app/data/Models/food_cart_screen.dart/consume_cart_request.dart';
+import 'package:hungrx_app/data/Models/food_cart_screen.dart/get_cart_model.dart';
 import 'package:hungrx_app/data/Models/restuarent_screen/nearby_restaurant_model.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_state.dart';
@@ -14,6 +17,7 @@ import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/direction
 import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/food_item_card.dart';
 import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/total_calorie_bar.dart';
 import 'package:hungrx_app/routes/route_names.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CartScreen extends StatefulWidget {
   final NearbyRestaurantModel? restaurant;
@@ -28,10 +32,45 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   List<OrderDetail> orderDetails = [];
+  CartResponseModel? _cachedCartData;
+  Map<String, double>? _cachedNutrition;
+  bool _isInitialLoad = true;
   @override
   void initState() {
     super.initState();
+    _loadCachedData();
+  }
+
+  Future<void> _loadCachedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('cart_cache');
+
+    if (cachedData != null) {
+      try {
+        final jsonData = json.decode(cachedData);
+        final cartResponse = CartResponseModel.fromJson(jsonData);
+        setState(() {
+          _cachedCartData = cartResponse;
+          // _cachedNutrition = _calculateTotalNutrition(cartResponse.data);
+          _isInitialLoad = false;
+        });
+      } catch (e) {
+        debugPrint('Error loading cached data: $e');
+      }
+    }
+
+    // Fetch fresh data in background
     context.read<GetCartBloc>().add(LoadCart());
+  }
+
+  Future<void> _cacheData(CartResponseModel cartData) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cart_cache', json.encode(cartData.toJson()));
+  }
+
+  Future<void> _handleRefresh() async {
+    context.read<GetCartBloc>().add(LoadCart());
+    return Future.delayed(const Duration(seconds: 1));
   }
 
   void _showCalorieWarning(BuildContext context, String message) {
@@ -97,183 +136,220 @@ class _CartScreenState extends State<CartScreen> {
             ),
           ),
         ),
-        body: BlocBuilder<GetCartBloc, GetCartState>(
+        body: BlocConsumer<GetCartBloc, GetCartState>(
+          listener: (context, state) {
+            if (state is CartError) {
+              if (!_isInitialLoad) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    action: SnackBarAction(
+                      label: 'Retry',
+                      onPressed: () {
+                        context.read<GetCartBloc>().add(LoadCart());
+                      },
+                    ),
+                  ),
+                );
+              }
+            } else if (state is CartLoaded) {
+              if (_cachedCartData == null ||
+                  !_compareCartData(_cachedCartData!, state.cartResponse)) {
+                setState(() {
+                  _cachedCartData = state.cartResponse;
+                  _cachedNutrition = state.totalNutrition;
+                });
+                _cacheData(state.cartResponse);
+              }
+            }
+          },
           builder: (context, state) {
-            if (state is CartLoading) {
+            // Show loading only if no cached data
+            if (state is CartLoading && _cachedCartData == null) {
               return _buildLoadingView();
             }
-            if (state is CartError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      state.message,
-                      style: const TextStyle(color: Colors.white),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<GetCartBloc>().add(
-                              LoadCart(),
-                            );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.buttonColors,
+
+            // Show error only if no cached data
+            // if (state is CartError && _cachedCartData == null) {
+            //   return _buildErrorView(state.message);
+            // }
+
+            // Use either current state or cached data
+            final cartData =
+                (state is CartLoaded) ? state.cartResponse : _cachedCartData;
+            final nutrition =
+                (state is CartLoaded) ? state.totalNutrition : _cachedNutrition;
+
+            if (cartData == null || nutrition == null) {
+              return const SizedBox();
+            }
+
+            // Handle empty cart
+            if (cartData.data.isEmpty) {
+              return _buildEmptyCartView(screenWidth, isSmallScreen);
+            }
+
+            // Build main cart content
+            return _buildMainContent(
+              cartData,
+              nutrition,
+              screenWidth,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainContent(
+    CartResponseModel cartData,
+    Map<String, double> nutrition,
+    double screenWidth,
+  ) {
+    return Stack(
+      children: [
+        RefreshIndicator(
+          onRefresh: _handleRefresh,
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(screenWidth * 0.04),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildCalorieSummaryCard(
+                        cartData.remaining,
+                        nutrition,
+                        screenWidth,
                       ),
-                      child: const Text('Retry'),
+                    ],
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                  child: Text(
+                    'Food Items',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenWidth < 360 ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.only(bottom: 100),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final cart = cartData.data[index];
+                      return Column(
+                        children: cart.dishDetails.map((dish) {
+                          return FoodItemCard(
+                            cartId: cart.cartId,
+                            dish: dish,
+                            showCalorieWarning: _showCalorieWarning,
+                          );
+                        }).toList(),
+                      );
+                    },
+                    childCount: cartData.data.length,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: TotalCaloriesBar(
+            remainingCalories: cartData.remaining,
+            nutrition: nutrition,
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool _compareCartData(CartResponseModel cached, CartResponseModel fresh) {
+    if (cached.data.length != fresh.data.length) return false;
+
+    for (var i = 0; i < cached.data.length; i++) {
+      if (!cached.data[i].equals(fresh.data[i])) return false;
+    }
+
+    return cached.remaining == fresh.remaining;
+  }
+
+  Widget _buildEmptyCartView(double screenWidth, bool isSmallScreen) {
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.shopping_cart_outlined,
+                  size: isSmallScreen ? 48 : 64,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: screenWidth * 0.04),
+                Text(
+                  'Your cart is empty',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 18 : 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: screenWidth * 0.02),
+                Text(
+                  'Add some delicious food to get started',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: screenWidth * 0.06),
+                Wrap(
+                  spacing: screenWidth * 0.04,
+                  runSpacing: screenWidth * 0.03,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    _buildActionButton(
+                      context: context,
+                      icon: Icons.restaurant,
+                      label: 'Show restaurants',
+                      onPressed: () =>
+                          context.pushNamed(RouteNames.restaurants),
+                      isSmallScreen: isSmallScreen,
+                      screenWidth: screenWidth,
+                    ),
+                    _buildActionButton(
+                      context: context,
+                      icon: Icons.history,
+                      label: 'See log history',
+                      onPressed: () =>
+                          context.pushNamed(RouteNames.dailyInsightScreen),
+                      isSmallScreen: isSmallScreen,
+                      screenWidth: screenWidth,
                     ),
                   ],
                 ),
-              );
-            }
-    
-            if (state is CartLoaded && state.carts.isEmpty) {
-              return Center(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        size: isSmallScreen ? 48 : 64,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: screenWidth * 0.04),
-                      Text(
-                        'Your cart is empty',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: isSmallScreen ? 18 : 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: screenWidth * 0.02),
-                      Text(
-                        'Add some delicious food to get started',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: isSmallScreen ? 14 : 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: screenWidth * 0.06),
-                      Wrap(
-                        spacing: screenWidth * 0.04,
-                        runSpacing: screenWidth * 0.03,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          _buildActionButton(
-                            context: context,
-                            icon: Icons.restaurant,
-                            label: 'Show restaurants',
-                            onPressed: () =>
-                                context.pushNamed(RouteNames.restaurants),
-                            isSmallScreen: isSmallScreen,
-                            screenWidth: screenWidth,
-                          ),
-                          _buildActionButton(
-                            context: context,
-                            icon: Icons.history,
-                            label: 'See log history',
-                            onPressed: () => context
-                                .pushNamed(RouteNames.dailyInsightScreen),
-                            isSmallScreen: isSmallScreen,
-                            screenWidth: screenWidth,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-    
-            if (state is CartLoaded) {
-              return Stack(
-                children: [
-                  CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.all(screenWidth * 0.04),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildCalorieSummaryCard(
-                                state.remaining,
-                                state.totalNutrition,
-                                screenWidth,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.04,
-                          ),
-                          child: Text(
-                            'Food Items',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: isSmallScreen ? 16 : 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (state.carts.isEmpty)
-                        const SliverFillRemaining(
-                          child: Center(
-                            child: Text(
-                              'No items in cart',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        )
-                      else
-                        SliverPadding(
-                          padding: const EdgeInsets.only(bottom: 100),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, cartIndex) {
-                                final cart = state.carts[cartIndex];
-                                // Create a list of food items for each dish in the cart
-                                return Column(
-                                  children: cart.dishDetails.map((dish) {
-                                    return FoodItemCard(
-                                      cartId: cart.cartId,
-                                      dish: dish,
-                                      showCalorieWarning: _showCalorieWarning,
-                                    );
-                                  }).toList(),
-                                );
-                              },
-                              childCount: state.carts.length,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  if (state.carts.isNotEmpty)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: TotalCaloriesBar(
-                        remainingCalories: state.remaining,
-                        nutrition: state.totalNutrition,
-                      ),
-                    ),
-                ],
-              );
-            }
-            return const SizedBox();
-          },
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -513,7 +589,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-// Helper widget for building info 
+// Helper widget for building info
   Widget _buildInfoRow({
     required IconData icon,
     required String text,
