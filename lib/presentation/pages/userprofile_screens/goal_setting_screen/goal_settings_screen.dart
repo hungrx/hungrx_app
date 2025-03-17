@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/data/Models/profile_setting_screen/goal_settings_model.dart';
@@ -5,6 +7,7 @@ import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_bloc.d
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_event.dart';
 import 'package:hungrx_app/presentation/blocs/goal_settings/goal_settings_state.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/goal_setting_screen/edit_goal_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GoalSettingsScreen extends StatefulWidget {
   const GoalSettingsScreen({
@@ -17,11 +20,45 @@ class GoalSettingsScreen extends StatefulWidget {
 
 class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
   @override
-  initState() {
+  void initState() {
     super.initState();
+    _loadCachedData();
+  }
+
+  GoalSettingsModel? _cachedSettings;
+  bool _isInitialLoad = true;
+
+  Future<void> _loadCachedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('goal_settings_cache');
+
+    if (cachedData != null) {
+      try {
+        final jsonData = json.decode(cachedData);
+        setState(() {
+          _cachedSettings = GoalSettingsModel.fromJson(jsonData);
+          _isInitialLoad = false;
+        });
+      } catch (e) {
+        debugPrint('Error loading cached data: $e');
+      }
+    }
+
+    // Fetch fresh data in background
     context.read<GoalSettingsBloc>().add(FetchGoalSettings());
   }
-  GoalSettingsModel? _cachedSettings;
+
+  Future<void> _cacheData(GoalSettingsModel settings) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        'goal_settings_cache', json.encode(settings.toJson()));
+  }
+
+  Future<void> _handleRefresh() async {
+    context.read<GoalSettingsBloc>().add(FetchGoalSettings());
+    return Future.delayed(const Duration(seconds: 1));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,26 +67,34 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
         child: BlocConsumer<GoalSettingsBloc, GoalSettingsState>(
           listener: (context, state) {
             if (state is GoalSettingsError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  action: SnackBarAction(
-                    label: 'Retry',
-                    onPressed: () {
-                      context.read<GoalSettingsBloc>().add(FetchGoalSettings());
-                    },
+              if (!_isInitialLoad) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    action: SnackBarAction(
+                      label: 'Retry',
+                      onPressed: () {
+                        context
+                            .read<GoalSettingsBloc>()
+                            .add(FetchGoalSettings());
+                      },
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             } else if (state is GoalSettingsLoaded) {
-              _cachedSettings = state.settings;
+              if (_cachedSettings == null ||
+                  !_cachedSettings!.equals(state.settings)) {
+                setState(() {
+                  _cachedSettings = state.settings;
+                });
+                _cacheData(state.settings);
+              }
             }
           },
           builder: (context, state) {
             return RefreshIndicator(
-              onRefresh: () async {
-                context.read<GoalSettingsBloc>().add(FetchGoalSettings());
-              },
+              onRefresh: _handleRefresh,
               child: Stack(
                 children: [
                   SingleChildScrollView(
@@ -102,7 +147,6 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
       ),
     );
   }
-
 
   Widget _buildErrorOverlay(String message, VoidCallback onRetry) {
     return Container(
@@ -218,21 +262,22 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
       ],
     );
   }
-Widget _buildTitleRow(BuildContext context, GoalSettingsModel settings) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      const Text(
-        'Weight Goal',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
+
+  Widget _buildTitleRow(BuildContext context, GoalSettingsModel settings) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          'Weight Goal',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-      GestureDetector(
-        onTap: () async {
-          final result = await Navigator.push(
+        GestureDetector(
+          onTap: () async {
+            final result = await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => GoalSettingsEditScreen(
@@ -247,93 +292,88 @@ Widget _buildTitleRow(BuildContext context, GoalSettingsModel settings) {
                 ),
               ),
             );
-          
-          if (result != null && mounted) {
-            context.read<GoalSettingsBloc>().add(FetchGoalSettings());
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFBBD66F),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.edit, size: 16, color: Colors.black),
-              SizedBox(width: 4),
-              Text(
-                'Edit',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w600,
+
+            if (result != null && mounted) {
+              context.read<GoalSettingsBloc>().add(FetchGoalSettings());
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFBBD66F),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.edit, size: 16, color: Colors.black),
+                SizedBox(width: 4),
+                Text(
+                  'Edit',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    ],
-  );
-}
-
-Widget _buildGoalDetailsCard(GoalSettingsModel settings) {
-  // Helper function to convert kg to lbs
-  double kgToLbs(double kg) {
-    return kg * 2.20462;
-  }
-
-  // Helper function to format weight with proper unit
-  String formatWeight(String weight, bool isMetric) {
-    if (isMetric) {
-      return '$weight kg';
-    } else {
-     
-      return '$weight lbs';
-    }
-  }
-
-  // Helper function to format weight gain rate
-  String formatWeightGainRate(double rate, bool isMetric) {
-    if (isMetric) {
-      return '${rate.toStringAsFixed(2)} kg / week';
-    } else {
-      double lbs = kgToLbs(rate);
-      return '${lbs.toStringAsFixed(0)} lbs / week';
-    }
-  }
-
-  return Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: const Color(0xFF1E1E1E),
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Column(
-      children: [
-        _buildInfoRow('Goal', settings.goal),
-        const SizedBox(height: 20),
-        _buildInfoRow(
-          'Target Weight', 
-          formatWeight(settings.targetWeight, settings.isMetric)
-        ),
-        const SizedBox(height: 20),
-        _buildInfoRow(
-          'Goal pace', 
-          formatWeightGainRate(settings.weightGainRate, settings.isMetric)
-        ),
-        const SizedBox(height: 20),
-        _buildInfoRow('Activity level', settings.activityLevel),
-        const SizedBox(height: 20),
-        _buildInfoRow('Meals per day', '${settings.mealsPerDay} times'),
       ],
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildGoalDetailsCard(GoalSettingsModel settings) {
+    // Helper function to convert kg to lbs
+    double kgToLbs(double kg) {
+      return kg * 2.20462;
+    }
+
+    // Helper function to format weight with proper unit
+    String formatWeight(String weight, bool isMetric) {
+      if (isMetric) {
+        return '$weight kg';
+      } else {
+        return '$weight lbs';
+      }
+    }
+
+    // Helper function to format weight gain rate
+    String formatWeightGainRate(double rate, bool isMetric) {
+      if (isMetric) {
+        return '${rate.toStringAsFixed(2)} kg / week';
+      } else {
+        double lbs = kgToLbs(rate);
+        return '${lbs.toStringAsFixed(0)} lbs / week';
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          _buildInfoRow('Goal', settings.goal),
+          const SizedBox(height: 20),
+          _buildInfoRow('Target Weight',
+              formatWeight(settings.targetWeight, settings.isMetric)),
+          const SizedBox(height: 20),
+          _buildInfoRow('Goal pace',
+              formatWeightGainRate(settings.weightGainRate, settings.isMetric)),
+          const SizedBox(height: 20),
+          _buildInfoRow('Activity level', settings.activityLevel),
+          const SizedBox(height: 20),
+          _buildInfoRow('Meals per day', '${settings.mealsPerDay} times'),
+        ],
+      ),
+    );
+  }
 
   Widget _buildInfoRow(String label, String value) {
     return Row(

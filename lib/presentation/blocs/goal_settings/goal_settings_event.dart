@@ -5,3 +5,7 @@ class FetchGoalSettings extends GoalSettingsEvent {
   FetchGoalSettings();
 }
 class ClearGoalSettings extends GoalSettingsEvent {}
+
+class LoadCachedGoalSettings extends GoalSettingsEvent {
+  LoadCachedGoalSettings();
+}
