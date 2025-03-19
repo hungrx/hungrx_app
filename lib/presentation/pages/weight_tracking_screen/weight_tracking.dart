@@ -109,7 +109,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
     return const SizedBox();
   }
 
-  Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
+Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
     final List<ChartData> chartData = [];
 
     // Sort history by date before creating chart data
@@ -132,7 +132,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(16),
       ),
-      height: 280, // Increased height for better visibility
+      height: 280,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -158,23 +158,25 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
           const SizedBox(height: 16),
           Expanded(
             child: SfCartesianChart(
-              margin: const EdgeInsets.all(0),
+              margin:  EdgeInsets.all(0),
+              zoomPanBehavior: ZoomPanBehavior(
+                enablePanning: true,
+                enablePinching: true,
+                zoomMode: ZoomMode.x,
+              ),
               primaryXAxis: CategoryAxis(
                 isInversed: false,
-                majorGridLines:
-                    const MajorGridLines(width: 0.5, color: Colors.grey),
+                majorGridLines: const MajorGridLines(width: 0.5, color: Colors.grey),
                 labelStyle: const TextStyle(color: Colors.white),
-                // labelRotation: 45, // Rotate labels for better readability
-                interval: 1,
+                // No label rotation for cleaner look
+                interval: chartData.length > 10 ? (chartData.length / 10).ceil().toDouble() : 1,
               ),
               primaryYAxis: NumericAxis(
-                autoScrollingMode: AutoScrollingMode.end,
-                majorGridLines:
-                    const MajorGridLines(width: 0.5, color: Colors.grey),
+                majorGridLines: const MajorGridLines(width: 0.5, color: Colors.grey),
                 labelStyle: const TextStyle(color: Colors.white),
                 minimum: _getMinWeight(weightHistory) - 1,
                 maximum: _getMaxWeight(weightHistory) + 1,
-                interval: 2, // Set interval for better readability
+                interval: 2,
               ),
               tooltipBehavior: TooltipBehavior(
                 enable: true,
