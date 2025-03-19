@@ -107,7 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
               fontSize: isSmallScreen ? 14 : 16,
             ),
             decoration: InputDecoration(
-              hintText: 'Search foods...',
+              hintText: 'Search by name or calorie(e.g.300cal)',
               hintStyle: TextStyle(
                 color: Colors.grey,
                 fontSize: isSmallScreen ? 14 : 16,

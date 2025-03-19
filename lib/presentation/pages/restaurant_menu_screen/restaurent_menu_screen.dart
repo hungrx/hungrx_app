@@ -366,49 +366,49 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
             ),
           ),
           const SizedBox(height: 14),
-         GestureDetector(
-  onTap: () {
-    final menuState = context.read<RestaurantMenuBloc>().state;
-    if (menuState is RestaurantMenuLoaded) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => BlocProvider(
-            create: (context) => SearchBloc(),
-            child: SearchScreen(
-              restaurantId: widget.restaurantId,
-              categories: menuState.menuResponse.menu.categories,
+          GestureDetector(
+            onTap: () {
+              final menuState = context.read<RestaurantMenuBloc>().state;
+              if (menuState is RestaurantMenuLoaded) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider(
+                      create: (context) => SearchBloc(),
+                      child: SearchScreen(
+                        restaurantId: widget.restaurantId,
+                        categories: menuState.menuResponse.menu.categories,
+                      ),
+                    ),
+                  ),
+                );
+              } else {
+                // Show loading indicator or message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please wait while menu loads...'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.search, color: Colors.grey[600]),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Search by name or calorie...',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
-    } else {
-      // Show loading indicator or message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please wait while menu loads...'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-  },
-  child: Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    decoration: BoxDecoration(
-      color: Colors.black,
-      borderRadius: BorderRadius.circular(30),
-    ),
-    child: Row(
-      children: [
-        Icon(Icons.search, color: Colors.grey[600]),
-        const SizedBox(width: 8),
-        Text(
-          'Search foods...',
-          style: TextStyle(color: Colors.grey[600], fontSize: 16),
-        ),
-      ],
-    ),
-  ),
-),
         ],
       ),
     );

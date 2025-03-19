@@ -9,4 +9,6 @@ class SearchDishes extends SearchEvent {
   SearchDishes(this.query, this.categories);
 }
 
-class ClearSearch extends SearchEvent {}
+class ClearSearch extends SearchEvent {
+  ClearSearch();
+}
