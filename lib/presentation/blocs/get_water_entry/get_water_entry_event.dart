@@ -6,3 +6,7 @@ class FetchWaterIntakeData extends GetWaterIntakeEvent {
 
   FetchWaterIntakeData({required this.date}); // Removed userId parameter
 }
+class LoadCachedWaterIntake extends GetWaterIntakeEvent {
+  final String date;
+  LoadCachedWaterIntake({required this.date});
+}

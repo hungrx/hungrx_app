@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,7 @@ import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_eve
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_state.dart';
 import 'package:hungrx_app/presentation/pages/weight_tracking_screen/widget/shimmer_effect.dart';
 import 'package:hungrx_app/routes/route_names.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class WeightTrackingScreen extends StatefulWidget {
@@ -23,15 +26,42 @@ class WeightTrackingScreen extends StatefulWidget {
 }
 
 class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
+  WeightHistoryModel? cachedWeightHistory;
+  bool isInitialLoad = true;
   @override
   void initState() {
     super.initState();
-    _initializeUserId();
+    _loadCachedData();
   }
 
-  Future<void> _initializeUserId() async {
+  Future<void> _loadCachedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('weight_history_cache');
+
+    if (cachedData != null) {
+      try {
+        final jsonData = json.decode(cachedData);
+        setState(() {
+          cachedWeightHistory = WeightHistoryModel.fromJson(jsonData);
+          isInitialLoad = false;
+        });
+      } catch (e) {
+        debugPrint('Error loading cached data: $e');
+      }
+    }
+
+    // Fetch fresh data in background
+    _fetchWeightHistory();
+  }
+
+  void _fetchWeightHistory() {
     context.read<WeightHistoryBloc>().add(FetchWeightHistory());
   }
+
+  // Future<void> _handleRefresh() async {
+  //   _fetchWeightHistory();
+  //   return Future.delayed(const Duration(seconds: 1));
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +158,6 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
           const SizedBox(height: 16),
           Expanded(
             child: SfCartesianChart(
-
               margin: const EdgeInsets.all(0),
               primaryXAxis: CategoryAxis(
                 isInversed: false,
@@ -155,7 +184,6 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
               plotAreaBorderWidth: 0,
               series: <CartesianSeries>[
                 LineSeries<ChartData, String>(
-
                   dataSource: chartData,
                   xValueMapper: (ChartData data, _) => data.x,
                   yValueMapper: (ChartData data, _) => data.y,

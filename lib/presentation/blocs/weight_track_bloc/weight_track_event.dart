@@ -5,3 +5,7 @@ abstract class WeightHistoryEvent {}
 class FetchWeightHistory extends WeightHistoryEvent {
   FetchWeightHistory(); // No longer needs userId parameter
 }
+
+class LoadCachedWeightHistory extends WeightHistoryEvent {
+  LoadCachedWeightHistory();
+}

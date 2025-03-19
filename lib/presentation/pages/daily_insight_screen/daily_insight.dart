@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +12,7 @@ import 'package:hungrx_app/presentation/pages/daily_insight_screen/widget/food_d
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/widget/nutiction_summery.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/widget/shimmer_effect.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DailyInsightScreen extends StatefulWidget {
   const DailyInsightScreen({super.key});
@@ -22,13 +25,38 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
   late DateTime selectedDate;
   final List<String> weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   String? userId;
-  
+  DailyFoodResponse? cachedDailyInsight;
+  bool isInitialLoad = true;
 
   @override
   void initState() {
     super.initState();
     selectedDate = DateTime.now();
     // Load user ID when screen initializes
+    _loadCachedData();
+  }
+
+  Future<void> _loadCachedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final date = DateFormat('dd/MM/yyyy').format(selectedDate);
+    final cachedData = prefs.getString('daily_insight_cache');
+
+    if (cachedData != null) {
+      try {
+        final decodedData = json.decode(cachedData) as Map<String, dynamic>;
+        if (decodedData.containsKey(date)) {
+          setState(() {
+            cachedDailyInsight = DailyFoodResponse.fromJson(
+                decodedData[date] as Map<String, dynamic>);
+            isInitialLoad = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error loading cached data: $e');
+      }
+    }
+
+    // Fetch fresh data in background
     _fetchDailyInsightData();
   }
 

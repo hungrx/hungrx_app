@@ -28,8 +28,25 @@ class WeightHistoryModel {
               ?.map((e) => WeightEntry.fromJson(e))
               .toList() ??
           [],
-      lastUpdated: DateTime.parse(json['lastUpdated'] ?? DateTime.now().toIso8601String()),
+      lastUpdated: DateTime.parse(
+          json['lastUpdated'] ?? DateTime.now().toIso8601String()),
     );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'status': status,
+        'message': message,
+        'isMetric': isMetric,
+        'currentWeight': currentWeight,
+        'initialWeight': initialWeight,
+        'history': history.map((e) => e.toJson()).toList(),
+        'lastUpdated': lastUpdated.toIso8601String(),
+      };
+
+  bool equals(WeightHistoryModel other) {
+    return currentWeight == other.currentWeight &&
+        history.length == other.history.length &&
+        lastUpdated == other.lastUpdated;
   }
 }
 
@@ -46,24 +63,49 @@ class WeightEntry {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+        'weight': weight,
+        'date': date.toIso8601String(),
+      };
+
   String getFormattedDate() {
     if (date == DateTime(1970, 1, 1)) return "Initial weight";
 
     final List<String> months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
-    
+
     String formattedDay = date.day.toString().padLeft(2, '0');
     return "$formattedDay-${months[date.month - 1]}-${date.year}";
   }
 
   String getGraphDate() {
     final List<String> months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
-    
+
     String formattedDay = date.day.toString().padLeft(2, '0');
     return "$formattedDay-${months[date.month - 1]}";
   }

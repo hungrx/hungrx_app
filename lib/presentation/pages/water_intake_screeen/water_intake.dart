@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
@@ -16,6 +18,7 @@ import 'package:hungrx_app/presentation/blocs/water_intake/water_intake_state.da
 import 'package:hungrx_app/presentation/pages/water_intake_screeen/widgets/water_dialog.dart';
 import 'package:hungrx_app/presentation/pages/water_intake_screeen/widgets/water_shimmer.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WaterIntakeScreen extends StatefulWidget {
   const WaterIntakeScreen({super.key});
@@ -27,14 +30,40 @@ class WaterIntakeScreen extends StatefulWidget {
 class _WaterIntakeScreenState extends State<WaterIntakeScreen> {
   late DateTime selectedDate;
   final List<String> weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  WaterIntakeData? cachedWaterIntake;
+  bool isInitialLoad = true;
 
   @override
   void initState() {
     super.initState();
     selectedDate = DateTime.now();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadWaterIntakeData();
+      _loadCachedData();
     });
+  }
+
+  Future<void> _loadCachedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
+    final cachedData = prefs.getString('water_intake_cache');
+
+    if (cachedData != null) {
+      try {
+        final decodedData = json.decode(cachedData) as Map<String, dynamic>;
+        if (decodedData.containsKey(formattedDate)) {
+          setState(() {
+            cachedWaterIntake = WaterIntakeData.fromJson(
+                decodedData[formattedDate] as Map<String, dynamic>);
+            isInitialLoad = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error loading cached data: $e');
+      }
+    }
+
+    // Fetch fresh data in background
+    _loadWaterIntakeData();
   }
 
   void _loadWaterIntakeData() {
@@ -219,62 +248,63 @@ class _WaterIntakeScreenState extends State<WaterIntakeScreen> {
     );
   }
 
-Widget _buildWaterProgress(WaterIntakeData data) {
-  // Convert daily goal from L to ml
-  final dailyGoal = double.parse(data.dailyWaterIntake) * 1000;
-  final consumedAmount = data.dateStats.totalIntake.toDouble();
-  final progress = dailyGoal > 0 ? (consumedAmount / dailyGoal).clamp(0.0, 1.0) : 0.0;
+  Widget _buildWaterProgress(WaterIntakeData data) {
+    // Convert daily goal from L to ml
+    final dailyGoal = double.parse(data.dailyWaterIntake) * 1000;
+    final consumedAmount = data.dateStats.totalIntake.toDouble();
+    final progress =
+        dailyGoal > 0 ? (consumedAmount / dailyGoal).clamp(0.0, 1.0) : 0.0;
 
-  return Container(
-    margin: const EdgeInsets.all(16),
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: AppColors.tileColor,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-      children: [
-        CircularPercentIndicator(
-          radius: 80,
-          lineWidth: 10,
-          percent: progress,
-          center: const Icon(
-            Icons.water_drop,
-            color: Colors.lightBlueAccent,
-            size: 40,
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.tileColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          CircularPercentIndicator(
+            radius: 80,
+            lineWidth: 10,
+            percent: progress,
+            center: const Icon(
+              Icons.water_drop,
+              color: Colors.lightBlueAccent,
+              size: 40,
+            ),
+            progressColor: Colors.lightBlueAccent,
+            backgroundColor: Colors.lightBlueAccent.withOpacity(0.2),
           ),
-          progressColor: Colors.lightBlueAccent,
-          backgroundColor: Colors.lightBlueAccent.withOpacity(0.2),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildProgressItem(
-                Icons.flag,
-                'Goal',
-                '${dailyGoal.toInt()} ml', // Changed from L to ml
-              ),
-              const SizedBox(height: 12),
-              _buildProgressItem(
-                Icons.water_drop_outlined,
-                'Remaining',
-                '${data.dateStats.remaining} ml', // Changed from L to ml
-              ),
-              const SizedBox(height: 12),
-              _buildProgressItem(
-                Icons.check_circle_outline,
-                'Consumed',
-                '${data.dateStats.totalIntake} ml',
-              ),
-            ],
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProgressItem(
+                  Icons.flag,
+                  'Goal',
+                  '${dailyGoal.toInt()} ml', // Changed from L to ml
+                ),
+                const SizedBox(height: 12),
+                _buildProgressItem(
+                  Icons.water_drop_outlined,
+                  'Remaining',
+                  '${data.dateStats.remaining} ml', // Changed from L to ml
+                ),
+                const SizedBox(height: 12),
+                _buildProgressItem(
+                  Icons.check_circle_outline,
+                  'Consumed',
+                  '${data.dateStats.totalIntake} ml',
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   Widget _buildProgressItem(IconData icon, String label, String value) {
     return Row(
@@ -399,7 +429,10 @@ Widget _buildWaterProgress(WaterIntakeData data) {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child:  Text('Cancel' , style: TextStyle(color: Colors.white),),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -411,7 +444,10 @@ Widget _buildWaterProgress(WaterIntakeData data) {
                     );
                 Navigator.pop(context);
               },
-              child: const Text('Delete', style: TextStyle(color: Colors.blue),),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.blue),
+              ),
             ),
           ],
         );
