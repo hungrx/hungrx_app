@@ -27,6 +27,8 @@ class VerifySubscriptionApiClient {
           statusCode: response.statusCode,
         );
       }
+      print("..........${DateTime.now().toUtc().toIso8601String()}");
+      print({".............veryfy sub${response.body}"});
 
       return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {

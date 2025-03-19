@@ -124,6 +124,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       if (result.success) {
         final details = RevenueCatDetailsModel(
           userId: userId ?? '',
+          rcAppUserId: result.rcAppUserId ?? '',
           revenueCatDetails: RevenueCatInfo(
             isCanceled: false,
             expirationDate: result.expirationDate ?? '',

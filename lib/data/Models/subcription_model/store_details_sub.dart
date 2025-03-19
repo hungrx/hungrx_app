@@ -1,20 +1,24 @@
 class RevenueCatDetailsModel {
   final String userId;
+  final String rcAppUserId;  // Added this new field
   final RevenueCatInfo revenueCatDetails;
 
   RevenueCatDetailsModel({
     required this.userId,
+    required this.rcAppUserId,  // Added to constructor
     required this.revenueCatDetails,
   });
 
   Map<String, dynamic> toJson() => {
     'userId': userId,
+    'rcAppUserId': rcAppUserId,  // Added to toJson
     'revenueCatDetails': revenueCatDetails.toJson(),
   };
 
   factory RevenueCatDetailsModel.fromJson(Map<String, dynamic> json) => 
     RevenueCatDetailsModel(
       userId: json['userId'] ?? '',
+      rcAppUserId: json['rcAppUserId'] ?? '',  // Added to fromJson
       revenueCatDetails: RevenueCatInfo.fromJson(
         json['revenueCatDetails'] ?? {}
       ),

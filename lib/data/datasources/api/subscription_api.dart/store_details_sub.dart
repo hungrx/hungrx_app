@@ -19,6 +19,7 @@ class RevenueCatApiClient {
         },
         body: json.encode(details.toJson()),
       );
+      print("................${details.toJson()}");
       print(" new api update ${response.body}");
 
       if (response.statusCode == 200) {

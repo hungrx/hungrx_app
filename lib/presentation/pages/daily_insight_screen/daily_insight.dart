@@ -22,6 +22,7 @@ class DailyInsightScreenState extends State<DailyInsightScreen> {
   late DateTime selectedDate;
   final List<String> weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   String? userId;
+  
 
   @override
   void initState() {

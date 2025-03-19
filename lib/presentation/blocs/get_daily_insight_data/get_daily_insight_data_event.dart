@@ -7,3 +7,10 @@ class GetDailyInsightData extends DailyInsightEvent {
     required this.date,
   });
 }
+class LoadCachedDailyInsight extends DailyInsightEvent {
+  final String date;
+
+  LoadCachedDailyInsight({
+    required this.date,
+  });
+}

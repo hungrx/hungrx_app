@@ -1,5 +1,4 @@
 
-import 'package:hungrx_app/data/Models/home_meals_screen/common_food/add_common_food_history_request.dart';
 
 class DailyFoodResponse {
   final bool success;
@@ -25,6 +24,13 @@ class DailyFoodResponse {
       dailySummary: DailySummary.fromJson(json['dailySummary'] ?? {}),
     );
   }
+  Map<String, dynamic> toJson() => {
+    'success': success,
+    'message': message,
+    'date': date,
+    'consumedFood': consumedFood.toJson(),
+    'dailySummary': dailySummary.toJson(),
+  };
 }
 
 class ConsumedFood {
@@ -48,6 +54,12 @@ class ConsumedFood {
       snacks: MealData.fromJson(json['snacks'] ?? {}),
     );
   }
+  Map<String, dynamic> toJson() => {
+    'breakfast': breakfast.toJson(),
+    'lunch': lunch.toJson(),
+    'dinner': dinner.toJson(),
+    'snacks': snacks.toJson(),
+  };
 }
 
 class MealData {
@@ -68,6 +80,10 @@ class MealData {
           [],
     );
   }
+  Map<String, dynamic> toJson() => {
+    'mealId': mealId,
+    'foods': foods.map((food) => food.toJson()).toList(),
+  };
 }
 
 class FoodItem {
@@ -120,6 +136,38 @@ class FoodItem {
       category: json['category'] != null ? Category.fromJson(json['category']) : null,
     );
   }
+  Map<String, dynamic> toJson() => {
+    'servingSize': servingSize,
+    'selectedMeal': selectedMeal,
+    'dishId': dishId,
+    'totalCalories': totalCalories,
+    'timestamp': timestamp.toIso8601String(),
+    'name': name,
+    'brandName': brandName,
+    'image': image,
+    'nutritionFacts': nutritionFacts.toJson(),
+    'servingInfo': servingInfo?.toJson(),
+    'foodId': foodId,
+    'isCustomFood': isCustomFood,
+    // 'category': category?.toJson(),
+  };
+}
+
+class Category {
+  final String main;
+  final List<String> sub;
+
+  Category({
+    required this.main,
+    required this.sub,
+  });
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      main: json['main'] ?? '',
+      sub: (json['sub'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+    );
+  }
 }
 
 class NutrientInfo {
@@ -137,6 +185,10 @@ class NutrientInfo {
       unit: json['unit'],
     );
   }
+   Map<String, dynamic> toJson() => {
+    'value': value,
+    'unit': unit,
+  };
 }
 
 
@@ -199,6 +251,22 @@ class NutritionFacts {
       fat: json['fat'],
     );
   }
+  Map<String, dynamic> toJson() => {
+    'calories': calories,
+    'totalFat': totalFat?.toJson(),
+    'sodium': sodium?.toJson(),
+    'totalCarbohydrates': totalCarbohydrates?.toJson(),
+    'sugars': sugars?.toJson(),
+    'protein': protein?.toJson(),
+    'cholesterol': cholesterol?.toJson(),
+    'dietaryFiber': dietaryFiber?.toJson(),
+    'saturatedFat': saturatedFat?.toJson(),
+    'transFat': transFat?.toJson(),
+    'carbs': carbs,
+    'fat': fat,
+    'totalCarbohydrate': totalCarbohydrate?.toJson(),
+    'Potassiun': potassiun?.toJson(),
+  };
 }
 
 class ServingInfo {
@@ -222,6 +290,12 @@ class ServingInfo {
       quantity: json['quantity'] ?? 1, // Added with default value
     );
   }
+   Map<String, dynamic> toJson() => {
+    'size': size,
+    'unit': unit,
+    'weight': weight?.toJson(),
+    'quantity': quantity,
+  };
 }
 
 class Weight {
@@ -240,6 +314,10 @@ class Weight {
           .toDouble(), // Note: handling typo in JSON 'vaule'
     );
   }
+  Map<String, dynamic> toJson() => {
+    'unit': unit,
+    'vaule': value, // Keeping the typo as per original
+  };
 }
 
 class DailySummary {
@@ -260,4 +338,9 @@ class DailySummary {
       remaining: (json['remaining'] ?? 0.0).toDouble(),
     );
   }
+  Map<String, dynamic> toJson() => {
+    'totalCalories': totalCalories,
+    'dailyGoal': dailyGoal,
+    'remaining': remaining,
+  };
 }

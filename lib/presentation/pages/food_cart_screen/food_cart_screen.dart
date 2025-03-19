@@ -186,7 +186,7 @@ class _CartScreenState extends State<CartScreen> {
 
             // Handle empty cart
             if (cartData.data.isEmpty) {
-              return _buildEmptyCartView(screenWidth, isSmallScreen);
+              return Center(child: _buildEmptyCartView(screenWidth, isSmallScreen));
             }
 
             // Build main cart content
@@ -289,66 +289,62 @@ class _CartScreenState extends State<CartScreen> {
   Widget _buildEmptyCartView(double screenWidth, bool isSmallScreen) {
     return RefreshIndicator(
       onRefresh: _handleRefresh,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.shopping_cart_outlined,
-                  size: isSmallScreen ? 48 : 64,
+      child: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.shopping_cart_outlined,
+                size: isSmallScreen ? 48 : 64,
+                color: Colors.grey,
+              ),
+              SizedBox(height: screenWidth * 0.04),
+              Text(
+                'Your cart is empty',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmallScreen ? 18 : 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: screenWidth * 0.02),
+              Text(
+                'Add some delicious food to get started',
+                style: TextStyle(
                   color: Colors.grey,
+                  fontSize: isSmallScreen ? 14 : 16,
                 ),
-                SizedBox(height: screenWidth * 0.04),
-                Text(
-                  'Your cart is empty',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isSmallScreen ? 18 : 20,
-                    fontWeight: FontWeight.bold,
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: screenWidth * 0.06),
+              Wrap(
+                spacing: screenWidth * 0.04,
+                runSpacing: screenWidth * 0.03,
+                alignment: WrapAlignment.center,
+                children: [
+                  _buildActionButton(
+                    context: context,
+                    icon: Icons.restaurant,
+                    label: 'Show restaurants',
+                    onPressed: () =>
+                        context.pushNamed(RouteNames.restaurants),
+                    isSmallScreen: isSmallScreen,
+                    screenWidth: screenWidth,
                   ),
-                ),
-                SizedBox(height: screenWidth * 0.02),
-                Text(
-                  'Add some delicious food to get started',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: isSmallScreen ? 14 : 16,
+                  _buildActionButton(
+                    context: context,
+                    icon: Icons.history,
+                    label: 'See log history',
+                    onPressed: () =>
+                        context.pushNamed(RouteNames.dailyInsightScreen),
+                    isSmallScreen: isSmallScreen,
+                    screenWidth: screenWidth,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: screenWidth * 0.06),
-                Wrap(
-                  spacing: screenWidth * 0.04,
-                  runSpacing: screenWidth * 0.03,
-                  alignment: WrapAlignment.center,
-                  children: [
-                    _buildActionButton(
-                      context: context,
-                      icon: Icons.restaurant,
-                      label: 'Show restaurants',
-                      onPressed: () =>
-                          context.pushNamed(RouteNames.restaurants),
-                      isSmallScreen: isSmallScreen,
-                      screenWidth: screenWidth,
-                    ),
-                    _buildActionButton(
-                      context: context,
-                      icon: Icons.history,
-                      label: 'See log history',
-                      onPressed: () =>
-                          context.pushNamed(RouteNames.dailyInsightScreen),
-                      isSmallScreen: isSmallScreen,
-                      screenWidth: screenWidth,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
