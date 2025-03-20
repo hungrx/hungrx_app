@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,6 +38,8 @@ class DashboardScreen extends StatefulWidget {
 class DashboardScreenState extends State<DashboardScreen> {
   final _calorieController = StreamController<double>.broadcast();
   Timer? _refreshTimer;
+  HomeData? cachedHomeData;
+  bool isInitialLoad = true;
 
   static double getFontSize(BuildContext context, double factor) {
     return MediaQuery.of(context).size.width * factor;
@@ -57,7 +60,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     // Single initialization point
-    _initializeApp();
+    _loadCachedData();
     _refreshTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
       _checkDateChange();
     });
@@ -95,9 +98,29 @@ class DashboardScreenState extends State<DashboardScreen> {
         // Then fetch metrics and show dialog
         await _fetchMetricsAndShowDialog();
       } catch (e) {
-          Exception('Error during date change check: $e');
+        Exception('Error during date change check: $e');
       }
     } else {}
+  }
+
+  Future<void> _loadCachedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('home_data_cache');
+
+    if (cachedData != null) {
+      try {
+        final jsonData = json.decode(cachedData);
+        setState(() {
+          cachedHomeData = HomeData.fromJson(jsonData);
+          isInitialLoad = false;
+        });
+      } catch (e) {
+        debugPrint('Error loading cached data: $e');
+      }
+    }
+
+    // Initialize app after loading cache
+    _initializeApp();
   }
 
   Future<void> _initializeApp() async {
@@ -392,7 +415,6 @@ class DashboardScreenState extends State<DashboardScreen> {
           ),
         );
       } catch (e) {
-
         // Handle dialog error
       }
     } else {}

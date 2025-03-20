@@ -10,8 +10,22 @@ class CalorieMetricsModel {
   factory CalorieMetricsModel.fromJson(Map<String, dynamic> json) {
     return CalorieMetricsModel(
       status: json['status'] ?? false,
-      data: json['data'] != null ? CalorieMetricsData.fromJson(json['data']) : null,
+      data: json['data'] != null
+          ? CalorieMetricsData.fromJson(json['data'])
+          : null,
     );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'status': status,
+        'data': data?.toJson(),
+      };
+
+  bool equals(CalorieMetricsModel other) {
+    if (status != other.status) return false;
+    if (data == null && other.data == null) return true;
+    if (data == null || other.data == null) return false;
+    return data!.equals(other.data!);
   }
 }
 
@@ -45,6 +59,32 @@ class CalorieMetricsData {
     required this.caloriesToReachGoal,
     required this.isShown,
   });
+
+  Map<String, dynamic> toJson() => {
+        'consumedCalories': consumedCalories,
+        'dailyTargetCalories': dailyTargetCalories,
+        'remainingCalories': remainingCalories,
+        'weightChangeRate': weightChangeRate,
+        'daysLeft': daysLeft,
+        'goal': goal,
+        'date': date,
+        'calorieStatus': calorieStatus,
+        'message': message,
+        'dailyWeightLoss': dailyWeightLoss,
+        'ratio': ratio,
+        'caloriesToReachGoal': caloriesToReachGoal,
+        'isShown': isShown,
+      };
+
+  bool equals(CalorieMetricsData other) {
+    return consumedCalories == other.consumedCalories &&
+        dailyTargetCalories == other.dailyTargetCalories &&
+        remainingCalories == other.remainingCalories &&
+        daysLeft == other.daysLeft &&
+        dailyWeightLoss == other.dailyWeightLoss &&
+        ratio == other.ratio &&
+        date == other.date;
+  }
 
   // Define both helper methods inside the class
   static double _safeDouble(dynamic value) {

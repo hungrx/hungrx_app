@@ -9,3 +9,4 @@ class InitializeHomeData extends HomeEvent {
 
 
 class RefreshHomeData extends HomeEvent {}
+class LoadCachedHomeData extends HomeEvent {}

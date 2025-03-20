@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -13,6 +14,8 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
   final GetCartRepository cartRepository;
   final AuthService _authService;
   CartResponseModel? _cachedCart;
+  Timer? _debounceTimer;
+  Map<String, List<PendingUpdate>> _pendingUpdates = {};
 
   GetCartBloc(
     this.cartRepository,
@@ -20,10 +23,10 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
   ) : super(CartInitial()) {
     on<LoadCart>(_onLoadCart);
     on<UpdateQuantity>(_onUpdateQuantity);
-     on<LoadCachedCart>(_onLoadCachedCart);
+    on<LoadCachedCart>(_onLoadCachedCart);
   }
 
-   Future<void> _onLoadCachedCart(
+  Future<void> _onLoadCachedCart(
     LoadCachedCart event,
     Emitter<GetCartState> emit,
   ) async {
@@ -56,7 +59,6 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
     }
   }
 
-
   Future<void> _onLoadCart(LoadCart event, Emitter<GetCartState> emit) async {
     // If we have cached data, emit it first
     if (_cachedCart != null) {
@@ -88,7 +90,8 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
       }
 
       // Compare with cached data before emitting
-      if (_cachedCart == null || !_compareCartResponses(_cachedCart!, cartResponse)) {
+      if (_cachedCart == null ||
+          !_compareCartResponses(_cachedCart!, cartResponse)) {
         _cachedCart = cartResponse;
         final totalNutrition = _calculateTotalNutrition(cartResponse.data);
         emit(CartLoaded(
@@ -97,7 +100,7 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
           cartResponse: cartResponse,
           remaining: cartResponse.remaining,
         ));
-        
+
         // Update cache
         await _cacheCartData(cartResponse);
       }
@@ -108,13 +111,14 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
     }
   }
 
-  bool _compareCartResponses(CartResponseModel cached, CartResponseModel fresh) {
+  bool _compareCartResponses(
+      CartResponseModel cached, CartResponseModel fresh) {
     if (cached.data.length != fresh.data.length) return false;
-    
+
     for (var i = 0; i < cached.data.length; i++) {
       if (!cached.data[i].equals(fresh.data[i])) return false;
     }
-    
+
     return cached.remaining == fresh.remaining;
   }
 
@@ -166,54 +170,149 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
     }
   }
 
+  @override
+  Future<void> close() {
+    _debounceTimer?.cancel();
+    return super.close();
+  }
+
   void _onUpdateQuantity(
       UpdateQuantity event, Emitter<GetCartState> emit) async {
     final currentState = state;
     if (currentState is CartLoaded) {
-      final updatedCarts = currentState.carts.map((cart) {
-        if (cart.cartId == event.cartId) {
-          final updatedDishDetails = cart.dishDetails.map((dish) {
-            if (dish.dishId == event.dishId) {
-              return DishDetail(
-                quantity: event.quantity, // Use the new quantity from the event
-                url: dish.url,
-                restaurantId: dish.restaurantId,
-                restaurantName: dish.restaurantName,
-                categoryName: dish.categoryName,
-                subCategoryName: dish.subCategoryName,
-                dishId: dish.dishId,
-                dishName: dish.dishName,
-                servingSize: dish.servingSize, // Keep the original servingSize
-                nutritionInfo: dish.nutritionInfo,
-              );
-            }
-            return dish;
-          }).toList();
-
-          return CartModel(
-            cartId: cart.cartId,
-            orders: cart.orders,
-            dishDetails: updatedDishDetails,
-            createdAt: cart.createdAt,
-          );
-        }
-        return cart;
-      }).toList();
+      // Optimistically update UI first
+      final updatedCarts = _updateCartsWithNewQuantity(
+        currentState.carts,
+        event.cartId,
+        event.dishId,
+        event.quantity,
+      );
 
       final totalNutrition = _calculateTotalNutrition(updatedCarts);
 
-      // Create updated CartResponseModel with the modified data
+      // Emit new state immediately for responsive UI
       final updatedCartResponse = CartResponseModel(
-          success: currentState.cartResponse.success,
-          message: currentState.cartResponse.message,
-          data: updatedCarts,
-          remaining: currentState.remaining);
+        success: currentState.cartResponse.success,
+        message: currentState.cartResponse.message,
+        data: updatedCarts,
+        remaining: currentState.remaining,
+      );
 
       emit(CartLoaded(
-          carts: updatedCarts,
-          totalNutrition: totalNutrition,
-          cartResponse: updatedCartResponse,
-          remaining: currentState.remaining));
+        carts: updatedCarts,
+        totalNutrition: totalNutrition,
+        cartResponse: updatedCartResponse,
+        remaining: currentState.remaining,
+      ));
+
+      // Add to pending updates
+      _addToPendingUpdates(event.cartId, event.dishId, event.quantity);
+
+      // Debounce API calls
+      _debounceTimer?.cancel();
+      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+        _syncPendingUpdates();
+      });
+    }
+  }
+
+  List<CartModel> _updateCartsWithNewQuantity(
+    List<CartModel> carts,
+    String cartId,
+    String dishId,
+    int quantity,
+  ) {
+    return carts.map((cart) {
+      if (cart.cartId == cartId) {
+        final updatedDishDetails = cart.dishDetails.map((dish) {
+          if (dish.dishId == dishId) {
+            return DishDetail(
+              quantity: quantity,
+              url: dish.url,
+              restaurantId: dish.restaurantId,
+              restaurantName: dish.restaurantName,
+              categoryName: dish.categoryName,
+              subCategoryName: dish.subCategoryName,
+              dishId: dish.dishId,
+              dishName: dish.dishName,
+              servingSize: dish.servingSize,
+              nutritionInfo: dish.nutritionInfo,
+            );
+          }
+          return dish;
+        }).toList();
+
+        return CartModel(
+          cartId: cart.cartId,
+          orders: cart.orders,
+          dishDetails: updatedDishDetails,
+          createdAt: cart.createdAt,
+        );
+      }
+      return cart;
+    }).toList();
+  }
+
+  void _addToPendingUpdates(String cartId, String dishId, int quantity) {
+    if (!_pendingUpdates.containsKey(cartId)) {
+      _pendingUpdates[cartId] = [];
+    }
+
+    // Find the dish in the current state to get its serving size
+    final currentState = state as CartLoaded;
+    final cart = currentState.carts.firstWhere((c) => c.cartId == cartId);
+    final dish = cart.dishDetails.firstWhere((d) => d.dishId == dishId);
+
+    _pendingUpdates[cartId]!.removeWhere((update) => update.dishId == dishId);
+    _pendingUpdates[cartId]!.add(PendingUpdate(
+      dishId: dishId,
+      servingSize: dish.servingSize,
+      quantity: quantity,
+    ));
+  }
+
+  Future<void> _syncPendingUpdates() async {
+    print('.........Syncing pending updates');
+    bool anyUpdateSuccessful = false;
+
+    for (final entry in _pendingUpdates.entries) {
+      final cartId = entry.key;
+      final updates = entry.value;
+
+      if (updates.isEmpty) continue;
+
+      final items = updates
+          .map((update) => {
+                'dishId': update.dishId,
+                'servingSize': update.servingSize,
+                'quantity': update.quantity,
+              })
+          .toList();
+
+      final success = await cartRepository.updateQuantity(
+        cartId: cartId,
+        items: items,
+      );
+      print({"success": success});
+
+      if (success) {
+        anyUpdateSuccessful = true;
+      } else {
+        // If update fails, break the loop and reload cart
+        add(LoadCart());
+        break;
+      }
+    }
+
+    // Clear pending updates after sync attempt
+    _pendingUpdates.clear();
+
+    // If any update was successful, reload the cart to get fresh data
+    if (anyUpdateSuccessful) {
+      // Clear cached data to force a fresh load
+      _cachedCart = null;
+      // Reload cart data
+      add(LoadCart());
     }
   }
 
@@ -233,4 +332,16 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
         }
     }
   }
+}
+
+class PendingUpdate {
+  final String dishId;
+  final String servingSize;
+  final int quantity;
+
+  PendingUpdate({
+    required this.dishId,
+    required this.servingSize,
+    required this.quantity,
+  });
 }

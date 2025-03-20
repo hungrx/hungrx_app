@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/data/Models/dashboad_screen/streak_data_model.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_event.dart';
 import 'package:hungrx_app/presentation/blocs/streak_bloc/streaks_state.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StreakCalendar extends StatefulWidget {
   final bool isMaintain;
@@ -17,6 +21,10 @@ class StreakCalendar extends StatefulWidget {
 }
 
 class _StreakCalendarState extends State<StreakCalendar> {
+  StreakDataModel? cachedStreak;
+  bool isInitialLoad = true;
+  bool _isLoading = false;
+
   double getResponsiveSize(BuildContext context,
       {required double small, required double medium, required double large}) {
     final width = MediaQuery.of(context).size.width;
@@ -49,22 +57,52 @@ class _StreakCalendarState extends State<StreakCalendar> {
     return MediaQuery.of(context).size.width * factor;
   }
 
-  bool _isLoading = false;
+  // bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadStreakData();
+    _loadCachedData();
+  }
+
+  Future<void> _loadCachedData() async {
+    if (!mounted) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString('streak_cache');
+
+      if (cachedData != null) {
+        final jsonData = json.decode(cachedData);
+        if (mounted) {
+          setState(() {
+            cachedStreak = StreakDataModel.fromJson(jsonData);
+            isInitialLoad = false;
+            _isLoading = false; // Reset loading state after cache is loaded
+          });
+        }
+      }
+
+      // Only fetch fresh data if we're in initial load or cache is empty
+      if (isInitialLoad || cachedStreak == null) {
+        _loadStreakData();
+      }
+    } catch (e) {
+      debugPrint('Error loading cached streak data: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+      _loadStreakData(); // Fallback to fresh data if cache fails
+    }
   }
 
   Future<void> _loadStreakData() async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
 
     // Assuming you have a FetchStreakData event
     context.read<StreakBloc>().add(FetchStreakData());
-
-    setState(() => _isLoading = false);
   }
 
   Widget _buildLoadingView() {
@@ -144,8 +182,8 @@ class _StreakCalendarState extends State<StreakCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 360;
+    // final screenSize = MediaQuery.of(context).size;
+    // final isSmallScreen = screenSize.width < 360;
 
     return BlocConsumer<StreakBloc, StreakState>(
       listener: (context, state) {
@@ -163,6 +201,12 @@ class _StreakCalendarState extends State<StreakCalendar> {
             ),
           );
         }
+        if (state is StreakError || state is StreakLoaded) {
+          setState(() {
+            _isLoading = false;
+            isInitialLoad = false;
+          });
+        }
       },
       builder: (context, state) {
         if (state is StreakLoading || _isLoading) {
@@ -172,42 +216,86 @@ class _StreakCalendarState extends State<StreakCalendar> {
         if (state is StreakError) {
           return _buildErrorView(state.message);
         }
-
         if (state is StreakLoaded) {
-          final streakData = state.streakData;
-          final streakMap = streakData.getStreakMap();
-          final startingDate = streakData.startDate;
-          final endingDate = DateTime.now().add(
-              const Duration(days: 365)); // Show one year ahead for unlimited
-          // final endingDate = streakData.endDate();
+          return _buildHeatMapContainer(state.streakData);
+        }
 
-          return _buildContainer(
-            context,
-            child: SizedBox(
-              
-              // width: 240,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
+        if (cachedStreak != null && !isInitialLoad) {
+          return _buildHeatMapContainer(cachedStreak!);
+        }
+     
 
-                  SizedBox(
-                    height: screenSize.width * (isSmallScreen ? 0.50 : 0.56),
-                    child: _buildHeatMap(startingDate, endingDate, streakMap,
-                        screenSize, isSmallScreen),
-                  ),
-                  // Padding(
-                  //   padding: const EdgeInsets.only(left: 3),
-                  //   child: _buildStats(context, streakData, isSmallScreen),
-                  // ),
-                ],
-              ),
-            ),
-          );
+        // if (state is StreakLoaded) {
+        //   final streakData = state.streakData;
+        //   final streakMap = streakData.getStreakMap();
+        //   final startingDate = streakData.startDate;
+        //   final endingDate = DateTime.now().add(
+        //       const Duration(days: 365)); // Show one year ahead for unlimited
+        //   // final endingDate = streakData.endDate();
+
+        //   return _buildContainer(
+        //     context,
+        //     child: SizedBox(
+        //       // width: 240,
+        //       child: Column(
+        //         crossAxisAlignment: CrossAxisAlignment.start,
+        //         mainAxisAlignment: MainAxisAlignment.start,
+        //         children: [
+        //           SizedBox(
+        //             height: screenSize.width * (isSmallScreen ? 0.50 : 0.56),
+        //             child: _buildHeatMap(startingDate, endingDate, streakMap,
+        //                 screenSize, isSmallScreen),
+        //           ),
+        //           // Padding(
+        //           //   padding: const EdgeInsets.only(left: 3),
+        //           //   child: _buildStats(context, streakData, isSmallScreen),
+        //           // ),
+        //         ],
+        //       ),
+        //     ),
+        //   );
+        // }
+
+          if (state is StreakLoading || _isLoading) {
+          return _buildLoadingView();
+        }
+
+        if (state is StreakError) {
+          return _buildErrorView(state.message);
         }
 
         return _buildErrorView('Unable to load streak data');
       },
+    );
+  }
+
+  Widget _buildHeatMapContainer(StreakDataModel streakData) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+    final streakMap = streakData.getStreakMap();
+    final startingDate = streakData.startDate;
+    final endingDate = DateTime.now().add(const Duration(days: 365));
+
+    return _buildContainer(
+      context,
+      child: SizedBox(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: screenSize.width * (isSmallScreen ? 0.50 : 0.56),
+              child: _buildHeatMap(
+                startingDate, 
+                endingDate, 
+                streakMap,
+                screenSize, 
+                isSmallScreen
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -224,8 +312,6 @@ class _StreakCalendarState extends State<StreakCalendar> {
       child: child,
     );
   }
-
-
 
   Widget _buildHeatMap(DateTime startDate, DateTime endDate,
       Map<DateTime, int> datasets, Size screenSize, bool isSmallScreen) {
@@ -247,10 +333,9 @@ class _StreakCalendarState extends State<StreakCalendar> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: HeatMap(
-          
-           margin: const EdgeInsets.all(4),
+          margin: const EdgeInsets.all(4),
           borderRadius: 20,
-          fontSize:  screenSize.width * (isSmallScreen ? 0.03 : 0.026),
+          fontSize: screenSize.width * (isSmallScreen ? 0.03 : 0.026),
           startDate: startDate,
           endDate: endDate,
           datasets: datasets,

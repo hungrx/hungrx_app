@@ -1,9 +1,9 @@
 class StreakDataModel {
   final String userId;
   final String startingDate;
-  final String? expectedEndDate;  // Make nullable
-  final int? totalDays;          // Make nullable since it's not in the JSON
-  final int? currentStreak;      // Make nullable since it's not in the JSON
+  final String? expectedEndDate;
+  final int? totalDays;
+  final int? currentStreak;
   final int daysLeft;
   final List<String> dates;
   final bool status;
@@ -12,9 +12,9 @@ class StreakDataModel {
   StreakDataModel({
     required this.userId,
     required this.startingDate,
-    this.expectedEndDate,        // Remove required
-    this.totalDays,             // Remove required
-    this.currentStreak,         // Remove required
+    this.expectedEndDate,
+    this.totalDays,
+    this.currentStreak,
     required this.daysLeft,
     required this.dates,
     required this.status,
@@ -22,18 +22,40 @@ class StreakDataModel {
   });
 
   factory StreakDataModel.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] as Map<String, dynamic>;
+    final data = json['data'] as Map<String, dynamic>? ?? json;
     return StreakDataModel(
       userId: data['userId'] as String,
       startingDate: data['startingDate'] as String,
-      expectedEndDate: data['expectedEndDate'] as String?,  // Handle null
-      totalDays: data['totalDays'] as int?,                // Handle null
-      currentStreak: data['currentStreak'] as int?,        // Handle null
+      expectedEndDate: data['expectedEndDate'] as String?,
+      totalDays: data['totalDays'] as int?,
+      currentStreak: data['currentStreak'] as int?,
       daysLeft: data['daysLeft'] as int,
-      dates: List<String>.from(data['dates'] ?? []),       // Provide empty list as default
-      status: json['status'] as bool,
-      message: json['message'] as String,
+      dates: List<String>.from(data['dates'] ?? []),
+      status: json['status'] as bool? ?? data['status'] as bool,
+      message: json['message'] as String? ?? data['message'] as String,
     );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'data': {
+      'userId': userId,
+      'startingDate': startingDate,
+      'expectedEndDate': expectedEndDate,
+      'totalDays': totalDays,
+      'currentStreak': currentStreak,
+      'daysLeft': daysLeft,
+      'dates': dates,
+    },
+    'status': status,
+    'message': message,
+  };
+
+  bool equals(StreakDataModel other) {
+    return userId == other.userId &&
+           startingDate == other.startingDate &&
+           daysLeft == other.daysLeft &&
+           dates.length == other.dates.length &&
+           dates.every((date) => other.dates.contains(date));
   }
 
   // Convert date string from dd/mm/yyyy to DateTime

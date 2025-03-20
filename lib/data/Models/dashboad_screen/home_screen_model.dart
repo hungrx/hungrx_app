@@ -1,14 +1,14 @@
 class HomeData {
   final String username;
   final String goalHeading;
-  final bool goalStatus;        // Added field
+  final bool goalStatus;
   final String weight;
   final double caloriesToReachGoal;
   final double dailyCalorieGoal;
   final int daysToReachGoal;
   final double remaining;
   final int consumed;
-  final String calculationDate;  // Added field
+  final String calculationDate;
 
   HomeData({
     required this.username,
@@ -23,8 +23,7 @@ class HomeData {
     required this.calculationDate,
   });
 
- factory HomeData.fromJson(Map<String, dynamic> json) {
-    // Remove the nested data access since it's already handled in the API service
+  factory HomeData.fromJson(Map<String, dynamic> json) {
     return HomeData(
       username: json['username']?.toString().trim() ?? '',
       goalHeading: json['goalHeading']?.toString() ?? '',
@@ -37,6 +36,32 @@ class HomeData {
       consumed: _parseInt(json['consumed']),
       calculationDate: json['calculationDate']?.toString() ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'username': username,
+      'goalHeading': goalHeading,
+      'goalstatus': goalStatus,
+      'weight': weight,
+      'caloriesToReachGoal': caloriesToReachGoal,
+      'dailyCalorieGoal': dailyCalorieGoal,
+      'daysToReachGoal': daysToReachGoal,
+      'remaining': remaining,
+      'consumed': consumed,
+      'calculationDate': calculationDate,
+    };
+  }
+
+  bool equals(HomeData other) {
+    return username == other.username &&
+           goalStatus == other.goalStatus &&
+           weight == other.weight &&
+           caloriesToReachGoal == other.caloriesToReachGoal &&
+           dailyCalorieGoal == other.dailyCalorieGoal &&
+           daysToReachGoal == other.daysToReachGoal &&
+           remaining == other.remaining &&
+           consumed == other.consumed;
   }
 
   static double _parseDouble(dynamic value) {
@@ -65,23 +90,6 @@ class HomeData {
       }
     }
     return 0;
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'data': {
-        'username': username,
-        'goalHeading': goalHeading,
-        'goalstatus': goalStatus,
-        'weight': weight,
-        'caloriesToReachGoal': caloriesToReachGoal,
-        'dailyCalorieGoal': dailyCalorieGoal,
-        'daysToReachGoal': daysToReachGoal,
-        'remaining': remaining,
-        'consumed': consumed,
-        'calculationDate': calculationDate,
-      }
-    };
   }
 
   HomeData copyWith({
