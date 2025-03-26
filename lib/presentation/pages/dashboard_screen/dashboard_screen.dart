@@ -310,6 +310,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     await WeightReminderManager.updateLastReminderShown();
 
     final result = await showDialog<bool>(
+      // ignore: use_build_context_synchronously
       context: context,
       barrierDismissible: false,
       builder: (context) => WeightReminderDialog(

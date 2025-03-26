@@ -1,10 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
-import 'package:hungrx_app/core/widgets/header_section.dart';
 import 'package:hungrx_app/data/Models/weight_screen/weight_history_model.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_event.dart';
@@ -49,19 +47,12 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
         debugPrint('Error loading cached data: $e');
       }
     }
-
-    // Fetch fresh data in background
     _fetchWeightHistory();
   }
 
   void _fetchWeightHistory() {
     context.read<WeightHistoryBloc>().add(FetchWeightHistory());
   }
-
-  // Future<void> _handleRefresh() async {
-  //   _fetchWeightHistory();
-  //   return Future.delayed(const Duration(seconds: 1));
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +63,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
           builder: (context, state) {
             return Column(
               children: [
-                _buildHeader(),
+                // _buildHeader(),
                 Expanded(
                   child: _buildContent(context, state),
                 ),
@@ -82,12 +73,6 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
           },
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return const HeaderSection(
-      title: 'Weight Tracking',
     );
   }
 
@@ -109,7 +94,7 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
     return const SizedBox();
   }
 
-Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
+  Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
     final List<ChartData> chartData = [];
 
     // Sort history by date before creating chart data
@@ -158,7 +143,7 @@ Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
           const SizedBox(height: 16),
           Expanded(
             child: SfCartesianChart(
-              margin:  EdgeInsets.all(0),
+              margin: EdgeInsets.all(0),
               zoomPanBehavior: ZoomPanBehavior(
                 enablePanning: true,
                 enablePinching: true,
@@ -166,13 +151,17 @@ Widget _buildWeightGraph(WeightHistoryModel weightHistory) {
               ),
               primaryXAxis: CategoryAxis(
                 isInversed: false,
-                majorGridLines: const MajorGridLines(width: 0.5, color: Colors.grey),
+                majorGridLines:
+                    const MajorGridLines(width: 0.5, color: Colors.grey),
                 labelStyle: const TextStyle(color: Colors.white),
                 // No label rotation for cleaner look
-                interval: chartData.length > 10 ? (chartData.length / 10).ceil().toDouble() : 1,
+                interval: chartData.length > 10
+                    ? (chartData.length / 10).ceil().toDouble()
+                    : 1,
               ),
               primaryYAxis: NumericAxis(
-                majorGridLines: const MajorGridLines(width: 0.5, color: Colors.grey),
+                majorGridLines:
+                    const MajorGridLines(width: 0.5, color: Colors.grey),
                 labelStyle: const TextStyle(color: Colors.white),
                 minimum: _getMinWeight(weightHistory) - 1,
                 maximum: _getMaxWeight(weightHistory) + 1,

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -164,29 +163,42 @@ class _CartScreenState extends State<CartScreen> {
             }
           },
           builder: (context, state) {
+            CartResponseModel? cartData;
+            Map<String, double>? nutrition;
+
+            if (state is CartLoaded) {
+              cartData = state.cartResponse;
+              nutrition = state.totalNutrition;
+              // Update cache
+              _cachedCartData = cartData;
+              _cachedNutrition = nutrition;
+            } else if (state is CartSyncing) {
+              // Use cached data during syncing
+              cartData = _cachedCartData;
+              nutrition = _cachedNutrition;
+            } else {
+              cartData = _cachedCartData;
+              nutrition = _cachedNutrition;
+            }
+            print("state is loading..................");
             // Show loading only if no cached data
-            if (state is CartLoading && _cachedCartData == null) {
+            if ((state is CartLoading || state is CartSyncing) &&
+                _cachedCartData == null) {
+              print("state is showing shimmer..................");
+              print("${state is CartLoading}..................");
+              print("${state is CartSyncing}..................");
               return _buildLoadingView();
             }
 
-            // Show error only if no cached data
-            // if (state is CartError && _cachedCartData == null) {
-            //   return _buildErrorView(state.message);
-            // }
-
-            // Use either current state or cached data
-            final cartData =
-                (state is CartLoaded) ? state.cartResponse : _cachedCartData;
-            final nutrition =
-                (state is CartLoaded) ? state.totalNutrition : _cachedNutrition;
-
             if (cartData == null || nutrition == null) {
+              print("state is showing shimmer.................. in nutrition");
               return const SizedBox();
             }
 
             // Handle empty cart
             if (cartData.data.isEmpty) {
-              return Center(child: _buildEmptyCartView(screenWidth, isSmallScreen));
+              return Center(
+                  child: _buildEmptyCartView(screenWidth, isSmallScreen));
             }
 
             // Build main cart content
@@ -328,8 +340,7 @@ class _CartScreenState extends State<CartScreen> {
                     context: context,
                     icon: Icons.restaurant,
                     label: 'Show restaurants',
-                    onPressed: () =>
-                        context.pushNamed(RouteNames.restaurants),
+                    onPressed: () => context.pushNamed(RouteNames.restaurants),
                     isSmallScreen: isSmallScreen,
                     screenWidth: screenWidth,
                   ),

@@ -1,4 +1,3 @@
-
 class GoogleAuthException implements Exception {
   final String message;
   final bool isCancelled;

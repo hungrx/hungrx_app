@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,7 @@ import 'package:hungrx_app/data/Models/profile_screen/get_profile_details_model.
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_profile_details/get_profile_details_state.dart';
+import 'package:hungrx_app/presentation/blocs/referral/referral_bloc.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/widget/user_details_dialog.dart';
 import 'package:hungrx_app/routes/route_names.dart';
 import 'package:share_plus/share_plus.dart';
@@ -111,6 +114,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
+
   Widget _buildHeader(
       BuildContext context, GetProfileDetailsModel? profileData) {
     return Padding(
@@ -239,7 +243,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           });
         }),
         _buildDetailItem(Icons.payment, 'Subscription', 'Monthly plans...', () {
-          context.pushNamed(RouteNames.subscriptionScreen,extra: true);
+          context.pushNamed(RouteNames.subscriptionScreen, extra: true);
         }),
       ],
     );
@@ -288,18 +292,123 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Widget _buildInviteSection() {
-    // Text to share
-    const String inviteText =
-        "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights! Join me now: https://www.hungrx.com/";
+    // String? referralCode;
 
+    // Get platform-specific link
+    String getInviteLink() {
+      if (Platform.isAndroid) {
+        return "https://play.google.com/store/apps/details?id=com.hungrx.hungrx_app";
+      } else if (Platform.isIOS) {
+        return "https://apps.apple.com/us/app/hungrx/id6741845887";
+      }
+      return "https://www.hungrx.com/"; // fallback URL
+    }
+
+    // Text to share with platform-specific link and referral code
+    // String getInviteText() {
+    //   String baseText = "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights!";
+    //   String link = getInviteLink();
+    //   String referralText = referralCode != null ? " Use my referral code: $referralCode" : "";
+    //   return "$baseText$referralText Join me now: $link";
+    // }
     // Function to handle sharing
-    void handleShare() async {
+    Future<void> handleShare() async {
       try {
-        await Share.share(
-          inviteText,
-          subject: 'Join hungrX App!',
+        // Show loading indicator
+        if (!mounted) return;
+        BuildContext dialogContext = context;
+
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            dialogContext = context;
+            return const Center(
+                child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+            ));
+          },
         );
+
+        // Generate referral code using BlocListener instead of stream subscription
+        String? generatedCode;
+
+        await Future.delayed(Duration.zero); // Ensure dialog is shown
+
+        final completer = Completer<void>();
+
+        late StreamSubscription<ReferralState> subscription;
+        subscription = context.read<ReferralBloc>().stream.listen(
+          (state) async {
+            if (state is ReferralSuccess) {
+              generatedCode = state.referralCode;
+              if (mounted && dialogContext.mounted) {
+                Navigator.of(dialogContext).pop(); // Close loading dialog
+              }
+
+              // Share the content
+              try {
+                String baseText =
+                    "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights!";
+                String link = getInviteLink();
+                String referralText = generatedCode != null
+                    ? " Use my referral code: $generatedCode"
+                    : "";
+                String inviteText = "$baseText$referralText Join me now: $link";
+
+                await Share.share(
+                  inviteText,
+                  subject: 'Join hungrX App!',
+                );
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Failed to share. Please try again.')),
+                  );
+                }
+              }
+              completer.complete();
+            } else if (state is ReferralFailure) {
+              if (mounted && dialogContext.mounted) {
+                Navigator.of(dialogContext).pop(); // Close loading dialog
+              }
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.error)),
+                );
+              }
+              completer.complete();
+            }
+          },
+          onError: (error) {
+            if (mounted && dialogContext.mounted) {
+              Navigator.of(dialogContext).pop(); // Close loading dialog
+            }
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('An error occurred. Please try again.')),
+              );
+            }
+            completer.complete();
+          },
+        );
+
+        // Trigger the referral code generation
+        if (mounted) {
+          context.read<ReferralBloc>().add(GenerateReferralCode());
+        }
+
+        // Wait for the operation to complete
+        await completer.future;
+        await subscription.cancel();
       } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to share. Please try again.')),
+          );
+        }
         debugPrint('Error sharing: $e');
       }
     }

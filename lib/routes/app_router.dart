@@ -295,7 +295,7 @@ class AppRouter {
         path: '/subscriptionScreen',
         name: RouteNames.subscriptionScreen,
         builder: (BuildContext context, GoRouterState state) {
-          return  SubscriptionScreen(
+          return SubscriptionScreen(
             fromResultScreen: state.extra as bool? ?? false,
           ); // Replace with actual RestaurantDetailsScreen
         },

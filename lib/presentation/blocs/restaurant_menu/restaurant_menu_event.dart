@@ -13,3 +13,12 @@ class LoadRestaurantMenu extends RestaurantMenuEvent {
   @override
   List<Object?> get props => [restaurantId];
 }
+
+class LoadCachedRestaurantMenu extends RestaurantMenuEvent {
+  final String restaurantId;
+
+  LoadCachedRestaurantMenu({required this.restaurantId});
+
+  @override
+  List<Object?> get props => [restaurantId];
+}

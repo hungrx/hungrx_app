@@ -27,6 +27,20 @@ class HelpSupportScreen extends StatelessWidget {
     );
   }
 
+  String getInviteLink() {
+    if (Platform.isAndroid) {
+      return "https://play.google.com/store/apps/details?id=com.hungrx.hungrx_app";
+    } else if (Platform.isIOS) {
+      return "https://apps.apple.com/us/app/hungrx/id6741845887";
+    }
+    return "https://www.hungrx.com/"; // fallback URL
+  }
+
+  // Text to share with platform-specific link
+  String getInviteText() {
+    return "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights! Join me now: ${getInviteLink()}";
+  }
+
   final String inviteText =
       "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights! Join me now: https://www.hungrx.com/";
 
@@ -74,8 +88,8 @@ class HelpSupportScreen extends StatelessWidget {
                       LucideIcons.linkedin,
                       () => _launchUrl(
                           'https://www.linkedin.com/company/hungrx/posts/?feedView=all')),
-                  _buildSocialButton(LucideIcons.x,
-                      () => _launchUrl('https://x.com/hungr_x')),
+                  _buildSocialButton(
+                      LucideIcons.x, () => _launchUrl('https://x.com/hungr_x')),
                 ],
               ),
             ),
@@ -141,17 +155,15 @@ class HelpSupportScreen extends StatelessWidget {
                     },
                   ),
                   _buildDivider(),
-                _buildSupportItem(
-  icon: Icons.star_outline,
-  title: Platform.isIOS 
-      ? 'Rate us on App Store'
-      : 'Rate us on Play Store',
-  onTap: () => _launchUrl(
-    Platform.isIOS
-        ? 'https://apps.apple.com/app/hungrX' // Replace with your actual App Store ID
-        : 'https://play.google.com/store/apps/details?id=com.hungrx.app'
-  ),
-),
+                  _buildSupportItem(
+                    icon: Icons.star_outline,
+                    title: Platform.isIOS
+                        ? 'Rate us on App Store'
+                        : 'Rate us on Play Store',
+                    onTap: () => _launchUrl(Platform.isIOS
+                        ? 'https://apps.apple.com/us/app/hungrx/id6741845887' // Replace with your actual App Store ID
+                        : 'https://play.google.com/store/apps/details?id=com.hungrx.hungrx_app'),
+                  ),
                   // _buildDivider(),
                   // _buildSupportItem(
                   //   icon: Icons.poll_outlined,
@@ -170,7 +182,7 @@ class HelpSupportScreen extends StatelessWidget {
   void handleShare() async {
     try {
       await Share.share(
-        inviteText,
+        getInviteText(),
         subject: 'Join hungrX App!',
       );
     } catch (e) {

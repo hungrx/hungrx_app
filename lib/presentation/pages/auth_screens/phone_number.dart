@@ -398,9 +398,9 @@ class _PhoneNumberScreenState extends State<PhoneNumberScreen> {
                                   _termsAccepted = value ?? false;
                                 });
                               },
-                              fillColor: MaterialStateProperty.resolveWith(
+                              fillColor: WidgetStateProperty.resolveWith(
                                 (states) =>
-                                    states.contains(MaterialState.selected)
+                                    states.contains(WidgetState.selected)
                                         ? AppColors.buttonColors
                                         : Colors.grey.withOpacity(0.5),
                               ),

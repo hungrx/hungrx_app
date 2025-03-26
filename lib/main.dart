@@ -1,11 +1,8 @@
-// import 'dart:io';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:hungrx_app/core/constants/subcription_const/subscription_constants.dart';
 import 'package:hungrx_app/data/datasources/api/auth_screen.dart/apple_auth_api.dart';
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/consume_cart_api.dart';
 import 'package:hungrx_app/data/datasources/api/cart_screen.dart/delete_dish_cart_api.dart';
@@ -28,6 +25,7 @@ import 'package:hungrx_app/data/datasources/api/home_meals/logmeal_search_histor
 import 'package:hungrx_app/data/datasources/api/home_meals/meal_type_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/get_profile_details_api.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/goal_settings_api.dart';
+import 'package:hungrx_app/data/datasources/api/profile_edit_screen/referral_datasource.dart';
 import 'package:hungrx_app/data/datasources/api/profile_edit_screen/report_bug_api.dart';
 import 'package:hungrx_app/data/datasources/api/dashboard_screen/streak_api_service.dart';
 import 'package:hungrx_app/data/datasources/api/profile_setting_screens/tdee_api_service.dart';
@@ -62,6 +60,7 @@ import 'package:hungrx_app/data/repositories/home_meals_screen/add_common_food_h
 import 'package:hungrx_app/data/repositories/home_meals_screen/common_consume_food_repository.dart';
 import 'package:hungrx_app/data/repositories/home_meals_screen/common_food_repository.dart';
 import 'package:hungrx_app/data/repositories/home_meals_screen/custom_food_entry_repository.dart';
+import 'package:hungrx_app/data/repositories/profile_screen/referral_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_setting_screen/goal_settings_repository.dart';
 import 'package:hungrx_app/data/repositories/profile_screen/delete_account_repository.dart';
 import 'package:hungrx_app/data/repositories/daily_insight_screen/delete_consumed_food_repository.dart';
@@ -97,6 +96,7 @@ import 'package:hungrx_app/data/repositories/water_screen/water_intake_repositor
 import 'package:hungrx_app/data/repositories/weight_screen/weight_history_repository.dart';
 import 'package:hungrx_app/data/repositories/weight_screen/weight_update_repository.dart';
 import 'package:hungrx_app/data/services/auth_service.dart';
+import 'package:hungrx_app/data/services/hive_service.dart';
 import 'package:hungrx_app/data/services/purchase_service.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/apple_sign_in_usecase.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/login_usecase.dart';
@@ -173,6 +173,7 @@ import 'package:hungrx_app/presentation/blocs/log_screen_meal_type/log_screen_me
 import 'package:hungrx_app/presentation/blocs/nearby_restaurant/nearby_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/otp_verify_bloc/auth_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/progress_bar/progress_bar_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/referral/referral_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/report_bug/report_bug_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/request_restaurant/request_restaurant_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/restaurant_menu/restaurant_menu_bloc.dart';
@@ -189,22 +190,18 @@ import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_
 import 'package:hungrx_app/presentation/blocs/water_intake/water_intake_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
+import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_screen/user_profile_screen.dart';
 import 'package:hungrx_app/routes/app_router.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/sign_up_usecase.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/email_sign_up_repository.dart';
-// import 'package:purchases_flutter/purchases_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await PurchaseService.initialize();
-  // await Purchases.setLogLevel(LogLevel.debug);
-  // await Purchases.configure(PurchasesConfiguration(Platform.isAndroid
-  //     ? SubscriptionConstants.revenueCatApiKeyAndroid
-  //     : SubscriptionConstants.revenueCatApiKeyIOS));
-  // await SystemChrome.setPreferredOrientations([
-  //   DeviceOrientation.portraitUp,
-  // ]);
-  // Add this line to disable split-screen
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   await SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.manual,
     overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
@@ -221,8 +218,10 @@ void main() async {
   }
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.dumpErrorToConsole(details);
-    // print('Flutter Error: ${details.exception}');
   };
+
+  await HiveService.init();
+
   runApp(const MyApp());
 }
 
@@ -339,6 +338,17 @@ class MyApp extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+          BlocProvider(
+            create: (context) => ReferralBloc(
+              repository: ReferralRepository(
+                dataSource: ReferralDataSource(
+                  client: http.Client(),
+                ),
+              ),
+              authService: authService,
+            ),
+            child: const UserProfileScreen(),
           ),
 
           BlocProvider(

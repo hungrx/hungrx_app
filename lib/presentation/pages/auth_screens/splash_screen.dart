@@ -30,15 +30,46 @@ class SplashScreen extends StatefulWidget {
   SplashScreenState createState() => SplashScreenState();
 }
 
-class SplashScreenState extends State<SplashScreen> {
+class SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   final AuthService _authService = AuthService();
   final OnboardingService _onboardingService = OnboardingService();
+  late AnimationController _controller;
+  late Animation<double> _opacityAnimation;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize AnimationController
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+
+    // Set up animations after controller is initialized
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.5, 1.0)),
+    );
+
+    // Start animation
+    _controller.forward();
+
+    // Initialize app services
     _initializeApp();
   }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  // void _setupAnimations() {
+  //   _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+  //     CurvedAnimation(parent: _controller, curve: const Interval(0.5, 1.0)),
+  //   );
+  // }
 
   Future<void> _initializeApp() async {
     await _authService.initialize();
@@ -257,26 +288,29 @@ class SplashScreenState extends State<SplashScreen> {
 
           return Scaffold(
             backgroundColor: AppColors.buttonColors,
-            body: Column(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Image.asset(
-                      'assets/images/logos.png',
-                      width: 300,
-                      height: 300,
+            body: FadeTransition(
+              opacity: _opacityAnimation,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Image.asset(
+                        'assets/images/logos.png',
+                        width: 250,
+                        height: 250,
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: 35), // Adjust as needed
-                  child: LoadingAnimationWidget.threeRotatingDots(
-                    color: AppColors.primaryColor,
-                    size: 35,
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: 35), // Adjust as needed
+                    child: LoadingAnimationWidget.threeRotatingDots(
+                      color: AppColors.primaryColor,
+                      size: 35,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },

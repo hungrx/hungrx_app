@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungrx_app/data/Models/food_cart_screen.dart/get_cart_model.dart';
@@ -14,8 +13,15 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
   final GetCartRepository cartRepository;
   final AuthService _authService;
   CartResponseModel? _cachedCart;
-  Timer? _debounceTimer;
-  Map<String, List<PendingUpdate>> _pendingUpdates = {};
+
+  // Debounce per cart instead of globally
+  final Map<String, Timer> _debounceTimers = {};
+
+  // Track previous state for rollback on failure
+  CartResponseModel? lastConfirmedState;
+
+  // Enhanced pending updates structure with status tracking
+  final Map<String, Map<String, PendingUpdate>> _pendingUpdates = {};
 
   GetCartBloc(
     this.cartRepository,
@@ -24,6 +30,7 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
     on<LoadCart>(_onLoadCart);
     on<UpdateQuantity>(_onUpdateQuantity);
     on<LoadCachedCart>(_onLoadCachedCart);
+    on<SyncPendingUpdates>(_onSyncPendingUpdates);
   }
 
   Future<void> _onLoadCachedCart(
@@ -37,6 +44,7 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
       if (cachedData != null) {
         final jsonData = json.decode(cachedData);
         _cachedCart = CartResponseModel.fromJson(jsonData);
+        lastConfirmedState = _cachedCart; // Store as last confirmed state
         final totalNutrition = _calculateTotalNutrition(_cachedCart!.data);
         emit(CartLoaded(
           carts: _cachedCart!.data,
@@ -93,6 +101,7 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
       if (_cachedCart == null ||
           !_compareCartResponses(_cachedCart!, cartResponse)) {
         _cachedCart = cartResponse;
+        lastConfirmedState = cartResponse; // Store as last confirmed state
         final totalNutrition = _calculateTotalNutrition(cartResponse.data);
         emit(CartLoaded(
           carts: cartResponse.data,
@@ -122,64 +131,11 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
     return cached.remaining == fresh.remaining;
   }
 
-  Map<String, double> _calculateTotalNutrition(List<CartModel> carts) {
-    try {
-      double totalCalories = 0;
-      double totalProtein = 0;
-      double totalCarbs = 0;
-      double totalFat = 0;
-
-      for (var cart in carts) {
-        for (var dish in cart.dishDetails) {
-          try {
-            final servingSize = _parseServingSize(dish.servingSize);
-            final quantity =
-                dish.quantity ?? 1; // Get the quantity and default to 1 if null
-
-            final calories =
-                double.tryParse(dish.nutritionInfo.calories.value) ?? 0;
-            final protein =
-                double.tryParse(dish.nutritionInfo.protein.value) ?? 0;
-            final carbs = double.tryParse(dish.nutritionInfo.carbs.value) ?? 0;
-            final fat = double.tryParse(dish.nutritionInfo.totalFat.value) ?? 0;
-
-            // Multiply by both servingSize and quantity
-            totalCalories += calories * servingSize * quantity;
-            totalProtein += protein * servingSize * quantity;
-            totalCarbs += carbs * servingSize * quantity;
-            totalFat += fat * servingSize * quantity;
-          } catch (e) {
-            continue;
-          }
-        }
-      }
-
-      return {
-        'calories': totalCalories,
-        'protein': totalProtein,
-        'carbs': totalCarbs,
-        'fat': totalFat,
-      };
-    } catch (e) {
-      return {
-        'calories': 0.0,
-        'protein': 0.0,
-        'carbs': 0.0,
-        'fat': 0.0,
-      };
-    }
-  }
-
-  @override
-  Future<void> close() {
-    _debounceTimer?.cancel();
-    return super.close();
-  }
-
-  void _onUpdateQuantity(
+  Future<void> _onUpdateQuantity(
       UpdateQuantity event, Emitter<GetCartState> emit) async {
     final currentState = state;
     if (currentState is CartLoaded) {
+      emit(CartSyncing(event.dishId));
       // Optimistically update UI first
       final updatedCarts = _updateCartsWithNewQuantity(
         currentState.carts,
@@ -203,17 +159,81 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
         totalNutrition: totalNutrition,
         cartResponse: updatedCartResponse,
         remaining: currentState.remaining,
+        
+        pendingSync: true, // Flag indicating there are unsaved changes
       ));
 
       // Add to pending updates
       _addToPendingUpdates(event.cartId, event.dishId, event.quantity);
 
-      // Debounce API calls
-      _debounceTimer?.cancel();
-      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-        _syncPendingUpdates();
-      });
+      // Debounce API calls per cart
+      _debounceTimers[event.cartId]?.cancel();
+      _debounceTimers[event.cartId] = Timer(
+        const Duration(milliseconds: 800), // Slightly faster debounce
+        () => add(SyncPendingUpdates(cartId: event.cartId)),
+      );
     }
+  }
+
+  Future<void> _onSyncPendingUpdates(
+      SyncPendingUpdates event, Emitter<GetCartState> emit) async {
+    final String? cartId = event.cartId;
+
+    // If cartId is provided, sync only that cart's updates
+    // Otherwise, sync all pending updates
+    final cartsToSync = cartId != null
+        ? {cartId: _pendingUpdates[cartId]}
+        : Map<String, Map<String, PendingUpdate>>.from(_pendingUpdates);
+
+    if (cartsToSync.isEmpty) return;
+
+    emit(CartSyncing(
+      cartId ?? 'all', // DishId is used to track progress
+    ));
+
+    for (final entry in cartsToSync.entries) {
+      final cartId = entry.key;
+      final updates = entry.value;
+
+      if (updates == null || updates.isEmpty) continue;
+
+      final items = updates.values
+          .map((update) => {
+                'dishId': update.dishId,
+                'servingSize': update.servingSize,
+                'quantity': update.quantity,
+              })
+          .toList();
+
+      try {
+        final success = await cartRepository.updateQuantity(
+          cartId: cartId,
+          items: items,
+        );
+
+        if (success) {
+          // Only remove successful updates
+          _pendingUpdates.remove(cartId);
+        } else {
+          // Don't clear updates, they will be retried later
+          // But also don't break the loop - try other carts independently
+          debugPrint('Failed to update cart $cartId');
+
+          if (state is CartLoaded) {
+            // Notify user of failure but don't revert UI yet
+            emit((state as CartLoaded));
+          }
+        }
+      } catch (e) {
+        debugPrint('Error syncing cart $cartId: $e');
+        // Keep updates in the queue for retry
+      }
+    }
+
+    // After sync attempts, reload cart to get fresh data
+    // This ensures we're in sync with the server
+    _cachedCart = null;
+    add(LoadCart());
   }
 
   List<CartModel> _updateCartsWithNewQuantity(
@@ -255,7 +275,7 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
 
   void _addToPendingUpdates(String cartId, String dishId, int quantity) {
     if (!_pendingUpdates.containsKey(cartId)) {
-      _pendingUpdates[cartId] = [];
+      _pendingUpdates[cartId] = {};
     }
 
     // Find the dish in the current state to get its serving size
@@ -263,56 +283,71 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
     final cart = currentState.carts.firstWhere((c) => c.cartId == cartId);
     final dish = cart.dishDetails.firstWhere((d) => d.dishId == dishId);
 
-    _pendingUpdates[cartId]!.removeWhere((update) => update.dishId == dishId);
-    _pendingUpdates[cartId]!.add(PendingUpdate(
+    _pendingUpdates[cartId]![dishId] = PendingUpdate(
       dishId: dishId,
       servingSize: dish.servingSize,
       quantity: quantity,
-    ));
+      timestamp: DateTime.now(), // Track when the update was requested
+    );
   }
 
-  Future<void> _syncPendingUpdates() async {
-    print('.........Syncing pending updates');
-    bool anyUpdateSuccessful = false;
-
-    for (final entry in _pendingUpdates.entries) {
-      final cartId = entry.key;
-      final updates = entry.value;
-
-      if (updates.isEmpty) continue;
-
-      final items = updates
-          .map((update) => {
-                'dishId': update.dishId,
-                'servingSize': update.servingSize,
-                'quantity': update.quantity,
-              })
-          .toList();
-
-      final success = await cartRepository.updateQuantity(
-        cartId: cartId,
-        items: items,
-      );
-      print({"success": success});
-
-      if (success) {
-        anyUpdateSuccessful = true;
-      } else {
-        // If update fails, break the loop and reload cart
-        add(LoadCart());
-        break;
-      }
+  @override
+  Future<void> close() {
+    // Cancel all debounce timers
+    for (final timer in _debounceTimers.values) {
+      timer.cancel();
     }
+    _debounceTimers.clear();
+    return super.close();
+  }
 
-    // Clear pending updates after sync attempt
-    _pendingUpdates.clear();
+  Map<String, double> _calculateTotalNutrition(List<CartModel> carts) {
+    try {
+      double totalCalories = 0;
+      double totalProtein = 0;
+      double totalCarbs = 0;
+      double totalFat = 0;
 
-    // If any update was successful, reload the cart to get fresh data
-    if (anyUpdateSuccessful) {
-      // Clear cached data to force a fresh load
-      _cachedCart = null;
-      // Reload cart data
-      add(LoadCart());
+      for (var cart in carts) {
+        for (var dish in cart.dishDetails) {
+          try {
+            final servingSize = _parseServingSize(dish.servingSize);
+            final quantity =
+                dish.quantity ?? 1; // Get the quantity and default to 1 if null
+
+            final calories =
+                double.tryParse(dish.nutritionInfo.calories.value) ?? 0;
+            final protein =
+                double.tryParse(dish.nutritionInfo.protein.value) ?? 0;
+            final carbs = double.tryParse(dish.nutritionInfo.carbs.value) ?? 0;
+            final fat = double.tryParse(dish.nutritionInfo.totalFat.value) ?? 0;
+
+            // Multiply by both servingSize and quantity
+            totalCalories += calories * servingSize * quantity;
+            totalProtein += protein * servingSize * quantity;
+            totalCarbs += carbs * servingSize * quantity;
+            totalFat += fat * servingSize * quantity;
+          } catch (e) {
+            debugPrint('Error calculating nutrition for dish: $e');
+            continue;
+          }
+        }
+      }
+
+      return {
+        'calories': totalCalories,
+        'protein': totalProtein,
+        'carbs': totalCarbs,
+        'fat': totalFat,
+      };
+    } catch (e) {
+      debugPrint('Error calculating total nutrition: $e');
+      return {
+        'calories': 0.0,
+        'protein': 0.0,
+        'carbs': 0.0,
+        'fat': 0.0,
+      };
     }
   }
 
@@ -334,14 +369,26 @@ class GetCartBloc extends Bloc<GetCartEvent, GetCartState> {
   }
 }
 
+// Enhanced PendingUpdate class with timestamp for retry policies
 class PendingUpdate {
   final String dishId;
   final String servingSize;
   final int quantity;
+  final DateTime timestamp;
 
   PendingUpdate({
     required this.dishId,
     required this.servingSize,
     required this.quantity,
+    required this.timestamp,
   });
 }
+
+// New event for syncing specific cart updates
+class SyncPendingUpdates extends GetCartEvent {
+  final String? cartId; // If null, sync all carts
+
+  SyncPendingUpdates({this.cartId});
+}
+
+// Extend CartLoaded to have sync information

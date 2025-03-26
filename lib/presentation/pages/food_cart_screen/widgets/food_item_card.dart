@@ -7,8 +7,9 @@ import 'package:hungrx_app/presentation/blocs/delete_dish/delete_dish_event.dart
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_event.dart';
 import 'package:hungrx_app/presentation/blocs/get_cart_items/get_cart_items_state.dart';
+import 'package:hungrx_app/presentation/pages/food_cart_screen/widgets/shimmer_food_card.dart';
 
-class FoodItemCard extends StatelessWidget {
+class FoodItemCard extends StatefulWidget {
   final String cartId;
   final DishDetail dish;
   final Function(BuildContext, String) showCalorieWarning;
@@ -21,12 +22,78 @@ class FoodItemCard extends StatelessWidget {
   });
 
   @override
+  State<FoodItemCard> createState() => _FoodItemCardState();
+}
+
+class _FoodItemCardState extends State<FoodItemCard> {
+  final bool _isUpdating = false;
+
+  Future<void> _updateQuantity(BuildContext context, int newQuantity) async {
+    if (_isUpdating) return; // Prevent multiple updates
+
+    // setState(() => _isUpdating = true);
+
+    try {
+      final state = context.read<GetCartBloc>().state;
+      if (state is CartLoaded) {
+        context.read<GetCartBloc>().add(
+              UpdateQuantity(
+                cartId: widget.cartId,
+                dishId: widget.dish.dishId,
+                quantity: newQuantity,
+              ),
+            );
+      }
+    } catch (e) {
+      debugPrint('Error updating quantity: $e');
+      // if (mounted) {
+      //   setState(() => _isUpdating = false);
+      // }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // final screenWidth = MediaQuery.of(context).size.width;
+
+    return BlocBuilder<GetCartBloc, GetCartState>(
+      buildWhen: (previous, current) {
+        // Only rebuild for this specific dish's changes
+        if (current is CartSyncing) {
+          // Either this dish is syncing OR we're syncing all dishes in this cart
+          return current.dishId == widget.dish.dishId ||
+              current.dishId == widget.cartId ||
+              current.dishId == 'all';
+        }
+
+        // Always rebuild when we transition from syncing to loaded
+        if (current is CartLoaded && previous is CartSyncing) {
+          return true;
+        }
+
+        return current is CartLoaded;
+      },
+      builder: (context, state) {
+        final bool isLoading =
+            state is CartSyncing && state.dishId == widget.dish.dishId;
+
+        if (isLoading || _isUpdating) {
+          return ShimmerFoodCard(
+            screenWidth: MediaQuery.of(context).size.width,
+          );
+        }
+
+        return _buildNormalCard(context);
+      },
+    );
+  }
+
+  Widget _buildNormalCard(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isSmallScreen = screenWidth < 360;
-    final quantity = dish.quantity;
+    final quantity = widget.dish.quantity;
     final caloriesPerItem =
-        double.tryParse(dish.nutritionInfo.calories.value) ?? 0;
+        double.tryParse(widget.dish.nutritionInfo.calories.value) ?? 0;
 
     // Calculate responsive dimensions
     final double horizontalMargin = screenWidth * 0.04;
@@ -34,7 +101,7 @@ class FoodItemCard extends StatelessWidget {
     final double padding = screenWidth * 0.03;
     final double imageSize = isSmallScreen ? 60.0 : 80.0;
     final double spacing = screenWidth * 0.04;
-
+    // Move your existing Stack widget code here
     return Stack(
       children: [
         Container(
@@ -68,7 +135,7 @@ class FoodItemCard extends StatelessWidget {
 
   Widget _buildFoodImage(double size, BuildContext context) {
     // Create a unique key for the image based on the dish ID and URL
-    final imageKey = ValueKey('${dish.url}');
+    final imageKey = ValueKey('${widget.dish.url}');
 
     return Container(
       key: imageKey, // Add key to maintain widget state
@@ -80,9 +147,9 @@ class FoodItemCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: dish.url != null
+        child: widget.dish.url != null
             ? Image.network(
-                dish.url!,
+                widget.dish.url!,
                 key: imageKey, // Add key to the image widget
                 fit: BoxFit.cover,
                 // Enable memory caching
@@ -143,7 +210,7 @@ class FoodItemCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            dish.dishName,
+            widget.dish.dishName,
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -152,7 +219,7 @@ class FoodItemCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${dish.nutritionInfo.calories.value} ${dish.nutritionInfo.calories.unit}',
+            '${widget.dish.nutritionInfo.calories.value} ${widget.dish.nutritionInfo.calories.unit}',
             style: TextStyle(
               color: Colors.grey,
               fontSize: isSmallScreen ? 12 : 14,
@@ -160,7 +227,7 @@ class FoodItemCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            dish.restaurantName,
+            widget.dish.restaurantName,
             style: TextStyle(
               color: Colors.green,
               fontSize: isSmallScreen ? 10 : 12,
@@ -183,30 +250,20 @@ class FoodItemCard extends StatelessWidget {
     return Row(
       children: [
         IconButton(
-          icon: Icon(
-            Icons.remove,
-            color: Colors.white,
-            size: iconSize,
-          ),
+          icon: Icon(Icons.remove, color: Colors.white, size: iconSize),
           constraints: BoxConstraints(
             minWidth: iconSize * 1.5,
             minHeight: iconSize * 1.5,
           ),
           padding: EdgeInsets.all(iconSize * 0.25),
-          onPressed: quantity > 1
-              ? () {
+          onPressed: quantity > 1 && !_isUpdating
+              ? () async {
                   final state = context.read<GetCartBloc>().state;
                   if (state is CartLoaded) {
-                    context.read<GetCartBloc>().add(
-                          UpdateQuantity(
-                            cartId: cartId,
-                            dishId: dish.dishId,
-                            quantity: quantity - 1,
-                          ),
-                        );
+                    await _updateQuantity(context, quantity - 1);
                   }
                 }
-              : null, // Disable button when quantity is 1
+              : null,
         ),
         Container(
           padding: EdgeInsets.symmetric(
@@ -217,47 +274,48 @@ class FoodItemCard extends StatelessWidget {
             color: Colors.grey[900],
             borderRadius: BorderRadius.circular(4),
           ),
-          child: Text(
-            quantity.toString(),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: isSmallScreen ? 12 : 14,
-            ),
-          ),
+          child: _isUpdating
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Text(
+                  quantity.toString(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 12 : 14,
+                  ),
+                ),
         ),
         IconButton(
-          icon: Icon(
-            Icons.add,
-            color: Colors.white,
-            size: iconSize,
-          ),
+          icon: Icon(Icons.add, color: Colors.white, size: iconSize),
           constraints: BoxConstraints(
             minWidth: iconSize * 1.5,
             minHeight: iconSize * 1.5,
           ),
           padding: EdgeInsets.all(iconSize * 0.25),
-          onPressed: () {
-            final state = context.read<GetCartBloc>().state;
-            if (state is CartLoaded) {
-              final newTotalCalories =
-                  state.totalNutrition['calories']! + caloriesPerItem;
+          onPressed: !_isUpdating
+              ? () async {
+                  final state = context.read<GetCartBloc>().state;
+                  if (state is CartLoaded) {
+                    final newTotalCalories =
+                        state.totalNutrition['calories']! + caloriesPerItem;
 
-              if (newTotalCalories > state.remaining) {
-                showCalorieWarning(
-                  context,
-                  'Adding more quantity would exceed your daily calorie limit!',
-                );
-              } else {
-                context.read<GetCartBloc>().add(
-                      UpdateQuantity(
-                        cartId: cartId,
-                        dishId: dish.dishId,
-                        quantity: quantity + 1,
-                      ),
-                    );
-              }
-            }
-          },
+                    if (newTotalCalories > state.remaining) {
+                      widget.showCalorieWarning(
+                        context,
+                        'Adding more quantity would exceed your daily calorie limit!',
+                      );
+                    } else {
+                      await _updateQuantity(context, quantity + 1);
+                    }
+                  }
+                }
+              : null,
         ),
       ],
     );
@@ -283,10 +341,10 @@ class FoodItemCard extends StatelessWidget {
         onPressed: () {
           context.read<DeleteDishCartBloc>().add(
                 DeleteDishFromCart(
-                  servingSize: dish.servingSize,
-                  cartId: cartId,
-                  restaurantId: dish.restaurantId,
-                  dishId: dish.dishId,
+                  servingSize: widget.dish.servingSize,
+                  cartId: widget.cartId,
+                  restaurantId: widget.dish.restaurantId,
+                  dishId: widget.dish.dishId,
                 ),
               );
         },
