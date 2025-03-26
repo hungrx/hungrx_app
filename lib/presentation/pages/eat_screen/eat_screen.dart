@@ -248,17 +248,6 @@ class _EatScreenState extends State<EatScreen> {
                 size: 110,
               ),
             )
-            // ClipRRect(
-            //   borderRadius: BorderRadius.circular(8),
-            //   child: SizedBox(
-            //     height: size.height * 0.15,
-            //     width: double.infinity,
-            //     child: Image.asset(
-            //       imagePath,
-            //       fit: BoxFit.cover,
-            //     ),
-            //   ),
-            // ),
           ],
         ),
       ),

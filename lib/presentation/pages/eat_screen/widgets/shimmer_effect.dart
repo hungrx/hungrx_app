@@ -6,100 +6,99 @@ class EatScreenShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size
-    final Size screenSize = MediaQuery.of(context).size;
-    final double screenWidth = screenSize.width;
-    final double screenHeight = screenSize.height;
+    final size = MediaQuery.of(context).size;
 
     return Shimmer.fromColors(
       baseColor: Colors.grey[800]!,
       highlightColor: Colors.grey[700]!,
-      child: SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: screenHeight * 0.7, // Minimum 70% of screen height
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header shimmer
-              _buildHeaderShimmer(screenWidth),
-              SizedBox(height: screenHeight * 0.04), // 4% of screen height
-              // Calorie budget shimmer
-              _buildCalorieBudgetShimmer(screenWidth),
-              SizedBox(height: screenHeight * 0.08), // 8% of screen height
-              // Options grid shimmer
-              _buildOptionsGridShimmer(screenWidth, screenHeight),
-            ],
-          ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header shimmer (Hi, Name)
+            Container(
+              width: size.width * 0.5,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+
+            SizedBox(height: size.height * 0.03),
+
+            // Calorie budget number
+            Container(
+              width: size.width * 0.3,
+              height: 45,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Calorie budget text
+            Container(
+              width: size.width * 0.45,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+
+            SizedBox(height: size.height * 0.05),
+
+            // Options Grid
+            Row(
+              children: [
+                Expanded(
+                  child: _buildOptionCard(size),
+                ),
+                SizedBox(width: size.width * 0.04),
+                Expanded(
+                  child: _buildOptionCard(size),
+                ),
+              ],
+            ),
+
+            // Spacer replacement - calculate remaining space
+            SizedBox(height: size.height * 0.15),
+
+            // Enjoy Calories text
+            Container(
+              width: size.width * 0.7,
+              height: size.height * 0.15,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+
+            // Space for bottom navigation
+            SizedBox(height: size.height * 0.08),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeaderShimmer(double screenWidth) {
+  Widget _buildOptionCard(Size size) {
     return Container(
-      width: screenWidth * 0.5, // 50% of screen width
-      height: 32,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-    );
-  }
-
-  Widget _buildCalorieBudgetShimmer(double screenWidth) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: screenWidth * 0.3, // 30% of screen width
-          height: 45,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: screenWidth * 0.45, // 45% of screen width
-          height: 20,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOptionsGridShimmer(double screenWidth, double screenHeight) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildOptionCardShimmer(screenHeight),
-        ),
-        SizedBox(width: screenWidth * 0.04), // 4% of screen width
-        Expanded(
-          child: _buildOptionCardShimmer(screenHeight),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOptionCardShimmer(double screenHeight) {
-    return Container(
-      height: screenHeight * 0.35, // 35% of screen height
+      height: size.height * 0.28,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(size.width * 0.04),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title shimmer
+            // Title
             Container(
               width: double.infinity,
               height: 24,
@@ -108,8 +107,10 @@ class EatScreenShimmer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            const SizedBox(height: 8),
-            // Subtitle shimmer
+
+            SizedBox(height: size.height * 0.01),
+
+            // Subtitle
             Container(
               width: double.infinity,
               height: 36,
@@ -118,14 +119,18 @@ class EatScreenShimmer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
+
             const Spacer(),
-            // Image placeholder shimmer
-            Container(
-              width: double.infinity,
-              height: 120, // Fixed height for image placeholder
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+
+            // Icon placeholder
+            Center(
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ],
