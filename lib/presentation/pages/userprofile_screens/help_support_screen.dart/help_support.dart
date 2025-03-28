@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hungrx_app/core/constants/colors/app_colors.dart';
+import 'package:hungrx_app/presentation/blocs/referral/referral_bloc.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/widgets/contact_us_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/help_support_screen.dart/widgets/feedbacks_widget.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -36,13 +40,172 @@ class HelpSupportScreen extends StatelessWidget {
     return "https://www.hungrx.com/"; // fallback URL
   }
 
-  // Text to share with platform-specific link
-  String getInviteText() {
-    return "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights! Join me now: ${getInviteLink()}";
+  void _showReferralDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.grey[900],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Your Referral Code',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      BlocBuilder<ReferralBloc, ReferralState>(
+                        builder: (context, state) {
+                          if (state is ReferralSuccess) {
+                            return Text(
+                              state.referralCode,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.5,
+                              ),
+                            );
+                          }
+                          return const CircularProgressIndicator();
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy,
+                            color: AppColors.buttonColors),
+                        onPressed: () {
+                          final state = context.read<ReferralBloc>().state;
+                          if (state is ReferralSuccess) {
+                            Clipboard.setData(
+                                ClipboardData(text: state.referralCode));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Referral code copied!'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.share, color: Colors.black),
+                  label: const Text(
+                    'Invite Friends',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.buttonColors,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  onPressed: () {
+                    final state = context.read<ReferralBloc>().state;
+                    if (state is ReferralSuccess) {
+                      handleShare(context, state.referralCode);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
-  final String inviteText =
-      "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights! Join me now: https://www.hungrx.com/";
+  Future<void> handleReferral(BuildContext context) async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+            ),
+          );
+        },
+      );
+
+      // Trigger referral code generation
+      context.read<ReferralBloc>().add(GenerateReferralCode());
+
+      // Wait for the state to change
+      await for (final state in context.read<ReferralBloc>().stream) {
+        if (state is ReferralSuccess) {
+          Navigator.pop(context); // Close loading dialog
+          _showReferralDialog(context);
+          break;
+        } else if (state is ReferralFailure) {
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.error)),
+          );
+          break;
+        }
+      }
+    } catch (e) {
+      Navigator.pop(context); // Close loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('Failed to generate referral code. Please try again.')),
+      );
+      debugPrint('Error handling referral: $e');
+    }
+  }
+
+  Future<void> handleShare(BuildContext context, String referralCode) async {
+    try {
+      String baseText =
+          "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights!";
+      String link = getInviteLink();
+      String inviteText =
+          "$baseText Use my referral code: $referralCode Join me now: $link";
+
+      await Share.share(
+        inviteText,
+        subject: 'Join hungrX App!',
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to share. Please try again.')),
+      );
+      debugPrint('Error sharing: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -149,10 +312,7 @@ class HelpSupportScreen extends StatelessWidget {
                   _buildSupportItem(
                     icon: Icons.share_outlined,
                     title: 'Share HungrX with a friend',
-                    onTap: () {
-                      handleShare();
-                      // Implement share functionality
-                    },
+                    onTap: () => handleReferral(context), // Modified this line
                   ),
                   _buildDivider(),
                   _buildSupportItem(
@@ -177,17 +337,6 @@ class HelpSupportScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void handleShare() async {
-    try {
-      await Share.share(
-        getInviteText(),
-        subject: 'Join hungrX App!',
-      );
-    } catch (e) {
-      debugPrint('Error sharing: $e');
-    }
   }
 
   Widget _buildSocialButton(IconData? icon, VoidCallback onTap) {

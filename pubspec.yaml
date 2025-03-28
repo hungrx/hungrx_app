@@ -62,6 +62,7 @@ dependencies:
   star_rating: ^0.11.0
   syncfusion_flutter_charts: ^28.1.41
   timezone: ^0.10.0
+  upgrader: ^11.3.1
   url_launcher: ^6.3.0
 
 dev_dependencies:

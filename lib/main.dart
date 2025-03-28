@@ -187,6 +187,7 @@ import 'package:hungrx_app/presentation/blocs/suggested_restaurants/suggested_re
 import 'package:hungrx_app/presentation/blocs/timezone/timezone_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/update_basic_info/update_basic_info_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/userprofileform/user_profile_form_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/verify_referral_bloc/verify_referral_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/water_intake/water_intake_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_track_bloc/weight_track_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/weight_update/weight_update_bloc.dart';
@@ -194,6 +195,7 @@ import 'package:hungrx_app/presentation/pages/userprofile_screens/user_profile_s
 import 'package:hungrx_app/routes/app_router.dart';
 import 'package:hungrx_app/domain/usecases/auth_screens/sign_up_usecase.dart';
 import 'package:hungrx_app/data/repositories/auth_screen/email_sign_up_repository.dart';
+import 'package:upgrader/upgrader.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -232,6 +234,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final upgrader = Upgrader(
+      debugLogging: true,
+      minAppVersion: '2.0.0', // Adjust this as needed.
+      messages: UpgraderMessages(
+        code: 'en',
+      ),
+      debugDisplayAlways: true, // Use false in production.
+    );
+
     final commonFoodApi = CommonFoodApi();
     final commonFoodRepository = ConsumeCommonFoodRepository(commonFoodApi);
     final commonFoodUseCase = CommonFoodUseCase(commonFoodRepository);
@@ -292,417 +303,430 @@ class MyApp extends StatelessWidget {
     final addLogMealSearchHistoryUseCase =
         AddLogMealSearchHistoryUseCase(logMealSearchHistoryRepository);
     return MultiBlocProvider(
-        providers: [
-          BlocProvider<GetProfileDetailsBloc>(
-            create: (context) => GetProfileDetailsBloc(
-              repository: GetProfileDetailsRepository(
-                GetProfileDetailsApi(),
+      providers: [
+        BlocProvider<GetProfileDetailsBloc>(
+          create: (context) => GetProfileDetailsBloc(
+            repository: GetProfileDetailsRepository(
+              GetProfileDetailsApi(),
+            ),
+            authService: authService,
+          ),
+        ),
+        BlocProvider<ProgressBarBloc>(
+          create: (context) =>
+              ProgressBarBloc(progressBarRepository, authService),
+        ),
+
+        // !  cart bloc in food menu
+        BlocProvider(
+          create: (context) => CartBloc(),
+        ),
+        BlocProvider<DeleteAccountBloc>(
+          create: (context) => DeleteAccountBloc(
+            authService: authService,
+            deleteAccountUseCase: deleteAccountUseCase,
+          ),
+        ),
+        BlocProvider<CommonFoodBloc>(
+          create: (context) => CommonFoodBloc(commonFoodUseCase),
+        ),
+
+        BlocProvider<AddCommonFoodHistoryBloc>(
+          create: (context) => AddCommonFoodHistoryBloc(
+            AddCommonFoodHistoryUseCase(
+              AddCommonFoodHistoryRepository(
+                AddCommonFoodHistoryApi(),
               ),
-              authService: authService,
             ),
           ),
-          BlocProvider<ProgressBarBloc>(
-            create: (context) =>
-                ProgressBarBloc(progressBarRepository, authService),
-          ),
+        ),
 
-          // !  cart bloc in food menu
-          BlocProvider(
-            create: (context) => CartBloc(),
-          ),
-          BlocProvider<DeleteAccountBloc>(
-            create: (context) => DeleteAccountBloc(
-              authService: authService,
-              deleteAccountUseCase: deleteAccountUseCase,
+        BlocProvider(
+          create: (context) => TimezoneBloc(
+            UpdateTimezoneUseCase(
+              TimezoneRepository(
+                TimezoneApi(),
+              ),
             ),
           ),
-          BlocProvider<CommonFoodBloc>(
-            create: (context) => CommonFoodBloc(commonFoodUseCase),
+        ),
+        BlocProvider(
+          create: (context) => ReferralBloc(
+            repository: ReferralRepository(
+              dataSource: ReferralDataSource(
+                client: http.Client(),
+              ),
+            ),
+            authService: authService,
           ),
+          child: const UserProfileScreen(),
+        ),
 
-          BlocProvider<AddCommonFoodHistoryBloc>(
-            create: (context) => AddCommonFoodHistoryBloc(
-              AddCommonFoodHistoryUseCase(
-                AddCommonFoodHistoryRepository(
-                  AddCommonFoodHistoryApi(),
+        BlocProvider(
+          create: (context) => AppleAuthBloc(
+            appleSignInUseCase: AppleSignInUseCase(
+              AppleAuthRepository(
+                api: AppleAuthApi(),
+              ),
+            ),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => SubscriptionBloc(
+            SubscriptionUseCase(
+              SubscriptionRepository(),
+            ),
+            storePurchaseUseCase,
+            authService,
+            StoreRevenueCatDetailsUseCase(
+              RevenueCatRepositoryImpl(
+                apiClient: RevenueCatApiClient(),
+              ),
+            ),
+          ),
+        ),
+
+        BlocProvider(
+          create: (context) => WeightUpdateBloc(
+            UpdateWeightUseCase(
+              WeightUpdateRepository(
+                WeightUpdateApiService(),
+              ),
+            ),
+            AuthService(),
+          ),
+        ),
+
+        BlocProvider<RestaurantMenuBloc>(
+          create: (context) => RestaurantMenuBloc(
+            repository: RestaurantMenuRepository(RestaurantMenuApi()),
+            authService: authService,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => CheckStatusSubscriptionBloc(
+              verifySubscriptionUseCase: VerifySubscriptionUseCase(
+                  repository: VerifySubscriptionRepository(
+                      apiClient: VerifySubscriptionApiClient()))),
+        ),
+
+        BlocProvider(
+          create: (context) => NearbyRestaurantBloc(
+            NearbyRestaurantRepository(
+              NearbyRestaurantApi(),
+            ),
+          ),
+        ),
+
+        // BlocProvider(create: (context) => UserBloc()..add(LoadUserId())),
+        BlocProvider<SignUpBloc>(
+          create: (context) => SignUpBloc(
+            signUpUseCase: SignUpUseCase(
+              UserSignUpRepository(),
+            ),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => ReportBugBloc(
+            reportBugUseCase,
+            authService,
+          ),
+        ),
+
+        BlocProvider<GetWaterIntakeBloc>(
+          create: (context) =>
+              GetWaterIntakeBloc(getWaterIntakeUseCase, authService),
+        ),
+        BlocProvider<WaterIntakeBloc>(
+          create: (context) => WaterIntakeBloc(
+            authService: AuthService(),
+            repository: WaterIntakeRepository(
+              api: WaterIntakeApi(
+                client: http.Client(),
+              ),
+            ),
+          ),
+        ),
+
+        BlocProvider<DeleteWaterBloc>(
+          create: (context) => DeleteWaterBloc(
+              DeleteWaterEntryUseCase(
+                DeleteWaterRepository(
+                  DeleteWaterApi(),
                 ),
               ),
-            ),
-          ),
+              authService),
+        ),
 
-          BlocProvider(
-            create: (context) => TimezoneBloc(
-              UpdateTimezoneUseCase(
-                TimezoneRepository(
-                  TimezoneApi(),
-                ),
-              ),
-            ),
-          ),
-          BlocProvider(
-            create: (context) => ReferralBloc(
-              repository: ReferralRepository(
-                dataSource: ReferralDataSource(
-                  client: http.Client(),
-                ),
-              ),
-              authService: authService,
-            ),
-            child: const UserProfileScreen(),
-          ),
+        BlocProvider<SuggestedRestaurantsBloc>(
+          create: (context) =>
+              SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase)
+                ..add(FetchSuggestedRestaurants()), // Initialize with data
+        ),
 
-          BlocProvider(
-            create: (context) => AppleAuthBloc(
-              appleSignInUseCase: AppleSignInUseCase(
-                AppleAuthRepository(
-                  api: AppleAuthApi(),
-                ),
-              ),
-            ),
-          ),
-          BlocProvider(
-            create: (context) => SubscriptionBloc(
-              SubscriptionUseCase(
-                SubscriptionRepository(),
-              ),
-              storePurchaseUseCase,
-              authService,
-              StoreRevenueCatDetailsUseCase(
-                RevenueCatRepositoryImpl(
-                  apiClient: RevenueCatApiClient(),
-                ),
-              ),
-            ),
-          ),
-
-          BlocProvider(
-            create: (context) => WeightUpdateBloc(
-              UpdateWeightUseCase(
-                WeightUpdateRepository(
-                  WeightUpdateApiService(),
-                ),
-              ),
-              AuthService(),
-            ),
-          ),
-
-          BlocProvider<RestaurantMenuBloc>(
-            create: (context) => RestaurantMenuBloc(
-              repository: RestaurantMenuRepository(RestaurantMenuApi()),
-              authService: authService,
-            ),
-          ),
-          BlocProvider(
-            create: (context) => CheckStatusSubscriptionBloc(
-                verifySubscriptionUseCase: VerifySubscriptionUseCase(
-                    repository: VerifySubscriptionRepository(
-                        apiClient: VerifySubscriptionApiClient()))),
-          ),
-
-          BlocProvider(
-            create: (context) => NearbyRestaurantBloc(
-              NearbyRestaurantRepository(
-                NearbyRestaurantApi(),
-              ),
-            ),
-          ),
-
-          // BlocProvider(create: (context) => UserBloc()..add(LoadUserId())),
-          BlocProvider<SignUpBloc>(
-            create: (context) => SignUpBloc(
-              signUpUseCase: SignUpUseCase(
-                UserSignUpRepository(),
-              ),
-            ),
-          ),
-          BlocProvider(
-            create: (context) => ReportBugBloc(
-              reportBugUseCase,
-              authService,
-            ),
-          ),
-
-          BlocProvider<GetWaterIntakeBloc>(
-            create: (context) =>
-                GetWaterIntakeBloc(getWaterIntakeUseCase, authService),
-          ),
-          BlocProvider<WaterIntakeBloc>(
-            create: (context) => WaterIntakeBloc(
-              authService: AuthService(),
-              repository: WaterIntakeRepository(
-                api: WaterIntakeApi(
-                  client: http.Client(),
-                ),
-              ),
-            ),
-          ),
-
-          BlocProvider<DeleteWaterBloc>(
-            create: (context) => DeleteWaterBloc(
-                DeleteWaterEntryUseCase(
-                  DeleteWaterRepository(
-                    DeleteWaterApi(),
+        BlocProvider(
+          create: (context) =>
+              GetBasicInfoBloc(getBasicInfoUseCase, authService),
+        ),
+        BlocProvider(create: (_) => AddMealBloc()),
+        BlocProvider(
+          create: (context) => UpdateBasicInfoBloc(updateBasicInfoUseCase),
+        ),
+        BlocProvider<SearchHistoryLogBloc>(
+          create: (context) => SearchHistoryLogBloc(
+              useCase: GetSearchHistoryLogUseCase(
+                repository: SearchHistoryLogRepository(
+                  api: GetSearchHistoryLogApi(
+                    client: http.Client(),
                   ),
                 ),
-                authService),
+              ),
+              authService: authService),
+        ),
+        BlocProvider(
+          create: (context) => LogMealSearchHistoryBloc(
+              addLogMealSearchHistoryUseCase, authService),
+        ),
+        BlocProvider<SearchBloc>(
+          create: (context) => SearchBloc(
+            FoodSearchRepository(
+              FoodSearchApi(),
+            ),
           ),
+        ),
+        // BlocProvider<WeightUpdateBloc>(
+        //   create: (context) => WeightUpdateBloc(
+        //     updateWeightUseCase,
+        //     authService,
+        //     // Add your repository/usecase here
+        //   ),
+        // ),
+        BlocProvider<CalorieMetricsBloc>(
+          create: (context) => CalorieMetricsBloc(
+              GetCalorieMetricsUseCase(
+                CalorieMetricsRepository(
+                  CalorieMetricsApi(),
+                ),
+              ),
+              authService),
+        ),
+        BlocProvider<DeleteFoodBloc>(
+          create: (context) => DeleteFoodBloc(
+              DeleteConsumedFoodUseCase(
+                DeleteFoodRepository(
+                  DeleteFoodApiService(),
+                ),
+              ),
+              authService),
+        ),
 
-          BlocProvider<SuggestedRestaurantsBloc>(
-            create: (context) =>
-                SuggestedRestaurantsBloc(getSuggestedRestaurantsUseCase)
-                  ..add(FetchSuggestedRestaurants()), // Initialize with data
+        BlocProvider<VerifyReferralBloc>(
+          create: (BuildContext context) => VerifyReferralBloc(
+            authService: authService,
           ),
+        ),
+        BlocProvider(
+          create: (context) => SignUpBloc(
+            signUpUseCase: SignUpUseCase(
+              UserSignUpRepository(),
+            ),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => FeedbackBloc(
+            SubmitFeedbackUseCase(
+              FeedbackRepository(
+                FeedbackApiService(),
+              ),
+            ),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => LoginBloc(
+            loginUseCase: LoginUseCase(
+              UserSignInRepository(),
+            ),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => ChangeCalorieGoalBloc(
+              ChangeCalorieGoalUseCase(
+                ChangeCalorieGoalRepository(
+                  ChangeCalorieGoalApi(),
+                ),
+              ),
+              authService),
+        ),
+        BlocProvider<DailyInsightBloc>(
+          create: (context) => DailyInsightBloc(
+              DailyInsightRepository(
+                DailyInsightDataSource(),
+              ),
+              authService),
+        ),
+        BlocProvider(
+          create: (context) => RequestRestaurantBloc(
+              RequestRestaurantUseCase(
+                RequestRestaurantRepository(
+                  RequestRestaurantApi(),
+                ),
+              ),
+              authService),
+        ),
 
-          BlocProvider(
-            create: (context) =>
-                GetBasicInfoBloc(getBasicInfoUseCase, authService),
-          ),
-          BlocProvider(create: (_) => AddMealBloc()),
-          BlocProvider(
-            create: (context) => UpdateBasicInfoBloc(updateBasicInfoUseCase),
-          ),
-          BlocProvider<SearchHistoryLogBloc>(
-            create: (context) => SearchHistoryLogBloc(
-                useCase: GetSearchHistoryLogUseCase(
-                  repository: SearchHistoryLogRepository(
-                    api: GetSearchHistoryLogApi(
-                      client: http.Client(),
-                    ),
+        BlocProvider(
+          create: (context) => GoalSettingsBloc(
+            GetGoalSettingsUseCase(
+              GoalSettingsRepository(
+                GoalSettingsApi(),
+              ),
+            ),
+            authService,
+          )..add(FetchGoalSettings()),
+        ),
+
+        BlocProvider<WeightHistoryBloc>(
+          create: (context) =>
+              WeightHistoryBloc(getWeightHistoryUseCase, authService
+                  // Add your repository/usecase here
                   ),
-                ),
-                authService: authService),
-          ),
-          BlocProvider(
-            create: (context) => LogMealSearchHistoryBloc(
-                addLogMealSearchHistoryUseCase, authService),
-          ),
-          BlocProvider<SearchBloc>(
-            create: (context) => SearchBloc(
-              FoodSearchRepository(
-                FoodSearchApi(),
-              ),
-            ),
-          ),
-          // BlocProvider<WeightUpdateBloc>(
-          //   create: (context) => WeightUpdateBloc(
-          //     updateWeightUseCase,
-          //     authService,
-          //     // Add your repository/usecase here
-          //   ),
-          // ),
-          BlocProvider<CalorieMetricsBloc>(
-            create: (context) => CalorieMetricsBloc(
-                GetCalorieMetricsUseCase(
-                  CalorieMetricsRepository(
-                    CalorieMetricsApi(),
-                  ),
-                ),
-                authService),
-          ),
-          BlocProvider<DeleteFoodBloc>(
-            create: (context) => DeleteFoodBloc(
-                DeleteConsumedFoodUseCase(
-                  DeleteFoodRepository(
-                    DeleteFoodApiService(),
-                  ),
-                ),
-                authService),
-          ),
-          BlocProvider(
-            create: (context) => SignUpBloc(
-              signUpUseCase: SignUpUseCase(
-                UserSignUpRepository(),
-              ),
-            ),
-          ),
-          BlocProvider(
-            create: (context) => FeedbackBloc(
-              SubmitFeedbackUseCase(
-                FeedbackRepository(
-                  FeedbackApiService(),
-                ),
-              ),
-            ),
-          ),
-          BlocProvider(
-            create: (context) => LoginBloc(
-              loginUseCase: LoginUseCase(
-                UserSignInRepository(),
-              ),
-            ),
-          ),
-          BlocProvider(
-            create: (context) => ChangeCalorieGoalBloc(
-                ChangeCalorieGoalUseCase(
-                  ChangeCalorieGoalRepository(
-                    ChangeCalorieGoalApi(),
-                  ),
-                ),
-                authService),
-          ),
-          BlocProvider<DailyInsightBloc>(
-            create: (context) => DailyInsightBloc(
-                DailyInsightRepository(
-                  DailyInsightDataSource(),
-                ),
-                authService),
-          ),
-          BlocProvider(
-            create: (context) => RequestRestaurantBloc(
-                RequestRestaurantUseCase(
-                  RequestRestaurantRepository(
-                    RequestRestaurantApi(),
-                  ),
-                ),
-                authService),
-          ),
+        ),
+        BlocProvider<MealTypeBloc>(
+          create: (context) => MealTypeBloc(
+            getMealTypesUseCase: getMealTypesUseCase,
+          )..add(FetchMealTypes()),
+        ),
+        BlocProvider<EatScreenBloc>(
+          create: (context) => EatScreenBloc(getEatScreenUseCase, authService),
+        ),
+        BlocProvider<StreakBloc>(
+          create: (context) => StreakBloc(getStreakUseCase, authService),
+        ),
 
-          BlocProvider(
-            create: (context) => GoalSettingsBloc(
-              GetGoalSettingsUseCase(
-                GoalSettingsRepository(
-                  GoalSettingsApi(),
+        BlocProvider<ConnectivityBloc>(
+          create: (context) => ConnectivityBloc(
+            connectivityRepository: connectivityRepository,
+          ),
+        ),
+
+        BlocProvider<OtpAuthBloc>(
+          create: (context) => OtpAuthBloc(
+            otpUseCase: OtpUseCase(
+              OtpRepository(),
+            ),
+          ),
+        ),
+        BlocProvider<GetCartBloc>(
+          create: (context) => GetCartBloc(
+            GetCartRepository(
+              GetCartApi(),
+            ),
+            authService,
+          ),
+        ),
+
+        BlocProvider<AddToCartBloc>(
+          create: (context) => AddToCartBloc(
+              AddToCartUseCase(
+                AddToCartRepository(
+                  AddToCartApi(),
                 ),
               ),
-              authService,
-            )..add(FetchGoalSettings()),
+              authService),
+        ),
+        BlocProvider(
+          create: (context) => CustomFoodEntryBloc(
+            CustomFoodEntryUseCase(
+              CustomFoodEntryRepository(
+                CustomFoodEntryApi(),
+              ),
+            ),
           ),
+        ),
+        BlocProvider(
+          create: (context) => ConsumeCartBloc(
+            ConsumeCartUseCase(
+              ConsumeCartRepository(
+                ConsumeCartApi(),
+              ),
+            ),
+            authService,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => CommonFoodSearchBloc(
+            repository: CommonFoodRepository(),
+          ),
+        ),
+        BlocProvider(
+          create: (context) => DeleteDishCartBloc(
+            DeleteDishCartUseCase(
+              DeleteDishCartRepository(
+                DeleteDishCartApi(),
+              ),
+            ),
+          ),
+        ),
+        BlocProvider<UserProfileFormBloc>(
+          create: (context) => UserProfileFormBloc(
+            userProfileRepository,
+            tdeeRepository,
+          ),
+        ),
+        // In main.dart, add this to your BlocProvider list
+        BlocProvider<GoogleAuthBloc>(
+          create: (context) => GoogleAuthBloc(
+            googleAuthUseCase: GoogleAuthUseCase(
+              GoogleAuthRepository(),
+            ),
+          ),
+        ),
+        BlocProvider<EatScreenSearchBloc>(
+          create: (context) => EatScreenSearchBloc(
+            searchUseCase: EatScreenSearchFoodUsecase(
+              EatSearchScreenRepository(
+                EatSearchScreenApiService(),
+              ),
+            ),
+          ),
+        ),
 
-          BlocProvider<WeightHistoryBloc>(
-            create: (context) =>
-                WeightHistoryBloc(getWeightHistoryUseCase, authService
-                    // Add your repository/usecase here
-                    ),
-          ),
-          BlocProvider<MealTypeBloc>(
-            create: (context) => MealTypeBloc(
-              getMealTypesUseCase: getMealTypesUseCase,
-            )..add(FetchMealTypes()),
-          ),
-          BlocProvider<EatScreenBloc>(
-            create: (context) =>
-                EatScreenBloc(getEatScreenUseCase, authService),
-          ),
-          BlocProvider<StreakBloc>(
-            create: (context) => StreakBloc(getStreakUseCase, authService),
-          ),
+        BlocProvider<CountryCodeBloc>(
+          create: (context) => CountryCodeBloc(),
+        ),
+        BlocProvider<TDEEBloc>(
+          create: (context) => TDEEBloc(tdeeRepository),
+        ),
+        BlocProvider<HomeBloc>(
+          create: (context) => HomeBloc(authService),
+        ),
 
-          BlocProvider<ConnectivityBloc>(
-            create: (context) => ConnectivityBloc(
-              connectivityRepository: connectivityRepository,
-            ),
-          ),
-
-          BlocProvider<OtpAuthBloc>(
-            create: (context) => OtpAuthBloc(
-              otpUseCase: OtpUseCase(
-                OtpRepository(),
-              ),
-            ),
-          ),
-          BlocProvider<GetCartBloc>(
-            create: (context) => GetCartBloc(
-              GetCartRepository(
-                GetCartApi(),
-              ),
-              authService,
-            ),
-          ),
-
-          BlocProvider<AddToCartBloc>(
-            create: (context) => AddToCartBloc(
-                AddToCartUseCase(
-                  AddToCartRepository(
-                    AddToCartApi(),
-                  ),
-                ),
-                authService),
-          ),
-          BlocProvider(
-            create: (context) => CustomFoodEntryBloc(
-              CustomFoodEntryUseCase(
-                CustomFoodEntryRepository(
-                  CustomFoodEntryApi(),
-                ),
-              ),
-            ),
-          ),
-          BlocProvider(
-            create: (context) => ConsumeCartBloc(
-              ConsumeCartUseCase(
-                ConsumeCartRepository(
-                  ConsumeCartApi(),
-                ),
-              ),
-              authService,
-            ),
-          ),
-          BlocProvider(
-            create: (context) => CommonFoodSearchBloc(
-              repository: CommonFoodRepository(),
-            ),
-          ),
-          BlocProvider(
-            create: (context) => DeleteDishCartBloc(
-              DeleteDishCartUseCase(
-                DeleteDishCartRepository(
-                  DeleteDishCartApi(),
-                ),
-              ),
-            ),
-          ),
-          BlocProvider<UserProfileFormBloc>(
-            create: (context) => UserProfileFormBloc(
-              userProfileRepository,
-              tdeeRepository,
-            ),
-          ),
-          // In main.dart, add this to your BlocProvider list
-          BlocProvider<GoogleAuthBloc>(
-            create: (context) => GoogleAuthBloc(
-              googleAuthUseCase: GoogleAuthUseCase(
-                GoogleAuthRepository(),
-              ),
-            ),
-          ),
-          BlocProvider<EatScreenSearchBloc>(
-            create: (context) => EatScreenSearchBloc(
-              searchUseCase: EatScreenSearchFoodUsecase(
-                EatSearchScreenRepository(
-                  EatSearchScreenApiService(),
-                ),
-              ),
-            ),
-          ),
-
-          BlocProvider<CountryCodeBloc>(
-            create: (context) => CountryCodeBloc(),
-          ),
-          BlocProvider<TDEEBloc>(
-            create: (context) => TDEEBloc(tdeeRepository),
-          ),
-          BlocProvider<HomeBloc>(
-            create: (context) => HomeBloc(authService),
-          ),
-
-          // Add other global BLoCs here
+        // Add other global BLoCs here
+      ],
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        title: 'hungrX',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        routerConfig: AppRouter.router,
+        supportedLocales: const [
+          Locale('en', ''),
         ],
-        child: MaterialApp.router(
-          debugShowCheckedModeBanner: false,
-          title: 'hungrX',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-            useMaterial3: true,
-          ),
-          routerConfig: AppRouter.router,
-          builder: (context, child) {
-            // SizeUtils.init(context); // Initialize if needed, but be consistent
-            return MediaQuery(
-              data: MediaQuery.of(context)
-                  .copyWith(textScaler: const TextScaler.linear(1.0)),
-              child: child!,
-            );
-          },
-        ));
+        builder: (context, child) {
+          child = UpgradeAlert(
+            upgrader: upgrader,
+            child: child ?? const SizedBox(),
+          );
+
+          return MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(1.0)),
+            child: child,
+          );
+        },
+      ),
+    );
   }
 }

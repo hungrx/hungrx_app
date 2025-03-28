@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungrx_app/core/constants/colors/app_colors.dart';
@@ -292,29 +293,128 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Widget _buildInviteSection() {
-    // String? referralCode;
-
-    // Get platform-specific link
     String getInviteLink() {
       if (Platform.isAndroid) {
         return "https://play.google.com/store/apps/details?id=com.hungrx.hungrx_app";
       } else if (Platform.isIOS) {
         return "https://apps.apple.com/us/app/hungrx/id6741845887";
       }
-      return "https://www.hungrx.com/"; // fallback URL
+      return "https://www.hungrx.com/";
     }
 
-    // Text to share with platform-specific link and referral code
-    // String getInviteText() {
-    //   String baseText = "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights!";
-    //   String link = getInviteLink();
-    //   String referralText = referralCode != null ? " Use my referral code: $referralCode" : "";
-    //   return "$baseText$referralText Join me now: $link";
-    // }
-    // Function to handle sharing
-    Future<void> handleShare() async {
+    void showReferralDialog(String referralCode) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: Colors.grey[900],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Your Referral Code',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          referralCode,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy,
+                              color: AppColors.buttonColors),
+                          onPressed: () {
+                            Clipboard.setData(
+                                ClipboardData(text: referralCode));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Referral code copied!'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.share, color: Colors.black),
+                    label: const Text(
+                      'Invite Friends',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.buttonColors,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    onPressed: () async {
+                      String baseText =
+                          "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights!";
+                      String link = getInviteLink();
+                      String inviteText =
+                          "$baseText Use my referral code: $referralCode Join me now: $link";
+
+                      try {
+                        await Share.share(
+                          inviteText,
+                          subject: 'Join hungrX App!',
+                        );
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text('Failed to share. Please try again.')),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    Future<void> handleReferral() async {
       try {
-        // Show loading indicator
         if (!mounted) return;
         BuildContext dialogContext = context;
 
@@ -324,54 +424,29 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           builder: (BuildContext context) {
             dialogContext = context;
             return const Center(
-                child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
-            ));
+              child: CircularProgressIndicator(
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(AppColors.buttonColors),
+              ),
+            );
           },
         );
 
-        // Generate referral code using BlocListener instead of stream subscription
-        String? generatedCode;
-
-        await Future.delayed(Duration.zero); // Ensure dialog is shown
-
         final completer = Completer<void>();
-
         late StreamSubscription<ReferralState> subscription;
+
         subscription = context.read<ReferralBloc>().stream.listen(
           (state) async {
             if (state is ReferralSuccess) {
-              generatedCode = state.referralCode;
               if (mounted && dialogContext.mounted) {
                 Navigator.of(dialogContext).pop(); // Close loading dialog
-              }
-
-              // Share the content
-              try {
-                String baseText =
-                    "Share HungrX and help your friends discover smarter eating with personalized meal recommendations and nearby restaurant insights!";
-                String link = getInviteLink();
-                String referralText = generatedCode != null
-                    ? " Use my referral code: $generatedCode"
-                    : "";
-                String inviteText = "$baseText$referralText Join me now: $link";
-
-                await Share.share(
-                  inviteText,
-                  subject: 'Join hungrX App!',
-                );
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Failed to share. Please try again.')),
-                  );
-                }
+                showReferralDialog(
+                    state.referralCode); // Show new referral dialog
               }
               completer.complete();
             } else if (state is ReferralFailure) {
               if (mounted && dialogContext.mounted) {
-                Navigator.of(dialogContext).pop(); // Close loading dialog
+                Navigator.of(dialogContext).pop();
               }
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -383,7 +458,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           },
           onError: (error) {
             if (mounted && dialogContext.mounted) {
-              Navigator.of(dialogContext).pop(); // Close loading dialog
+              Navigator.of(dialogContext).pop();
             }
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -395,21 +470,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           },
         );
 
-        // Trigger the referral code generation
         if (mounted) {
           context.read<ReferralBloc>().add(GenerateReferralCode());
         }
 
-        // Wait for the operation to complete
         await completer.future;
         await subscription.cancel();
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to share. Please try again.')),
+            const SnackBar(
+                content: Text(
+                    'Failed to generate referral code. Please try again.')),
           );
         }
-        debugPrint('Error sharing: $e');
+        debugPrint('Error handling referral: $e');
       }
     }
 
@@ -452,7 +527,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 borderRadius: BorderRadius.circular(25),
               ),
             ),
-            onPressed: handleShare,
+            onPressed: handleReferral,
           ),
         ),
       ],

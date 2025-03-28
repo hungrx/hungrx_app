@@ -13,6 +13,9 @@ import 'package:hungrx_app/presentation/blocs/check_subscription/check_subscript
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_bloc.dart';
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_event.dart';
 import 'package:hungrx_app/presentation/blocs/subscription/subscription_state.dart';
+import 'package:hungrx_app/presentation/blocs/verify_referral_bloc/verify_referral_bloc.dart';
+import 'package:hungrx_app/presentation/blocs/verify_referral_bloc/verify_referral_event.dart';
+import 'package:hungrx_app/presentation/blocs/verify_referral_bloc/verify_referral_state.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/active_subscriptiion_screen.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/active_subscription_dialog.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/widgets/feature_item_widget.dart';
@@ -34,6 +37,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   bool _isInitialLoading = true;
   bool _dialogShown = false;
   final AuthService _authService = AuthService();
+  final TextEditingController _referralController = TextEditingController();
 
   @override
   void initState() {
@@ -269,6 +273,32 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   @override
+  void dispose() {
+    _referralController.dispose();
+    super.dispose();
+  }
+
+  void _handleVerifyReferral() {
+    print('Verifying referral code...${_referralController.text}');
+    if (_referralController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a referral code'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Get the user ID (you'll need to implement this)
+    context.read<VerifyReferralBloc>().add(
+          VerifyReferralSubmitted(
+            referralCode: _referralController.text.trim(),
+          ),
+        );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -416,6 +446,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           // Show regular error snackbar
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
+                              duration: Duration(seconds: 1),
                               content: Text(
                                 "Subscription canceled or error occurred",
                                 style: const TextStyle(
@@ -423,7 +454,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              backgroundColor: Colors.red,
+                              backgroundColor: Colors.grey[700],
                             ),
                           );
                         }
@@ -663,6 +694,309 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                   LegalSectionWidget(
                                     privacyPolicyUrl: _privacyPolicyUrl,
                                   ),
+                                  Container(
+                                    margin:
+                                        const EdgeInsets.symmetric(vertical: 5),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: Colors.white24),
+                                    ),
+                                    child: Theme(
+                                      data: Theme.of(context).copyWith(
+                                        dividerColor: Colors.transparent,
+                                      ),
+                                      child: ExpansionTile(
+                                        tilePadding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        title: const Text(
+                                          'Enter Referral Code',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        trailing: const Icon(
+                                            Icons.card_giftcard,
+                                            color: Colors.white,
+                                            size: 20),
+                                        children: [
+                                          BlocConsumer<VerifyReferralBloc,
+                                              VerifyReferralState>(
+                                            listener: (context, state) {
+                                              if (state
+                                                  is VerifyReferralSuccess) {
+                                                showDialog(
+                                                  context: context,
+                                                  barrierDismissible: false,
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return Dialog(
+                                                      backgroundColor:
+                                                          Colors.black,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(20),
+                                                        side: BorderSide(
+                                                            color: AppColors
+                                                                .buttonColors,
+                                                            width: 2),
+                                                      ),
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(24.0),
+                                                        child: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Icon(
+                                                              Icons.celebration,
+                                                              color: AppColors
+                                                                  .buttonColors,
+                                                              size: 64,
+                                                            ),
+                                                            SizedBox(
+                                                                height: 24),
+                                                            Text(
+                                                              'Congratulations! 🎉',
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 24,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                                height: 16),
+                                                            Text(
+                                                              'Your referral code was successfully verified!',
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white70,
+                                                                fontSize: 16,
+                                                              ),
+                                                            ),
+                                                            SizedBox(height: 8),
+                                                            Text(
+                                                              'Enjoy 7 days of HungrX Premium',
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                              style: TextStyle(
+                                                                color: AppColors
+                                                                    .buttonColors,
+                                                                fontSize: 18,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                                height: 24),
+                                                            ElevatedButton(
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                                context.go(
+                                                                    '/home');
+                                                              },
+                                                              style:
+                                                                  ElevatedButton
+                                                                      .styleFrom(
+                                                                backgroundColor:
+                                                                    AppColors
+                                                                        .buttonColors,
+                                                                minimumSize: Size(
+                                                                    double
+                                                                        .infinity,
+                                                                    50),
+                                                                shape:
+                                                                    RoundedRectangleBorder(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              12),
+                                                                ),
+                                                              ),
+                                                              child: Text(
+                                                                'Let\'s Start!',
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: Colors
+                                                                      .black,
+                                                                  fontSize: 18,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+                                                // You might want to reload subscriptions or update UI here
+                                              } else if (state
+                                                  is VerifyReferralFailure) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(state.error),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                            builder: (context, state) {
+                                              return Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 16),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      '🎉 Get 7 days free trial by entering a valid referral code!',
+                                                      style: TextStyle(
+                                                        color: AppColors
+                                                            .buttonColors,
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    TextField(
+                                                      controller:
+                                                          _referralController,
+                                                      style: const TextStyle(
+                                                          color: Colors.white),
+                                                      decoration:
+                                                          InputDecoration(
+                                                        hintText:
+                                                            'Enter referral code',
+                                                        hintStyle:
+                                                            const TextStyle(
+                                                                color: Colors
+                                                                    .grey),
+                                                        filled: true,
+                                                        fillColor: Colors.white
+                                                            .withOpacity(0.1),
+                                                        border:
+                                                            OutlineInputBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10),
+                                                          borderSide:
+                                                              BorderSide.none,
+                                                        ),
+                                                        prefixIcon: const Icon(
+                                                          Icons.redeem,
+                                                          color: Colors.grey,
+                                                        ),
+                                                        contentPadding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                          horizontal: 16,
+                                                          vertical: 14,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 16),
+                                                    SizedBox(
+                                                      width: double.infinity,
+                                                      child: ElevatedButton(
+                                                        onPressed: state
+                                                                is VerifyReferralLoading
+                                                            ? null
+                                                            : _handleVerifyReferral,
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              AppColors
+                                                                  .buttonColors,
+                                                          foregroundColor:
+                                                              Colors.black,
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                                  vertical: 14),
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
+                                                          ),
+                                                          elevation: 4,
+                                                          shadowColor: AppColors
+                                                              .buttonColors
+                                                              .withOpacity(0.5),
+                                                        ),
+                                                        child: state
+                                                                is VerifyReferralLoading
+                                                            ? const CircularProgressIndicator(
+                                                                valueColor: AlwaysStoppedAnimation<
+                                                                        Color>(
+                                                                    AppColors
+                                                                        .buttonColors),
+                                                              )
+                                                            : Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  Icon(Icons
+                                                                      .verified),
+                                                                  SizedBox(
+                                                                      width: 8),
+                                                                  Text(
+                                                                    'Verify Code',
+                                                                    style:
+                                                                        TextStyle(
+                                                                      fontSize:
+                                                                          16,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    const Text(
+                                                      '• Enter a valid referral code from existing premium users\n• Get instant access to all premium features for 7 days\n• No credit card required for trial period',
+                                                      style: TextStyle(
+                                                        color: Colors.white70,
+                                                        fontSize: 12,
+                                                        height: 1.5,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
                                   Container(
                                     margin:
                                         const EdgeInsets.symmetric(vertical: 5),
