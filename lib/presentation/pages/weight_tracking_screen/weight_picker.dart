@@ -117,6 +117,7 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
                 const Text(
                   'Current Weight',
                   style: TextStyle(
+                    fontWeight: FontWeight.bold,
                     color: Colors.grey,
                     fontSize: 16,
                   ),
@@ -372,7 +373,8 @@ class WeightPickerScreenState extends State<WeightPickerScreen>
                 ),
                 title: const Text(
                   'Update Weight',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
               body: MultiBlocListener(

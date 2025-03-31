@@ -58,7 +58,7 @@ class _LogMealViewState extends State<LogMealView> {
           ),
           title: const Text(
             'Log your meal',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
           ),
           actions: [
             PopupMenuButton<String>(

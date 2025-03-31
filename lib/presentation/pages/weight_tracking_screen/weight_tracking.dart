@@ -57,6 +57,19 @@ class _WeightTrackingScreenState extends State<WeightTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            context.pop();
+          },
+        ),
+        title: const Text(
+          'Weight Tracking',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: AppColors.primaryColor,
+      ),
       backgroundColor: Colors.black,
       body: SafeArea(
         child: BlocBuilder<WeightHistoryBloc, WeightHistoryState>(
