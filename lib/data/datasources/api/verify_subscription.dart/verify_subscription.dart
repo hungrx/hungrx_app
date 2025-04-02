@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-// import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
-// import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/core/utils/api_exception.dart';
 
 class VerifySubscriptionApiClient {
@@ -13,8 +12,8 @@ class VerifySubscriptionApiClient {
   Future<Map<String, dynamic>> verifySubscription(String userId) async {
     try {
       final response = await _httpClient.post(
-        // Uri.parse('${ApiConstants.baseUrl}/users/verify'),
-        Uri.parse('https://hungrxbackend.onrender.com/users/verify'),
+        Uri.parse('${ApiConstants.baseUrl}/users/verify'),
+        // Uri.parse('https://hungrxbackend.onrender.com/users/verify'),
         headers: {
           'Content-Type': 'application/json',
         },

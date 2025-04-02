@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/core/errors/exceptions.dart';
 import 'package:hungrx_app/data/Models/profile_screen/referral_model.dart';
 
@@ -11,7 +12,8 @@ class ReferralDataSource {
   Future<ReferralModel> generateReferralCode(String userId) async {
     try {
       final response = await client.post(
-        Uri.parse('https://hungrxbackend.onrender.com/users/generateRef'),
+        // Uri.parse('https://hungrxbackend.onrender.com/users/generateRef'),
+        Uri.parse('${ApiConstants.baseUrl}/users/generateRef'),
         headers: {
           'Content-Type': 'application/json',
         },

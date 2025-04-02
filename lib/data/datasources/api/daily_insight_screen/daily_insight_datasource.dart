@@ -17,6 +17,9 @@ class DailyInsightDataSource {
           'date': date,
         }),
       );
+      print(date);
+      print(userId);
+      print(",,,,,,,,,,,,,,,,,${response.body}");
       if (response.statusCode == 200) {
         return DailyFoodResponse.fromJson(jsonDecode(response.body));
       } else {

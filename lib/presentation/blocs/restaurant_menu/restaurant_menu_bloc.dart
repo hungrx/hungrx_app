@@ -146,15 +146,10 @@ class RestaurantMenuBloc
         userId,
       );
 
-      // Compare with cached data
-      if (cachedResponse == null ||
-          !_areMenusEqual(cachedResponse.menu, freshData.menu)) {
-        // Save to both Hive and memory cache
-        await _saveToHiveCache(event.restaurantId, freshData);
-
-        // Emit the fresh data
-        emit(RestaurantMenuLoaded(freshData));
-      }
+      // IMPORTANT: Always update cache if we get new data from server
+      // Don't compare with cached data, always treat server response as the truth
+      await _saveToHiveCache(event.restaurantId, freshData);
+      emit(RestaurantMenuLoaded(freshData));
     } catch (e) {
       debugPrint('Error fetching menu: $e');
       if (cachedResponse == null) {
@@ -164,26 +159,8 @@ class RestaurantMenuBloc
     }
   }
 
-  bool _areMenusEqual(RestaurantMenu menu1, RestaurantMenu menu2) {
-    if (menu1.id != menu2.id ||
-        menu1.restaurantName != menu2.restaurantName ||
-        menu1.categories.length != menu2.categories.length) {
-      return false;
-    }
-
-    for (int i = 0; i < menu1.categories.length; i++) {
-      final cat1 = menu1.categories[i];
-      final cat2 = menu2.categories[i];
-      if (cat1.id != cat2.id ||
-          cat1.categoryName != cat2.categoryName ||
-          cat1.dishes.length != cat2.dishes.length ||
-          cat1.subCategories.length != cat2.subCategories.length) {
-        return false;
-      }
-    }
-
-    return true;
-  }
+  // This method is no longer needed as we're always updating the cache
+  // But keeping it in case we need it for other use cases later
 
   // Clear cache methods
   Future<void> clearCache(String restaurantId) async {

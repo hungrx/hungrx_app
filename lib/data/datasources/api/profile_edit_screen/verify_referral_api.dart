@@ -1,15 +1,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hungrx_app/core/constants/api_const/api_constants.dart';
 import 'package:hungrx_app/data/Models/profile_screen/verify_referral_model.dart';
 
 class VerifyReferralApi {
-  static const String baseUrl = 'https://hungrxbackend.onrender.com';
+  // static const String baseUrl = 'https://hungrxbackend.onrender.com';
 
   Future<Map<String, dynamic>> verifyReferralCode(
       VerifyReferralModel referralData) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/users/verifyRef'),
+        Uri.parse('${ApiConstants.baseUrl}/users/verifyRef'),
         headers: {
           'Content-Type': 'application/json',
         },

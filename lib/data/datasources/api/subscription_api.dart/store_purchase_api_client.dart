@@ -20,7 +20,7 @@ class StorePurchaseApiClient {
         body: json.encode(purchaseDetails.toMap()), // Changed from toJson() to toMap()
       );
       print(response.body);
-
+print("update;;;;;;;;;;;;;;;${purchaseDetails.toMap()}");
       if (response.statusCode == 200) {
         return StorePurchaseResponseModel.fromJson(
             json.decode(response.body) as Map<String, dynamic>);
