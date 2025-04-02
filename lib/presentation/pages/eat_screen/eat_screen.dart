@@ -66,35 +66,38 @@ class _EatScreenState extends State<EatScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
                   SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (_cachedData != null || state is EatScreenLoaded)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildHeader((state is EatScreenLoaded)
-                                    ? state.data.data
-                                    : _cachedData!),
-                                SizedBox(height: size.height * 0.02),
-                                _buildCalorieBudget(_formatCalories(
-                                    (state is EatScreenLoaded)
-                                        ? state.data.data.dailyCalorieGoal
-                                        : _cachedData!.dailyCalorieGoal)),
-                                SizedBox(height: size.height * 0.05),
-                                _buildOptionsGrid(size),
-                              ],
-                            )
-                          else
-                            _buildPlaceholderContent(),
-                          const Spacer(),
-                          _buildEnjoyCalories(size),
-                          if (state is EatScreenError && _cachedData == null)
-                            _buildErrorOverlay("An error occurred"),
-                        ],
+                    hasScrollBody: true, // Changed to true to allow scrolling
+                    child: SingleChildScrollView(
+                      // Added SingleChildScrollView to fix overflow
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_cachedData != null || state is EatScreenLoaded)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildHeader((state is EatScreenLoaded)
+                                      ? state.data.data
+                                      : _cachedData!),
+                                  SizedBox(height: size.height * 0.02),
+                                  _buildCalorieBudget(_formatCalories(
+                                      (state is EatScreenLoaded)
+                                          ? state.data.data.dailyCalorieGoal
+                                          : _cachedData!.dailyCalorieGoal)),
+                                  SizedBox(height: size.height * 0.02),
+                                  _buildOptionsGrid(size),
+                                ],
+                              )
+                            else
+                              _buildPlaceholderContent(),
+                            SizedBox(height: size.height * 0.02),
+                            _buildEnjoyCalories(size),
+                            if (state is EatScreenError && _cachedData == null)
+                              _buildErrorOverlay("An error occurred"),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -142,7 +145,7 @@ class _EatScreenState extends State<EatScreen> {
           'Hi, ${data?.name ?? 'User'}',
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -168,88 +171,160 @@ class _EatScreenState extends State<EatScreen> {
   }
 
   Widget _buildOptionsGrid(Size size) {
-    return Row(
+    final tileWidth = size.width * 0.45;
+    final tileHeight = size.height * 0.25;
+
+    return Wrap(
+      spacing: size.width * 0.04,
+      runSpacing: size.height * 0.02,
       children: [
-        Expanded(
-          child: _buildOptionCard(
-            'Restaurants',
-            'Discover Nearby Restaurant Menus That Fit Your Calorie Budget',
-            'assets/images/burger.png',
-            Icons.fastfood_outlined,
-            () {
-              context.pushNamed(RouteNames.restaurants);
-            },
-            size,
-          ),
+        // Restaurant tile
+        _buildSmallTile(
+          size: size,
+          width: tileWidth,
+          height: tileHeight,
+          title: 'Restaurants',
+          subtitle:
+              'Discover Nearby Restaurant Menus That Fit Your Calorie Budget',
+          icon: Icons.fastfood_outlined,
+          iconColor: AppColors.buttonColors,
+          onTap: () {
+            context.pushNamed(RouteNames.restaurants);
+          },
         ),
-        SizedBox(width: size.width * 0.04),
-        Expanded(
-          child: _buildOptionCard(
-            'Home',
-            'Log what you eat from home or grocery stores for better calorie management.',
-            'assets/images/piza.png',
-            Symbols.skillet,
-            () {
-              context.pushNamed(RouteNames.logMealScreen);
-            },
-            size,
-          ),
+
+        // Home tile
+        _buildSmallTile(
+          size: size,
+          width: tileWidth,
+          height: tileHeight,
+          title: 'Home',
+          subtitle:
+              'Log what you eat from home or grocery stores for better calorie management.',
+          icon: Symbols.home_app_logo,
+          iconColor: AppColors.buttonColors,
+          onTap: () {
+            context.pushNamed(RouteNames.logMealScreen);
+          },
+        ),
+
+        // Cook tile with badge
+        _buildSmallTile(
+          size: size,
+          width: tileWidth,
+          height: tileHeight,
+          title: 'Cook',
+          subtitle: 'Create a meal in 5 mins, ai integrated feature',
+          icon: Symbols.skillet,
+          iconColor: AppColors.buttonColors,
+          showBadge: true, // Enable the badge
+          badgeText: 'NEW', // Set badge text
+          badgeColor: Colors.green, // Set badge color
+          onTap: () {
+            // TODO: Navigate to Cook screen when implemented
+            // context.pushNamed(RouteNames.cookScreen);
+          },
         ),
       ],
     );
   }
 
-  Widget _buildOptionCard(
-    String title,
-    String subtitle,
-    String imagePath,
-    IconData? icon,
-    void Function()? ontap,
-    Size size,
-  ) {
+  Widget _buildSmallTile({
+    required Size size,
+    required double width,
+    required double height,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required VoidCallback onTap,
+    bool showBadge = false,
+    String badgeText = 'New',
+    Color badgeColor = Colors.green,
+  }) {
     return GestureDetector(
-      onTap: ontap,
-      child: Container(
-        height: size.height * 0.35,
-        padding: EdgeInsets.all(size.width * 0.04),
-        decoration: BoxDecoration(
-          color: AppColors.tileColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: size.width * 0.045,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+      onTap: onTap,
+      child: Stack(
+        // Wrap with Stack to overlay the badge
+        children: [
+          Container(
+            width: width,
+            height: height,
+            decoration: BoxDecoration(
+              color: AppColors.tileColor,
+              borderRadius: BorderRadius.circular(16),
+              border:
+                  Border.all(color: Colors.grey.withOpacity(0.2), width: 0.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 5,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
-            SizedBox(height: size.height * 0.01),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: size.width * 0.03,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
+            padding: EdgeInsets.all(size.width * 0.03),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: size.width * 0.06,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: size.height * 0.005),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: size.width * 0.025,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Spacer(),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: 100,
+                  ),
+                ),
+                SizedBox(height: size.height * 0.01),
+              ],
             ),
-            const Spacer(),
-            Center(
-              child: Icon(
-                icon,
-                // Icons.fastfood_outlined,
-                color: AppColors.buttonColors,
-                size: 110,
+          ),
+          // Badge element that only shows if showBadge is true
+          if (showBadge)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: badgeColor,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(16),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  badgeText,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: size.width * 0.03,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            )
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
