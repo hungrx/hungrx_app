@@ -41,4 +41,5 @@ class RouteNames {
   static const String helpSupportScreen = 'helpSupportScreen';
   static const String policiesScreen = 'policiesScreen';
   static const String restaurantSearch = 'restaurantSearch';
+  static const String cookScreen = 'cookScreen';
 }

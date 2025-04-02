@@ -12,6 +12,7 @@ import 'package:hungrx_app/presentation/layout/root_layout.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/forgot_password.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/otp_screen.dart';
 import 'package:hungrx_app/presentation/pages/auth_screens/phone_number.dart';
+import 'package:hungrx_app/presentation/pages/cook_screen/cook_screen.dart';
 import 'package:hungrx_app/presentation/pages/subcription_screen/subscription_screen.dart';
 import 'package:hungrx_app/presentation/pages/userprofile_screens/basic_information_screen/basic_informaion_screen.dart';
 import 'package:hungrx_app/presentation/pages/daily_insight_screen/daily_insight.dart';
@@ -230,6 +231,13 @@ class AppRouter {
         name: RouteNames.phoneNumber,
         builder: (BuildContext context, GoRouterState state) {
           return const PhoneNumberScreen();
+        },
+      ),
+          GoRoute(
+        path: '/cookScreen',
+        name: RouteNames.cookScreen,
+        builder: (BuildContext context, GoRouterState state) {
+          return const CookScreen();
         },
       ),
       GoRoute(

@@ -20,10 +20,10 @@ class _RootLayoutState extends State<RootLayout> {
 
   Future<bool> _onWillPop() async {
     final location = GoRouterState.of(context).uri.toString();
-    
+
     if (location == '/home') {
       final now = DateTime.now();
-      if (lastBackPressTime == null || 
+      if (lastBackPressTime == null ||
           now.difference(lastBackPressTime!) > const Duration(seconds: 2)) {
         lastBackPressTime = now;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -36,7 +36,7 @@ class _RootLayoutState extends State<RootLayout> {
       }
       return true;
     }
-    
+
     if (!context.mounted) return false;
     context.go('/home');
     return false;
@@ -132,7 +132,7 @@ class _BottomNavigationBarWidget extends StatelessWidget {
 
   void _onItemTapped(int index, BuildContext context) {
     HapticFeedback.mediumImpact();
-    
+
     switch (index) {
       case 0:
         context.go('/home');
@@ -147,6 +147,5 @@ class _BottomNavigationBarWidget extends StatelessWidget {
         context.go('/foodcart');
         break;
     }
-    
   }
 }

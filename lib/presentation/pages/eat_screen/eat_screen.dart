@@ -221,7 +221,7 @@ class _EatScreenState extends State<EatScreen> {
           badgeText: 'NEW', // Set badge text
           badgeColor: Colors.green, // Set badge color
           onTap: () {
-            // TODO: Navigate to Cook screen when implemented
+            context.pushNamed(RouteNames.cookScreen);
             // context.pushNamed(RouteNames.cookScreen);
           },
         ),
